@@ -1,0 +1,2 @@
+-- 용도: RLS(Row Level Security) 활성화 및 정책 정의
+-- 규칙: 이 파일을 바꾸면 docs/erd.md 와 src/types/database.types.ts(npm run gen:types)도 같은 PR 에서 갱신한다.

@@ -1,0 +1,3 @@
+-- 용도: 테이블, 컬럼, 제약조건 등 DB 구조 정의
+-- 규칙: 이 파일을 바꾸면 docs/erd.md 와 src/types/database.types.ts(npm run gen:types)도 같은 PR 에서 갱신한다.
+-- 주의: 스키마 변경은 백엔드 담당자와 먼저 상의한다.

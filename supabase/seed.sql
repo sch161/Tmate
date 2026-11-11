@@ -1,0 +1,2 @@
+-- 용도: 개발·테스트용 초기 데이터
+-- 규칙: 스키마가 바뀌면 이 파일도 맞춰 수정하고, docs/erd.md 와 src/types/database.types.ts 도 같이 갱신한다.

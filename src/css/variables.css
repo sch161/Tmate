@@ -1,0 +1,19 @@
+/* 디자인 토큰 자리. 변수 이름만 정하고, 값은 디자인 확정 후 교체한다. (현재 값은 임시) */
+:root {
+  /* color */
+  --color-primary: #000000;
+  --color-secondary: #666666;
+  --color-background: #ffffff;
+  --color-surface: #f5f5f5;
+  --color-text: #111111;
+  --color-text-muted: #888888;
+  --color-border: #dddddd;
+  --color-error: #d32f2f;
+
+  /* font */
+  --font-family-base: system-ui, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+}

@@ -1,0 +1,7 @@
+/* 공통 스타일. 수정 전에 팀에 먼저 알린다. */
+body {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-background);
+}
