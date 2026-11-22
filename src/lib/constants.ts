@@ -28,7 +28,7 @@ export const PATHS = {
   tasteDetail: '/src/pages/taste-detail.html', // 아직 없음
   myReviews: '/src/pages/my-reviews.html', // 아직 없음
   tasteMates: '/src/pages/taste-mates.html', // 아직 없음
-  profileEdit: '/src/pages/profile-edit.html', // 아직 없음
+  profileEdit: '/src/pages/profile-edit.html',
 } as const;
 
 export function toEmail(username: string): string {
