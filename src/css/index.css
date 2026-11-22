@@ -1,0 +1,5 @@
+/* 모든 페이지의 CSS 진입점. 페이지는 이 파일 하나만 링크한다. 순서를 바꾸지 않는다. */
+@import './fonts.css';
+@import './reset.css';
+@import './variables.css';
+@import './common.css';
