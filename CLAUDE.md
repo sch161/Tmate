@@ -18,6 +18,7 @@
 - src/types/database.types.ts : 자동 생성 파일. 직접 수정 금지 (npm run gen:types)
 - src/css/ : reset.css, variables.css(디자인 토큰), common.css
 - supabase/ : schema.sql(최종 구조), migrations/(기존 DB 에 한 번만 적용), policies.sql, functions.sql, seed_reference.sql(기준 데이터), seed_demo_users.sql(개발용 가상 사용자)
+- scripts/import/ : 공공데이터 CSV → 지점·브랜드 메뉴 seed SQL 생성 스크립트 (README 참고)
 - docs/erd.md : ERD (DB 구조를 바꾸면 schema.sql, erd.md, 타입 파일을 같이 갱신)
 
 ## 도메인 규칙
