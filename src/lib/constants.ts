@@ -20,11 +20,16 @@ export const PATHS = {
   onboardingAllergy: '/src/pages/onboarding-allergy.html',
   home: '/src/pages/home.html',
   save: '/src/pages/save.html',
-  mypage: '/src/pages/mypage.html', // 아직 없음
+  mypage: '/src/pages/mypage.html',
   restaurant: '/src/pages/restaurant.html', // 아직 없음 (?id=가게id)
   tasteEdit: '/src/pages/taste-edit.html', // 아직 없음
   review: '/src/pages/review.html', // ?menuId=메뉴id&restaurantId=지점id(선택, 돌아가기용)
   allergyEdit: '/src/pages/allergy-edit.html', // 아직 없음
+  tasteDetail: '/src/pages/taste-detail.html', // 아직 없음
+  myReviews: '/src/pages/my-reviews.html', // 아직 없음
+  tasteMates: '/src/pages/taste-mates.html', // 아직 없음
+  profileEdit: '/src/pages/profile-edit.html', // 아직 없음
+  locationEdit: '/src/pages/location-edit.html', // 아직 없음
 } as const;
 
 export function toEmail(username: string): string {
