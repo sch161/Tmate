@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>입맛 선택 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/onboarding.css" />
+  </head>
+  <body>
+    <main class="app onboarding">
+      <div class="onboarding__progress"><div class="progress" style="--value: 50"></div></div>
+      <header class="onboarding__head">
+        <h1 class="onboarding__title">어떤 맛을 좋아하시나요?</h1>
+        <p class="onboarding__desc">최대 3개까지 선택할 수 있어요</p>
+      </header>
+      <section class="onboarding__body" id="body"></section>
+      <footer class="onboarding__footer">
+        <button class="btn-primary" id="next" type="button" disabled>다음으로</button>
+      </footer>
+    </main>
+    <script type="module" src="/src/pages/onboarding-flavor.ts"></script>
+  </body>
+</html>

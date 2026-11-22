@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>알레르기 선택 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/onboarding.css" />
+  </head>
+  <body>
+    <main class="app onboarding">
+      <div class="onboarding__progress"><div class="progress" style="--value: 100"></div></div>
+      <header class="onboarding__head">
+        <h1 class="onboarding__title">알레르기가 있으신가요?</h1>
+        <p class="onboarding__desc">해당하는 항목을 선택해주세요<br />(선택 사항)</p>
+      </header>
+      <section class="onboarding__body" id="body"></section>
+      <footer class="onboarding__footer">
+        <button class="btn-primary" id="next" type="button" disabled>선택완료</button>
+      </footer>
+    </main>
+    <script type="module" src="/src/pages/onboarding-allergy.ts"></script>
+  </body>
+</html>
