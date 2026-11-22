@@ -17,7 +17,7 @@
 - src/utils/\*.ts : 공통 유틸 (DOM 헬퍼, 하단 네비, 인증 가드 등)
 - src/types/database.types.ts : 자동 생성 파일. 직접 수정 금지 (npm run gen:types)
 - src/css/ : reset.css, variables.css(디자인 토큰), common.css
-- supabase/ : schema.sql, policies.sql, functions.sql, seed.sql
+- supabase/ : schema.sql(최종 구조), migrations/(기존 DB 에 한 번만 적용), policies.sql, functions.sql, seed_reference.sql(기준 데이터), seed_demo_users.sql(개발용 가상 사용자)
 - docs/erd.md : ERD (DB 구조를 바꾸면 schema.sql, erd.md, 타입 파일을 같이 갱신)
 
 ## 도메인 규칙
@@ -25,9 +25,11 @@
 - 로그인은 아이디 방식이다. 아이디는 영문 소문자·숫자·밑줄 4~20자이고, Supabase Auth 에는 `${아이디}@tmate-app.com` 이메일로 가입/로그인한다 (변환은 src/lib/constants.ts 한 곳에서만). 이메일 인증은 꺼져 있다. 가입 시 트리거가 profiles 를 자동 생성하고 nickname 기본값은 아이디다
 - 지역은 구 단위 문자열이다 (예: '서울시 구로구'). profiles.region 과 restaurants.region 을 문자열로 비교해 "주변 맛집"을 필터한다. 좌표·거리 계산은 하지 않는다
 - 온보딩 순서: 위치(Location) → 맛 선택(Flavor Info, 최대 3개) → 비율 조절(Allergy Info_g, 합계 100) → 알레르기 선택(Allergy Info, 선택 사항) → 홈
-- 평가 단위는 메뉴다 (별점 1~5 + 맛 태그 여러 개). 가게 평점은 소속 메뉴 평점의 평균이다
+- 브랜드 구조: 지점(restaurants)은 공공데이터(소상공인 상가정보)에서 가져오고, 메뉴·알레르기는 브랜드(brands) 단위로 한 번만 조사해 그 브랜드의 모든 지점이 공유한다. 개인 식당은 가게 1개 = 브랜드 1개(1:1)로 같은 구조를 쓴다
+- 평가 단위는 브랜드 메뉴다 (별점 1~5 + 맛 태그 여러 개). 지점 평점·맛 태그·취향 일치도는 소속 브랜드 메뉴 기준이라 같은 브랜드의 지점은 같은 값이다
 - 취향 일치도(%)는 메뉴·가게 카드에 표시한다. 정수 %, 평점은 소수 1자리 + " / 5" (예: 4.7 / 5)
-- 알레르기: 추천에서는 사용자가 피해야 할 재료가 포함된 메뉴를 제외하고, 가게 상세의 알레르기 탭에서는 경고(위험/주의)로 보여준다
+- 알레르기는 식약처 공식 19종 표준(allergens.name)으로 통일한다 (화면 표기는 display_name, 조사 결과 매핑은 aliases). 정보가 없으면 "정보 없음(unknown)"으로 저장하고, 모르는 메뉴를 안전하다고 표시하지 않는다. 메뉴의 allergen_status 는 verified(공식 본문 확인) / official_extract(공식 도메인 발췌) / estimated(추정) / unknown(정보 없음)이다
+- 알레르기 추천 규칙: 사용자가 알레르기를 1개 이상 등록했으면 추천에서 겹치는 메뉴와 unknown/estimated 메뉴를 제외한다(안전 우선). 등록한 알레르기가 없으면 상태와 무관하게 포함한다. 가게 상세의 알레르기 탭에서는 겹치는 메뉴를 경고(위험/주의)로, 등록자의 unknown/estimated 메뉴를 "정보 없음"으로 보여준다
 - 하단 네비게이션은 홈 / 저장 / 마이페이지 3개다
 
 ## 디자인 규칙

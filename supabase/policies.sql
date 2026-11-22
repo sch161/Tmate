@@ -1,7 +1,7 @@
 -- 용도: RLS(Row Level Security) 활성화 및 정책 정의
 -- 규칙: 이 파일을 바꾸면 docs/erd.md 와 src/types/database.types.ts(npm run gen:types)도 같은 PR 에서 갱신한다.
 --
--- 실행: schema.sql 적용 후 Supabase SQL Editor 에서 한 번에 실행한다. (RLS 활성화는 schema.sql 에 이미 있다)
+-- 실행: schema.sql(또는 migrations/001_brand_structure.sql) 적용 후 Supabase SQL Editor 에서 한 번에 실행한다. (RLS 활성화는 schema.sql 에 이미 있다)
 -- 원칙: 모든 정책은 `to authenticated` 만 만든다. anon(비로그인)은 정책이 없으므로 어떤 테이블도 읽거나 쓸 수 없다.
 -- 재실행: 가능. grant/revoke 는 멱등이고, 정책은 모두 drop policy if exists 후 create 한다.
 
@@ -15,9 +15,11 @@
 -- 불필요한 권한 회수: truncate 는 RLS 를 우회하고, references·trigger 는 클라이언트가 쓸 일이 없다
 revoke references, trigger, truncate on all tables in schema public from anon, authenticated;
 
--- 기준 데이터·가게·메뉴: 읽기만 (쓰기는 클라이언트에 열지 않는다)
-grant select on food_categories, taste_tags, allergens, restaurants, menus, menu_taste_tags, menu_allergens
+-- 기준 데이터·브랜드·가게·메뉴: 읽기만 (쓰기는 클라이언트에 열지 않는다)
+grant select on food_categories, taste_tags, allergens, brands, restaurants, menus, menu_taste_tags, menu_allergens
   to authenticated;
+-- 브랜드·집계 뷰는 anon 에 주지 않는다 (Supabase 기본 권한이 있더라도 회수)
+revoke all on brands, brand_stats from anon;
 
 -- profiles: 조회만 부여한다. 수정은 table-level update 없이 아래 컬럼 권한으로만 허용한다 (username·id·created_at 변경 불가)
 --   순서 주의: 먼저 table-level update 를 회수(컬럼 권한도 함께 지워짐)한 뒤 컬럼 권한을 준다.
@@ -34,7 +36,7 @@ grant select, insert, update, delete
 grant select, insert, delete on review_taste_tags to authenticated;
 
 -- 집계 뷰(security_invoker): 조회하는 사용자의 권한·RLS 가 그대로 적용되므로 뷰에도 select 가 필요하다
-grant select on menu_stats, restaurant_stats, restaurant_taste_tags to authenticated;
+grant select on menu_stats, brand_stats, restaurant_stats, restaurant_taste_tags to authenticated;
 
 -- ---------------------------------------------------------------------
 -- 1. 기준 데이터 / 가게 / 메뉴: 로그인 사용자는 읽기만 가능 (쓰기는 클라이언트에 열지 않는다)
@@ -54,7 +56,12 @@ drop policy if exists "allergens_select" on allergens;
 create policy "allergens_select" on allergens
   for select to authenticated using (true);
 
--- 가게: 모든 로그인 사용자가 목록·상세를 볼 수 있어야 한다
+-- 브랜드: 가게 카드·상세에 필요하므로 로그인 사용자 전체 조회 허용 (쓰기는 서버 측 조사/import 로만)
+drop policy if exists "brands_select" on brands;
+create policy "brands_select" on brands
+  for select to authenticated using (true);
+
+-- 가게(지점): 모든 로그인 사용자가 목록·상세를 볼 수 있어야 한다
 drop policy if exists "restaurants_select" on restaurants;
 create policy "restaurants_select" on restaurants
   for select to authenticated using (true);
@@ -211,8 +218,8 @@ create policy "review_taste_tags_delete_own" on review_taste_tags
 
 -- ---------------------------------------------------------------------
 -- RLS 검증 (SQL Editor 에서 아래 주석을 풀어 한 블록씩 실행. 끝에 rollback 으로 되돌린다)
---   <A>, <B> 는 seed.sql 의 가상 사용자 uuid 로 바꾼다. 예: seed01 = 5eed0000-0000-4000-8000-000000000001
---   user_allergens 에 행이 있는 사용자를 A 로 쓴다. (seed.sql 기준 seed02 = 000000000002)
+--   <A>, <B> 는 seed_demo_users.sql 의 가상 사용자 uuid 로 바꾼다. 예: seed01 = 5eed0000-0000-4000-8000-000000000001
+--   user_allergens 에 행이 있는 사용자를 A 로 쓴다. (seed_demo_users.sql 기준 seed02 = 000000000002)
 -- ---------------------------------------------------------------------
 -- begin;
 --   set local role authenticated;

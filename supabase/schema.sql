@@ -1,7 +1,13 @@
 -- =====================================================================
--- T:MATE schema.sql
--- Supabase SQL Editor 에서 위에서부터 한 번에 실행한다.
+-- T:MATE schema.sql  (새로 설치할 때 쓰는 최종 상태)
+-- 실행 순서(새 프로젝트): schema.sql → policies.sql → functions.sql → seed_reference.sql (→ 개발용 seed_demo_users.sql)
+-- 이미 옛 구조(가게·메뉴 1:N)가 있는 DB 는 이 파일이 아니라 supabase/migrations/001_brand_structure.sql 을 한 번만 적용한다.
 -- 구조를 바꾸면 docs/erd.md 도 같이 수정하고 `npm run gen:types` 로 타입을 갱신한다.
+--
+-- 구조 요약
+--   brands(브랜드) 1 ── N restaurants(지점, 공공데이터)
+--   brands(브랜드) 1 ── N menus(브랜드 공통 메뉴·알레르기). 개인 식당은 가게 1개 = 브랜드 1개(1:1)
+--   평가(reviews)는 메뉴(=브랜드 메뉴)에 붙으므로 같은 브랜드의 모든 지점이 평점·메뉴·알레르기를 공유한다.
 --
 -- 로그인 방식: 아이디 -> 가짜 이메일(아이디@tmate-app.com) 변환
 --   * 프론트에서 signUp / signInWithPassword 시 email = `${username}@tmate-app.com`
@@ -14,10 +20,17 @@
 -- ---------------------------------------------------------------------
 -- 1. 타입
 -- ---------------------------------------------------------------------
-create type allergen_level as enum ('danger', 'caution');  -- 위험 / 주의
+create type allergen_level as enum ('danger', 'caution');  -- 위험(함유) / 주의(혼입 가능)
+
+-- 알레르기 정보의 신뢰 단계
+--   verified          공식 페이지 본문을 직접 확인
+--   official_extract  공식 도메인 검색 결과 발췌에서 읽음 (본문 재확인 못 함)
+--   estimated         일반 조리법 기준 추정
+--   unknown           정보 없음
+create type allergen_status as enum ('verified', 'official_extract', 'estimated', 'unknown');
 
 -- ---------------------------------------------------------------------
--- 2. 기준 데이터 (seed.sql 에서 채운다)
+-- 2. 기준 데이터 (seed_reference.sql 에서 채운다)
 -- ---------------------------------------------------------------------
 create table food_categories (
   id    smallint generated always as identity primary key,
@@ -30,9 +43,12 @@ create table taste_tags (
   name  text not null unique                -- 매콤함, 달콤함, 짭조름함 ... (화면 표시용)
 );
 
+-- 식약처 알레르기 표시 대상 19종 표준. name 은 표준 이름, display_name 은 화면 표기, aliases 는 조사 결과 매핑용 별칭
 create table allergens (
-  id    smallint generated always as identity primary key,
-  name  text not null unique                -- 계란, 우유, 콩 ...
+  id            smallint generated always as identity primary key,
+  name          text not null unique,       -- 알류, 우유, 메밀, ... (표준 이름)
+  display_name  text not null,              -- 화면 표기 (알류 → '계란', 대두 → '콩', 나머지는 name 과 같음)
+  aliases       text[] not null default '{}'  -- 난류, 달걀, 계란 ...
 );
 
 -- ---------------------------------------------------------------------
@@ -64,27 +80,59 @@ create table user_allergens (
 );
 
 -- ---------------------------------------------------------------------
--- 4. 가게 / 메뉴
+-- 4. 브랜드 / 가게(지점) / 메뉴
 -- ---------------------------------------------------------------------
+-- 브랜드: 메뉴·알레르기를 한 번만 조사해 모든 지점이 공유한다. 개인 식당은 가게 1개 = 브랜드 1개(is_franchise = false)
+create table brands (
+  id                   bigint generated always as identity primary key,
+  name                 text not null,
+  is_franchise         boolean not null default false,
+  category_id          smallint references food_categories (id),
+  image_url            text,
+  official_domains     text[] not null default '{}',   -- 공식 사이트 도메인 (http 접두사 없이)
+  allergen_source_url  text,                           -- 공식 알레르기 페이지
+  allergen_data_date   date,                           -- 공식 표 기준일
+  shared_notice        text,                           -- 조리기구 공유 등 브랜드 공지
+  research_status      text not null default 'pending'
+                       check (research_status in ('pending', 'running', 'done', 'failed')),
+  researched_at        timestamptz,
+  research_error       text,
+  created_at           timestamptz not null default now()
+);
+-- 프랜차이즈 이름은 중복 불가 (개인 식당은 같은 이름이 여러 곳일 수 있다)
+create unique index brands_franchise_name_uidx on brands (name) where is_franchise;
+
+-- 지점. 공공데이터(소상공인 상가정보)에서 전국 지점을 가져온다.
 create table restaurants (
   id           bigint generated always as identity primary key,
+  brand_id     bigint not null references brands (id),
+  external_id  text unique,                        -- 공공데이터 상가업소번호 등 외부 고유번호
   name         text not null,
   address      text not null,
+  sido         text,
+  sigungu      text,
   region       text not null,                      -- 구 단위 필터용. 예: '서울시 구로구'
   phone        text,
   image_url    text,
-  category_id  smallint references food_categories (id),
   created_at   timestamptz not null default now()
 );
-create index restaurants_region_category_idx on restaurants (region, category_id);
+create index restaurants_region_idx on restaurants (region);
+create index restaurants_brand_idx on restaurants (brand_id);
 
+-- 메뉴는 브랜드 소속이다 (같은 브랜드의 모든 지점이 공유)
 create table menus (
-  id             bigint generated always as identity primary key,
-  restaurant_id  bigint not null references restaurants (id) on delete cascade,
-  name           text not null,
-  description    text,
-  image_url      text,
-  unique (restaurant_id, name)
+  id                   bigint generated always as identity primary key,
+  brand_id             bigint not null references brands (id) on delete cascade,
+  name                 text not null,
+  description          text,
+  image_url            text,
+  allergen_status      allergen_status not null default 'unknown',
+  allergen_source_url  text,                           -- 이 메뉴의 알레르기 정보 출처
+  allergen_checked_at  timestamptz,
+  allergen_note        text,                           -- 예: '세트 기준 표기'
+  menu_source_url      text,                           -- 메뉴 자체의 출처 (비공식일 수 있음)
+  menu_source_name     text,                           -- 비공식 출처 표시용 이름
+  constraint menus_brand_name_key unique (brand_id, name)
 );
 create index menus_name_idx on menus (name);
 
@@ -95,16 +143,18 @@ create table menu_taste_tags (
   primary key (menu_id, taste_tag_id)
 );
 
--- danger = 알레르기 재료 포함(위험), caution = 혼입 가능성(주의)
+-- danger = 알레르기 재료 포함(위험, 조사의 contains), caution = 혼입 가능성(주의, 조사의 may_contain)
+-- 알레르기 정보가 없는 메뉴는 행을 만들지 않고 menus.allergen_status = 'unknown' 으로 표시한다.
 create table menu_allergens (
-  menu_id      bigint   not null references menus (id) on delete cascade,
-  allergen_id  smallint not null references allergens (id),
-  level        allergen_level not null default 'danger',
+  menu_id        bigint   not null references menus (id) on delete cascade,
+  allergen_id    smallint not null references allergens (id),
+  level          allergen_level not null default 'danger',
+  original_text  text,                             -- 공식 원문 표기 보존 (예: '난류 / 달걀')
   primary key (menu_id, allergen_id)
 );
 
 -- ---------------------------------------------------------------------
--- 5. 평가 (유사도 계산의 원천 데이터)
+-- 5. 평가 (유사도 계산의 원천 데이터). 평가 단위는 브랜드 메뉴다.
 -- ---------------------------------------------------------------------
 create table reviews (
   id          bigint generated always as identity primary key,
@@ -141,8 +191,9 @@ create table saved_menus (
 );
 
 -- ---------------------------------------------------------------------
--- 7. 집계 뷰 (가게·메뉴 평점, 가게 입맛 태그)
+-- 7. 집계 뷰 (메뉴·브랜드·지점 평점, 지점 입맛 태그)
 --    security_invoker: 조회하는 사용자의 RLS 를 그대로 적용한다.
+--    지점이 많으므로 목록 RPC 는 지점 뷰 대신 brand_stats 를 브랜드 단위로 조회한다.
 -- ---------------------------------------------------------------------
 create view menu_stats with (security_invoker = true) as
 select menu_id,
@@ -151,17 +202,29 @@ select menu_id,
 from reviews
 group by menu_id;
 
-create view restaurant_stats with (security_invoker = true) as
-select m.restaurant_id,
-       round(avg(r.rating)::numeric, 1) as avg_rating,
-       count(r.id)                      as review_count
+create view brand_stats with (security_invoker = true) as
+select m.brand_id,
+       round(avg(rv.rating)::numeric, 1) as avg_rating,
+       count(rv.id)                      as review_count
 from menus m
-join reviews r on r.menu_id = m.id
-group by m.restaurant_id;
+join reviews rv on rv.menu_id = m.id
+group by m.brand_id;
 
+-- 지점별 집계: 소속 브랜드 메뉴의 평가
+create view restaurant_stats with (security_invoker = true) as
+select r.id                              as restaurant_id,
+       round(avg(rv.rating)::numeric, 1) as avg_rating,
+       count(rv.id)                      as review_count
+from restaurants r
+join menus m on m.brand_id = r.brand_id
+join reviews rv on rv.menu_id = m.id
+group by r.id;
+
+-- 지점별 입맛 태그: 소속 브랜드 메뉴 태그의 합집합
 create view restaurant_taste_tags with (security_invoker = true) as
-select distinct m.restaurant_id, mt.taste_tag_id
-from menus m
+select distinct r.id as restaurant_id, mt.taste_tag_id
+from restaurants r
+join menus m on m.brand_id = r.brand_id
 join menu_taste_tags mt on mt.menu_id = m.id;
 
 -- ---------------------------------------------------------------------
@@ -200,6 +263,7 @@ alter table allergens               enable row level security;
 alter table profiles                enable row level security;
 alter table user_taste_preferences  enable row level security;
 alter table user_allergens          enable row level security;
+alter table brands                  enable row level security;
 alter table restaurants             enable row level security;
 alter table menus                   enable row level security;
 alter table menu_taste_tags         enable row level security;

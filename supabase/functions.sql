@@ -1,9 +1,10 @@
 -- 용도: Postgres 함수(RPC). 입맛 유사도 계산 등. 프론트에서 supabase.rpc() 로 호출한다.
 -- 규칙: 이 파일을 바꾸면 docs/erd.md 와 src/types/database.types.ts(npm run gen:types)도 같은 PR 에서 갱신한다.
 --
--- 실행: schema.sql → policies.sql → (seed.sql) 적용 후, 이 파일을 SQL Editor 에서 통째로 실행한다. 재실행 가능(create or replace).
+-- 실행: schema.sql(또는 migrations/001_brand_structure.sql) → policies.sql 적용 후, 이 파일을 SQL Editor 에서 통째로 실행한다. 재실행 가능.
+--       그 다음 seed_reference.sql(기준 데이터)을 실행한다.
 --       실행 후 `npm run gen:types` 로 타입을 갱신한다.
---       반환 컬럼(returns table)을 바꾼 함수는 create or replace 로 덮어쓸 수 없으므로 먼저 drop function 한 뒤 다시 실행한다.
+--       반환 컬럼(returns table)을 바꾼 함수는 create or replace 로 덮어쓸 수 없으므로, 아래 "반환 컬럼이 바뀐 함수 정리" 블록이 먼저 drop 한다.
 --
 -- ---------------------------------------------------------------------
 -- 조정 가능한 상수 (모두 calc_setting() 한 곳에서 바꾼다)
@@ -372,6 +373,16 @@ revoke all on function public.calc_menu_reason(uuid, bigint)        from public,
 revoke all on function public.calc_taste_type(uuid)                 from public, anon, authenticated;
 
 -- =====================================================================
+-- 반환 컬럼이 바뀐 함수 정리 (브랜드 구조 전환). 재실행해도 안전하다 — 아래에서 모두 다시 만들고 권한도 다시 준다.
+-- =====================================================================
+drop function if exists public.get_restaurants(text, int, text, int);
+drop function if exists public.get_recommended_menus(text, int);
+drop function if exists public.get_restaurant_detail(bigint);
+drop function if exists public.get_restaurant_menus(bigint);
+drop function if exists public.get_allergy_menus(bigint);
+drop function if exists public.get_my_reviews();
+
+-- =====================================================================
 -- 2. 화면용 RPC
 -- =====================================================================
 
@@ -458,7 +469,9 @@ begin
 end;
 $$;
 
--- 가게 목록: 지역(필수)·카테고리·검색어(가게 이름 또는 메뉴 이름) 필터, 취향 일치도 내림차순
+-- 가게 목록: 지역(필수)·카테고리·검색어(지점명·브랜드명·메뉴명) 필터, 취향 일치도 내림차순
+--   평점·일치도·맛 태그는 소속 브랜드 기준이다 (같은 브랜드의 지점은 같은 값). 계산은 지점이 아니라 브랜드 단위로 한 번만 한다.
+--   카테고리 필터는 brands.category_id. has_official_allergen: 브랜드에 verified/official_extract 메뉴가 있는지
 create or replace function public.get_restaurants(
   p_region text,
   p_category_id int default null,
@@ -474,7 +487,11 @@ returns table (
   review_count bigint,
   taste_tags text[],
   is_saved boolean,
-  match_percent int
+  match_percent int,
+  brand_id bigint,
+  brand_name text,
+  is_franchise boolean,
+  has_official_allergen boolean
 )
 language plpgsql
 stable
@@ -500,60 +517,96 @@ begin
 
   return query
   with base as (
-    select r.*
+    select r.id as restaurant_id,
+           r.name as name,
+           r.region as region,
+           r.image_url as image_url,
+           b.id as brand_id,
+           b.name as brand_name,
+           b.is_franchise as is_franchise,
+           b.image_url as brand_image_url
     from public.restaurants r
+    join public.brands b on b.id = r.brand_id
     where (p_region is null or r.region = p_region)
-      and (p_category_id is null or r.category_id = p_category_id)
+      and (p_category_id is null or b.category_id = p_category_id)
       and (
         v_pattern is null
         or r.name ilike v_pattern escape '\'
+        or b.name ilike v_pattern escape '\'
         or exists (
           select 1 from public.menus m
-          where m.restaurant_id = r.id and m.name ilike v_pattern escape '\'
+          where m.brand_id = b.id and m.name ilike v_pattern escape '\'
         )
       )
   ),
-  menu_match as (
-    select m.restaurant_id, d.match as menu_match
-    from public.menus m
-    join base b on b.id = m.restaurant_id
-    cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
+  brand_ids as (
+    select distinct bb.brand_id from base bb
   ),
-  rest_match as (
-    select mm.restaurant_id, round(avg(mm.menu_match))::int as match_percent
-    from menu_match mm
-    group by mm.restaurant_id
-  )
-  select x.restaurant_id, x.name, x.region, x.image_url, x.avg_rating, x.review_count,
-         x.taste_tags, x.is_saved, x.match_percent
-  from (
-    select b.id as restaurant_id,
-           b.name as name,
-           b.region as region,
-           b.image_url as image_url,
-           rs.avg_rating as avg_rating,
-           coalesce(rs.review_count, 0) as review_count,
+  brand_match as (
+    select m.brand_id as brand_id, round(avg(d.match))::int as match_percent
+    from public.menus m
+    join brand_ids bi on bi.brand_id = m.brand_id
+    cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
+    group by m.brand_id
+  ),
+  brand_info as (
+    select bi.brand_id as brand_id,
+           bs.avg_rating as avg_rating,
+           coalesce(bs.review_count, 0) as review_count,
            coalesce((
              select array_agg(tt.name order by tt.id)
-             from public.restaurant_taste_tags rtt
-             join public.taste_tags tt on tt.id = rtt.taste_tag_id
-             where rtt.restaurant_id = b.id
+             from public.taste_tags tt
+             where tt.id in (
+               select mtt.taste_tag_id
+               from public.menus m
+               join public.menu_taste_tags mtt on mtt.menu_id = m.id
+               where m.brand_id = bi.brand_id
+             )
            ), '{}'::text[]) as taste_tags,
            exists (
+             select 1 from public.menus m
+             where m.brand_id = bi.brand_id and m.allergen_status in ('verified', 'official_extract')
+           ) as has_official_allergen
+    from brand_ids bi
+    left join public.brand_stats bs on bs.brand_id = bi.brand_id
+  )
+  select x.restaurant_id, x.name, x.region, x.image_url, x.avg_rating, x.review_count,
+         x.taste_tags, x.is_saved, x.match_percent,
+         x.brand_id, x.brand_name, x.is_franchise, x.has_official_allergen
+  from (
+    select bb.restaurant_id as restaurant_id,
+           bb.name as name,
+           bb.region as region,
+           coalesce(bb.image_url, bb.brand_image_url) as image_url,
+           bi.avg_rating as avg_rating,
+           bi.review_count as review_count,
+           bi.taste_tags as taste_tags,
+           exists (
              select 1 from public.saved_restaurants sr
-             where sr.user_id = v_uid and sr.restaurant_id = b.id
+             where sr.user_id = v_uid and sr.restaurant_id = bb.restaurant_id
            ) as is_saved,
-           coalesce(rm.match_percent, 0) as match_percent
-    from base b
-    left join public.restaurant_stats rs on rs.restaurant_id = b.id
-    left join rest_match rm on rm.restaurant_id = b.id
+           coalesce(bm.match_percent, 0) as match_percent,
+           bb.brand_id as brand_id,
+           bb.brand_name as brand_name,
+           bb.is_franchise as is_franchise,
+           bi.has_official_allergen as has_official_allergen
+    from base bb
+    join brand_info bi on bi.brand_id = bb.brand_id
+    left join brand_match bm on bm.brand_id = bb.brand_id
   ) x
   order by x.match_percent desc, x.avg_rating desc nulls last, x.restaurant_id
   limit v_limit;
 end;
 $$;
 
--- 오늘의 추천 메뉴: 지역 내 메뉴 중 이미 평가했거나 내 알레르기 재료가 들어간 메뉴는 제외
+-- 오늘의 추천 메뉴
+--   * 메뉴는 브랜드 소속이라 브랜드당 한 번만 나온다. restaurant_id 는 링크용으로, 해당 지역의 대표 지점(최소 id)을 돌려준다.
+--   * 이미 평가한 메뉴는 제외한다.
+--   * 알레르기 안전 정책 (이 함수의 상수 같은 규칙):
+--       - 사용자가 알레르기를 1개 이상 등록했으면: 내 알레르기가 겹치는 메뉴(level 무관)를 제외하고,
+--         allergen_status 가 unknown/estimated(= 공식 확인이 안 된 메뉴)인 메뉴도 제외한다. (안전 우선)
+--         → 남는 것은 verified/official_extract 이면서 겹치지 않는 메뉴뿐이다.
+--       - 등록한 알레르기가 없으면: allergen_status 와 무관하게 포함한다.
 create or replace function public.get_recommended_menus(p_region text, p_limit int default 6)
 returns table (
   menu_id bigint,
@@ -564,7 +617,9 @@ returns table (
   image_url text,
   avg_rating numeric,
   match_percent int,
-  reason text
+  reason text,
+  brand_name text,
+  allergen_status public.allergen_status
 )
 language plpgsql
 stable
@@ -575,32 +630,43 @@ as $$
 declare
   v_uid uuid := auth.uid();
   v_limit int;
+  v_has_allergy boolean;
 begin
   if v_uid is null then
     raise exception '로그인이 필요합니다.';
   end if;
 
   v_limit := least(greatest(coalesce(p_limit, 6), 1), 100);
+  v_has_allergy := exists (select 1 from public.user_allergens ua where ua.user_id = v_uid);
 
   return query
   select x.menu_id, x.menu_name, x.restaurant_id, x.restaurant_name, x.region, x.image_url,
          x.avg_rating, x.match_percent,
-         public.calc_menu_reason(v_uid, x.menu_id) as reason
+         public.calc_menu_reason(v_uid, x.menu_id) as reason,
+         x.brand_name, x.allergen_status
   from (
     select m.id as menu_id,
            m.name as menu_name,
            r.id as restaurant_id,
            r.name as restaurant_name,
            r.region as region,
-           coalesce(m.image_url, r.image_url) as image_url,
+           coalesce(m.image_url, b.image_url, r.image_url) as image_url,
            ms.avg_rating as avg_rating,
-           d.match as match_percent
-    from public.menus m
-    join public.restaurants r on r.id = m.restaurant_id
+           d.match as match_percent,
+           b.name as brand_name,
+           m.allergen_status as allergen_status
+    from (
+      select rr.brand_id as brand_id, min(rr.id) as restaurant_id
+      from public.restaurants rr
+      where p_region is null or rr.region = p_region
+      group by rr.brand_id
+    ) rep
+    join public.restaurants r on r.id = rep.restaurant_id
+    join public.brands b on b.id = rep.brand_id
+    join public.menus m on m.brand_id = b.id
     left join public.menu_stats ms on ms.menu_id = m.id
     cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
-    where (p_region is null or r.region = p_region)
-      and not exists (
+    where not exists (
         select 1 from public.reviews rv
         where rv.user_id = v_uid and rv.menu_id = m.id
       )
@@ -610,13 +676,14 @@ begin
         join public.user_allergens ua on ua.allergen_id = ma.allergen_id
         where ma.menu_id = m.id and ua.user_id = v_uid
       )
+      and (not v_has_allergy or m.allergen_status in ('verified', 'official_extract'))
   ) x
   order by x.match_percent desc, x.avg_rating desc nulls last, x.menu_id
   limit v_limit;
 end;
 $$;
 
--- 가게 상세: 일치도는 소속 메뉴 일치도 평균, 추천 이유는 일치도가 가장 높은 메뉴의 이유. 없는 id 면 0행
+-- 가게(지점) 상세: 평점·일치도는 소속 브랜드 메뉴 기준(일치도는 메뉴 일치도 평균), 추천 이유는 일치도가 가장 높은 메뉴의 이유. 없는 id 면 0행
 create or replace function public.get_restaurant_detail(p_restaurant_id bigint)
 returns table (
   restaurant_id bigint,
@@ -629,7 +696,13 @@ returns table (
   review_count bigint,
   match_percent int,
   reason text,
-  is_saved boolean
+  is_saved boolean,
+  brand_id bigint,
+  brand_name text,
+  is_franchise boolean,
+  shared_notice text,
+  allergen_source_url text,
+  allergen_data_date date
 )
 language plpgsql
 stable
@@ -647,18 +720,19 @@ begin
   return query
   with menu_match as (
     select m.id as menu_id, d.match as menu_match
-    from public.menus m
+    from public.restaurants rr
+    join public.menus m on m.brand_id = rr.brand_id
     cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
-    where m.restaurant_id = p_restaurant_id
+    where rr.id = p_restaurant_id
   )
   select r.id,
          r.name,
          r.address,
          r.region,
          r.phone,
-         r.image_url,
-         rs.avg_rating,
-         coalesce(rs.review_count, 0),
+         coalesce(r.image_url, b.image_url),
+         bs.avg_rating,
+         coalesce(bs.review_count, 0),
          coalesce((select round(avg(mm.menu_match))::int from menu_match mm), 0),
          (
            select public.calc_menu_reason(v_uid, t.menu_id)
@@ -667,14 +741,21 @@ begin
          exists (
            select 1 from public.saved_restaurants sr
            where sr.user_id = v_uid and sr.restaurant_id = r.id
-         )
+         ),
+         b.id,
+         b.name,
+         b.is_franchise,
+         b.shared_notice,
+         b.allergen_source_url,
+         b.allergen_data_date
   from public.restaurants r
-  left join public.restaurant_stats rs on rs.restaurant_id = r.id
+  join public.brands b on b.id = r.brand_id
+  left join public.brand_stats bs on bs.brand_id = b.id
   where r.id = p_restaurant_id;
 end;
 $$;
 
--- 가게의 메뉴 목록 (메뉴별 평가 탭): 일치도 내림차순
+-- 지점의 메뉴 목록 (메뉴별 평가 탭): 지점이 속한 브랜드의 메뉴, 일치도 내림차순
 create or replace function public.get_restaurant_menus(p_restaurant_id bigint)
 returns table (
   menu_id bigint,
@@ -685,7 +766,12 @@ returns table (
   avg_rating numeric,
   match_percent int,
   is_saved boolean,
-  my_rating int
+  my_rating int,
+  allergen_status public.allergen_status,
+  allergen_source_url text,
+  allergen_checked_at timestamptz,
+  menu_source_name text,
+  menu_source_url text
 )
 language plpgsql
 stable
@@ -702,12 +788,13 @@ begin
 
   return query
   select x.menu_id, x.name, x.description, x.image_url, x.taste_tags,
-         x.avg_rating, x.match_percent, x.is_saved, x.my_rating
+         x.avg_rating, x.match_percent, x.is_saved, x.my_rating,
+         x.allergen_status, x.allergen_source_url, x.allergen_checked_at, x.menu_source_name, x.menu_source_url
   from (
     select m.id as menu_id,
            m.name as name,
            m.description as description,
-           m.image_url as image_url,
+           coalesce(m.image_url, b.image_url) as image_url,
            coalesce((
              select array_agg(tt.name order by tt.id)
              from public.menu_taste_tags mtt
@@ -723,24 +810,36 @@ begin
            (
              select rv.rating::int from public.reviews rv
              where rv.user_id = v_uid and rv.menu_id = m.id
-           ) as my_rating
-    from public.menus m
+           ) as my_rating,
+           m.allergen_status as allergen_status,
+           m.allergen_source_url as allergen_source_url,
+           m.allergen_checked_at as allergen_checked_at,
+           m.menu_source_name as menu_source_name,
+           m.menu_source_url as menu_source_url
+    from public.restaurants rr
+    join public.brands b on b.id = rr.brand_id
+    join public.menus m on m.brand_id = rr.brand_id
     left join public.menu_stats ms on ms.menu_id = m.id
     cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
-    where m.restaurant_id = p_restaurant_id
+    where rr.id = p_restaurant_id
   ) x
   order by x.match_percent desc, x.menu_id;
 end;
 $$;
 
--- 알레르기 정보 탭: 내 알레르기 재료가 들어간 메뉴만. danger 가 있는 메뉴를 먼저
---   allergens 예: [{"name": "계란", "level": "danger"}, {"name": "우유", "level": "caution"}]
+-- 알레르기 정보 탭 (지점이 속한 브랜드의 메뉴 기준)
+--   kind = 'conflict': 내 알레르기 재료가 들어간 메뉴. allergens 예: [{"name": "계란", "level": "danger", "original_text": "난류"}]
+--   kind = 'unknown' : 알레르기를 1개 이상 등록한 경우에 한해, 공식 확인이 안 된 메뉴(allergen_status 가 unknown/estimated)
+--                      (겹치는 알레르기가 확인된 메뉴는 conflict 로만 나온다). allergens 는 빈 배열
+--   정렬: danger 충돌 → caution 충돌 → unknown
 create or replace function public.get_allergy_menus(p_restaurant_id bigint)
 returns table (
   menu_id bigint,
   name text,
   image_url text,
-  allergens jsonb
+  allergens jsonb,
+  allergen_status public.allergen_status,
+  kind text
 )
 language plpgsql
 stable
@@ -750,30 +849,60 @@ as $$
 #variable_conflict use_column
 declare
   v_uid uuid := auth.uid();
+  v_has_allergy boolean;
 begin
   if v_uid is null then
     raise exception '로그인이 필요합니다.';
   end if;
 
+  v_has_allergy := exists (select 1 from public.user_allergens ua where ua.user_id = v_uid);
+
   return query
-  select x.menu_id, x.name, x.image_url, x.allergens
-  from (
+  with conflicts as (
     select m.id as menu_id,
            m.name as name,
-           m.image_url as image_url,
+           coalesce(m.image_url, b.image_url) as image_url,
            jsonb_agg(
-             jsonb_build_object('name', a.name, 'level', ma.level)
+             jsonb_build_object('name', a.display_name, 'level', ma.level, 'original_text', ma.original_text)
              order by (ma.level = 'danger') desc, a.id
            ) as allergens,
-           bool_or(ma.level = 'danger') as has_danger
-    from public.menus m
+           bool_or(ma.level = 'danger') as has_danger,
+           m.allergen_status as allergen_status
+    from public.restaurants rr
+    join public.brands b on b.id = rr.brand_id
+    join public.menus m on m.brand_id = rr.brand_id
     join public.menu_allergens ma on ma.menu_id = m.id
     join public.user_allergens ua on ua.allergen_id = ma.allergen_id and ua.user_id = v_uid
     join public.allergens a on a.id = ma.allergen_id
-    where m.restaurant_id = p_restaurant_id
-    group by m.id, m.name, m.image_url
-  ) x
-  order by x.has_danger desc, x.menu_id;
+    where rr.id = p_restaurant_id
+    group by m.id, m.name, b.image_url, m.image_url, m.allergen_status
+  ),
+  unknowns as (
+    select m.id as menu_id,
+           m.name as name,
+           coalesce(m.image_url, b.image_url) as image_url,
+           m.allergen_status as allergen_status
+    from public.restaurants rr
+    join public.brands b on b.id = rr.brand_id
+    join public.menus m on m.brand_id = rr.brand_id
+    where rr.id = p_restaurant_id
+      and v_has_allergy
+      and m.allergen_status in ('unknown', 'estimated')
+      and not exists (select 1 from conflicts c where c.menu_id = m.id)
+  )
+  select u.menu_id, u.name, u.image_url, u.allergens, u.allergen_status, u.kind
+  from (
+    select c.menu_id, c.name, c.image_url, c.allergens, c.allergen_status,
+           'conflict'::text as kind,
+           case when c.has_danger then 0 else 1 end as sort_key
+    from conflicts c
+    union all
+    select k.menu_id, k.name, k.image_url, '[]'::jsonb, k.allergen_status,
+           'unknown'::text,
+           2
+    from unknowns k
+  ) u
+  order by u.sort_key, u.menu_id;
 end;
 $$;
 
@@ -877,6 +1006,9 @@ end;
 $$;
 
 -- 내가 평가한 메뉴 목록 (최신순). taste_tags 는 내가 평가에 붙인 맛 태그
+--   메뉴는 브랜드 소속이므로 brand_id, brand_name 을 함께 돌려준다.
+--   restaurant_id/restaurant_name 은 링크용: 내 지역의 대표 지점(최소 id), 내 지역에 지점이 없으면 브랜드의 최소 id 지점.
+--   브랜드에 지점이 하나도 없으면 restaurant_id 는 null, restaurant_name 은 브랜드 이름.
 create or replace function public.get_my_reviews()
 returns table (
   menu_id bigint,
@@ -886,7 +1018,9 @@ returns table (
   image_url text,
   rating int,
   taste_tags text[],
-  created_at timestamptz
+  created_at timestamptz,
+  brand_id bigint,
+  brand_name text
 )
 language plpgsql
 stable
@@ -896,17 +1030,20 @@ as $$
 #variable_conflict use_column
 declare
   v_uid uuid := auth.uid();
+  v_region text;
 begin
   if v_uid is null then
     raise exception '로그인이 필요합니다.';
   end if;
 
+  select p.region into v_region from public.profiles p where p.id = v_uid;
+
   return query
   select m.id,
          m.name,
-         r.id,
-         r.name,
-         coalesce(m.image_url, r.image_url),
+         rep.restaurant_id,
+         coalesce(rep.restaurant_name, b.name),
+         coalesce(m.image_url, b.image_url, rep.image_url),
          rv.rating::int,
          coalesce((
            select array_agg(tt.name order by tt.id)
@@ -914,12 +1051,51 @@ begin
            join public.taste_tags tt on tt.id = rtt.taste_tag_id
            where rtt.review_id = rv.id
          ), '{}'::text[]),
-         rv.created_at
+         rv.created_at,
+         b.id,
+         b.name
   from public.reviews rv
   join public.menus m on m.id = rv.menu_id
-  join public.restaurants r on r.id = m.restaurant_id
+  join public.brands b on b.id = m.brand_id
+  left join lateral (
+    select r.id as restaurant_id, r.name as restaurant_name, r.image_url as image_url
+    from public.restaurants r
+    where r.brand_id = b.id
+    order by (r.region is not distinct from v_region) desc, r.id
+    limit 1
+  ) rep on true
   where rv.user_id = v_uid
   order by rv.created_at desc, rv.id desc;
+end;
+$$;
+
+-- 지점이 있는 지역 목록 (지역 선택 시트용). 프론트가 restaurants 를 직접 읽어 중복 제거하던 방식(1000행 제한)을 대체한다.
+create or replace function public.get_regions()
+returns table (
+  region text,
+  sido text,
+  sigungu text,
+  restaurant_count bigint
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  return query
+  select r.region as region,
+         min(r.sido) as sido,
+         min(r.sigungu) as sigungu,
+         count(*) as restaurant_count
+  from public.restaurants r
+  group by r.region
+  order by r.region;
 end;
 $$;
 
@@ -996,6 +1172,7 @@ revoke all on function public.get_allergy_menus(bigint)                        f
 revoke all on function public.get_my_summary()                                 from public, anon;
 revoke all on function public.get_taste_mates(int)                             from public, anon;
 revoke all on function public.get_my_reviews()                                 from public, anon;
+revoke all on function public.get_regions()                                    from public, anon;
 revoke all on function public.upsert_review(bigint, int, int[])                from public, anon;
 revoke all on function public.delete_review(bigint)                            from public, anon;
 
@@ -1008,81 +1185,43 @@ grant execute on function public.get_allergy_menus(bigint)                     t
 grant execute on function public.get_my_summary()                              to authenticated;
 grant execute on function public.get_taste_mates(int)                          to authenticated;
 grant execute on function public.get_my_reviews()                              to authenticated;
+grant execute on function public.get_regions()                                 to authenticated;
 grant execute on function public.upsert_review(bigint, int, int[])             to authenticated;
 grant execute on function public.delete_review(bigint)                         to authenticated;
 
 -- =====================================================================
--- 검증용 SQL (seed.sql 적용 후). 각 블록은 /* 와 */ 두 줄만 지우면 begin ~ rollback 을 한 번에 실행할 수 있다.
--- SQL Editor 는 postgres 권한이라 auth.uid() 가 null 이므로, 시드 사용자를 흉내 낸다.
---   seed01 = 5eed0000-0000-4000-8000-000000000001 … seed12 = 5eed0000-0000-4000-8000-000000000012
--- 시드 닉네임: seed01 매운고수 / seed02 불꽃혀 / seed03 칼칼러버 / seed04 마라토너 / seed05 단짠단짠 / seed10 순한맛러버
+-- 검증용 SQL. 각 블록은 /* 와 */ 두 줄만 지우면 begin ~ rollback 을 한 번에 실행할 수 있다.
+-- SQL Editor 는 postgres 권한이라 auth.uid() 가 null 이므로, 사용자를 흉내 낸다.
+-- 시드 사용자(seed_demo_users.sql): seed01 = 5eed0000-0000-4000-8000-000000000001 … seed12 = …0012
+-- 브랜드·가게·메뉴·평가 데이터는 실제 데이터가 들어온 뒤 확인한다.
 -- =====================================================================
 
--- [검증 1] seed01(매운맛파) 추천 상위에 매운 메뉴(떡볶이·제육볶음·닭갈비 등, 맛 태그에 매콤함)가 오는지
-/*
-begin;
-  set local role authenticated;
-  select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000001","role":"authenticated"}', true);
-
-  select g.menu_name, g.restaurant_name, g.match_percent, g.avg_rating, g.reason,
-         (select string_agg(tt.name, ', ') from public.menu_taste_tags mtt
-            join public.taste_tags tt on tt.id = mtt.taste_tag_id
-           where mtt.menu_id = g.menu_id) as menu_tags
-  from public.get_recommended_menus('서울시 구로구') g;
-rollback;
-*/
-
--- [검증 2] seed05(단짠파, 우유·땅콩 알레르기)의 추천에 우유·땅콩 재료 메뉴가 없는지 (두 쿼리 모두 0행이어야 한다)
-/*
-begin;
-  set local role authenticated;
-  select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000005","role":"authenticated"}', true);
-
-  -- 전체 추천 중 우유·땅콩이 들어간 메뉴: 0행이어야 한다
-  select g.menu_name, a.name as allergen
-  from (
-    select * from public.get_recommended_menus('서울시 구로구', 100)
-    union all
-    select * from public.get_recommended_menus('서울시 관악구', 100)
-  ) g
-  join public.menu_allergens ma on ma.menu_id = g.menu_id
-  join public.allergens a on a.id = ma.allergen_id
-  where a.name in ('우유', '땅콩');
-
-  -- 참고: 추천 목록 자체는 비어 있지 않아야 한다
-  select count(*) as recommended_count from public.get_recommended_menus('서울시 구로구', 100);
-rollback;
-*/
-
--- [검증 3] seed01 의 취향 메이트 상위에 seed02~04(불꽃혀·칼칼러버·마라토너)가 오는지
-/*
-begin;
-  set local role authenticated;
-  select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000001","role":"authenticated"}', true);
-
-  select * from public.get_taste_mates();
-rollback;
-*/
-
--- [검증 4] 마이페이지 요약: seed01 은 매콤 60·달콤 25·감칠맛 15 → 유형 "매콤달콤", 설명 "매콤함 속 달콤한 반전을 좋아해요"
---          seed10 은 담백함 60·새콤함 40 → "담백새콤", "담백함 속 새콤한 반전을 좋아해요"
-/*
-begin;
-  set local role authenticated;
-  select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000001","role":"authenticated"}', true);
-  select * from public.get_my_summary();
-
-  select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000010","role":"authenticated"}', true);
-  select * from public.get_my_summary();
-rollback;
-*/
-
--- [검증 5] 내부 함수를 직접 호출하면 권한 오류가 나야 한다: ERROR: permission denied for function calc_menu_match
+-- [검증 1] 내부 함수를 직접 호출하면 권한 오류가 나야 한다: ERROR: permission denied for function calc_menu_match
 /*
 begin;
   set local role authenticated;
   select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 
   select public.calc_menu_match('5eed0000-0000-4000-8000-000000000001', 1);
+rollback;
+*/
+
+-- [검증 2] 알레르기를 등록한 사용자(seed02: 알류)의 추천에는 공식 확인된(verified/official_extract) 메뉴만, 겹치는 알레르기 메뉴는 없어야 한다
+/*
+begin;
+  set local role authenticated;
+  select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+
+  select menu_name, brand_name, allergen_status, match_percent from public.get_recommended_menus('서울시 구로구', 100);
+rollback;
+*/
+
+-- [검증 3] 지역 목록과 지점 수
+/*
+begin;
+  set local role authenticated;
+  select set_config('request.jwt.claims', '{"sub":"5eed0000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+
+  select * from public.get_regions();
 rollback;
 */
