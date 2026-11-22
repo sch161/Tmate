@@ -15,3 +15,6 @@ src/assets/fonts-src/
 
 # Supabase CLI 캐시
 supabase/.temp/
+
+# AI 조사 PoC 결과물
+scripts/research/out/

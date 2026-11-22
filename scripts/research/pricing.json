@@ -1,0 +1,11 @@
+{
+  "_comment": "단가 값은 추측해서 채우지 않았다. 공식 가격표 developers.openai.com/api/docs/pricing 를 보고 직접 채울 것. null 이면 보고서에 '단가 미설정'으로 표시된다. 단가 단위: USD.",
+  "models": {
+    "gpt-6.1-sol": {
+      "input_per_1m_tokens": null,
+      "cached_input_per_1m_tokens": null,
+      "output_per_1m_tokens": null
+    }
+  },
+  "web_search_per_1k_calls": null
+}
