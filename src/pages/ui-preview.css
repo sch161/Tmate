@@ -1,0 +1,28 @@
+/* ui-preview 전용 레이아웃 (임시, 페이지와 함께 삭제) */
+.preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-block: var(--space-5);
+}
+
+.preview__title {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-semibold);
+}
+
+.preview__heading {
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+}
+
+.preview__gap {
+  margin-top: var(--space-3);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}

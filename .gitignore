@@ -9,3 +9,6 @@ dist
 !.vscode/extensions.json
 .idea
 npm-debug.log*
+
+# 폰트 원본(변환 전 TTF)
+src/assets/fonts-src/
