@@ -1,4 +1,4 @@
-import { getAllergens } from '../api/lookups';
+import { getAllergens, type Allergen } from '../api/lookups';
 import { saveOnboarding } from '../api/onboarding';
 import { PATHS } from '../lib/constants';
 import { getAllergenIcon } from '../utils/allergen-icons';
@@ -31,14 +31,15 @@ async function start(): Promise<void> {
   }
 }
 
-function render(state: OnboardingState, allergens: { id: number; name: string }[]): void {
+function render(state: OnboardingState, allergens: Allergen[]): void {
   if (!body) return;
   // 뒤로가기로 돌아왔을 때 이전 선택을 채운다
   const selected = new Set(state.allergenIds.filter((id) => allergens.some((a) => a.id === id)));
 
   const grid = el('div', { class: 'select-grid' });
   for (const allergen of allergens) {
-    const card = createSelectCard(allergen.name, getAllergenIcon(allergen.name), selected.has(allergen.id));
+    // 표시는 display_name, 아이콘은 표준 이름(name) 기준, 저장은 id 기준
+    const card = createSelectCard(allergen.display_name, getAllergenIcon(allergen.name), selected.has(allergen.id));
     card.addEventListener('click', () => {
       if (selected.has(allergen.id)) selected.delete(allergen.id);
       else selected.add(allergen.id);

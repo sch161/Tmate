@@ -3,6 +3,8 @@ import type { Database } from '../types/database.types';
 
 type RpcReturns<K extends 'get_restaurants' | 'get_recommended_menus'> = Database['public']['Functions'][K]['Returns'][number];
 
+export type AllergenStatus = Database['public']['Enums']['allergen_status'];
+
 type RestaurantRow = RpcReturns<'get_restaurants'>;
 type RecommendedMenuRow = RpcReturns<'get_recommended_menus'>;
 
@@ -17,6 +19,11 @@ export interface RestaurantSummary {
   reviewCount: number;
   isSaved: boolean;
   tasteTags: string[];
+  /** 브랜드 정보 (아직 화면에는 쓰지 않는다) */
+  brandId: number;
+  brandName: string;
+  isFranchise: boolean;
+  hasOfficialAllergen: boolean;
 }
 
 /** 오늘의 추천 메뉴 한 건. */
@@ -29,6 +36,9 @@ export interface RecommendedMenu {
   imageUrl: string | null;
   avgRating: number | null;
   matchPercent: number | null;
+  /** 브랜드·알레르기 상태 (아직 화면에는 쓰지 않는다) */
+  brandName: string;
+  allergenStatus: AllergenStatus;
 }
 
 export interface GetRestaurantsParams {
@@ -53,6 +63,10 @@ function toRestaurant(row: RestaurantRow): RestaurantSummary {
     reviewCount: numOrNull(row.review_count) ?? 0,
     isSaved: Boolean(row.is_saved),
     tasteTags: row.taste_tags ?? [],
+    brandId: row.brand_id,
+    brandName: row.brand_name,
+    isFranchise: Boolean(row.is_franchise),
+    hasOfficialAllergen: Boolean(row.has_official_allergen),
   };
 }
 
@@ -66,6 +80,8 @@ function toMenu(row: RecommendedMenuRow): RecommendedMenu {
     imageUrl: row.image_url || null,
     avgRating: numOrNull(row.avg_rating),
     matchPercent: numOrNull(row.match_percent),
+    brandName: row.brand_name,
+    allergenStatus: row.allergen_status,
   };
 }
 

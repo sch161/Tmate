@@ -60,6 +60,16 @@
   padding-bottom: 80px;
 }
 
+/* 디자인 대기: 알레르기 카드가 19개로 늘어 화면이 스크롤되므로 "선택완료" 버튼을 하단에 고정한다 (Figma 는 카드 9개 기준) */
+.onboarding__footer--sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-inline: calc(var(--space-4) * -1);
+  padding: var(--space-3) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
+  background: var(--color-background);
+}
+
 /* 선택 카드 안의 아이콘 (카드 기본 스타일은 common.css 의 .select-card) */
 .select-card__icon {
   height: 38px;
