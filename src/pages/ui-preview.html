@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>UI Preview (임시)</title>
+    <link rel="stylesheet" href="/src/css/reset.css" />
+    <link rel="stylesheet" href="/src/css/variables.css" />
+    <link rel="stylesheet" href="/src/css/common.css" />
+    <link rel="stylesheet" href="/src/pages/ui-preview.css" />
+  </head>
+  <body>
+    <main class="app app--with-nav">
+      <div class="progress" style="--value: 50"></div>
+
+      <div class="page preview">
+        <h1 class="preview__title">공통 UI 미리보기</h1>
+
+        <section>
+          <h2 class="preview__heading">버튼</h2>
+          <div class="stack">
+            <button class="btn-primary" type="button">다음으로</button>
+            <button class="btn-primary" type="button" disabled>다음으로</button>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="preview__heading">입력창</h2>
+          <div class="stack">
+            <input class="input" type="text" placeholder="아이디를 입력해주세요" />
+            <input class="input is-error" type="password" placeholder="비밀번호를 입력해주세요" />
+            <p class="error-message">비밀번호가 일치하지 않아요</p>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="preview__heading">칩</h2>
+          <div class="chip-group">
+            <span class="chip is-active">매콤함</span>
+            <span class="chip">짭조름함</span>
+            <span class="chip">달콤함</span>
+          </div>
+          <div class="chip-group preview__gap">
+            <button class="chip chip--filter is-active" type="button">전체</button>
+            <button class="chip chip--filter" type="button">한식</button>
+            <button class="chip chip--filter" type="button">중식</button>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="preview__heading">선택 카드</h2>
+          <div class="select-grid">
+            <button class="select-card is-selected" type="button">계란</button>
+            <button class="select-card is-selected" type="button">우유</button>
+            <button class="select-card" type="button">땅콩</button>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="preview__heading">진행률 / 평점 / 일치도 막대</h2>
+          <div class="stack">
+            <div class="progress" style="--value: 33"></div>
+            <div class="meter meter--rating">
+              <div class="meter__bar" style="--value: 94"></div>
+              <span>4.7 / 5</span>
+            </div>
+            <div class="meter">
+              <div class="meter__bar" style="--value: 70"></div>
+              <span>70 %</span>
+            </div>
+            <div class="meter meter--track">
+              <div class="meter__bar" style="--value: 70"></div>
+              <span>70 %</span>
+            </div>
+            <div class="meter meter--rating meter--lg">
+              <div class="meter__bar" style="--value: 94"></div>
+              <span>4.7 / 5</span>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="preview__heading">탭</h2>
+          <div class="tabs" role="tablist">
+            <button class="tab is-active" type="button" role="tab">메뉴별 평가</button>
+            <button class="tab" type="button" role="tab">알레르기 정보</button>
+          </div>
+        </section>
+
+        <section>
+          <h2 class="preview__heading">로딩 / 빈 상태 / 토스트</h2>
+          <div class="stack">
+            <div class="loading"><div class="spinner" role="status" aria-label="불러오는 중"></div></div>
+            <div class="empty-state">
+              <p class="empty-state__title">저장한 맛집이 없어요</p>
+              <p class="empty-state__desc">마음에 드는 곳을 저장해보세요</p>
+            </div>
+            <button class="btn-primary" type="button" id="toast-btn">토스트 띄우기</button>
+          </div>
+        </section>
+      </div>
+    </main>
+    <div id="nav-slot"></div>
+    <script type="module" src="/src/pages/ui-preview.ts"></script>
+  </body>
+</html>
