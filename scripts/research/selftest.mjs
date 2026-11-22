@@ -155,4 +155,73 @@ test('요청 본문: web_search 강제, KR, include, 도메인 제한은 프랜�
   assert.equal(buildRequestBody(indie, { ...opt, background: true }).background, true);
 });
 
+// ---- official_extract / 브랜드 모드 ----
+const brandPlace = { name: 'B', address: '', brand: 'B', is_franchise: true, official_domains: ['mcdonalds.co.kr'], mode: 'brand' };
+const sourcesOnly = new Set([normalizeUrl(OFFICIAL)]);
+const runB = (m, ctx = {}) => validateResult({ menus: [m] }, { place: brandPlace, knownUrls: known, sourceUrls: sourcesOnly, ...ctx });
+
+test('official_extract: 공식 도메인 URL 이 sources 에 있으면 유지 (utm 붙어도 일치)', () => {
+  const { result, stats } = runB(menu({ allergen_status: 'official_extract', allergen_sources: [{ url: `${OFFICIAL}?utm_source=openai` }] }));
+  assert.equal(result.menus[0].allergen_status, 'official_extract');
+  assert.equal(result.menus[0].allergens.length, 1);
+  assert.equal(stats.demoted, 0);
+  assert.equal(stats.menus.official_extract, 1);
+});
+test('official_extract 강등: 공식 도메인이 아니면 unknown', () => {
+  const { result } = runB(menu({ allergen_status: 'official_extract', allergen_sources: [{ url: 'https://blog.example.com/x' }] }), { sourceUrls: new Set([normalizeUrl('https://blog.example.com/x')]) });
+  assert.equal(result.menus[0].allergen_status, 'unknown');
+  assert.deepEqual(result.menus[0].allergens, []);
+});
+test('official_extract 강등: 공식 도메인이어도 sources 에 없으면(annotations 에만 있으면) unknown', () => {
+  const { result } = runB(menu({ allergen_status: 'official_extract' }), { sourceUrls: new Set() });
+  assert.equal(result.menus[0].allergen_status, 'unknown');
+});
+test('official_extract 강등: 출처가 비어 있으면 unknown + warnings', () => {
+  const { result, stats } = runB(menu({ allergen_status: 'official_extract', allergen_sources: [] }));
+  assert.equal(result.menus[0].allergen_status, 'unknown');
+  assert.equal(stats.demoted, 1);
+  assert.ok(result.warnings.some((w) => w.includes('official_extract') && w.includes('강등')));
+});
+test('브랜드 모드: 알레르기 합치기("조개, 굴" → 조개류)·원문 보존·고정 공지·세트 notes 유지', () => {
+  const m = menu({
+    name: '더블 데리버거 세트',
+    allergen_status: 'official_extract',
+    notes: '세트 기준 표기',
+    allergens: [
+      { standard_name: '조개', original_text: '조개', level: 'contains' },
+      { standard_name: '굴', original_text: '굴', level: 'contains' },
+    ],
+  });
+  const { result } = validateResult({ menus: [m], shared_notice: '튀김류 조리기구 공유' }, { place: brandPlace, knownUrls: known, sourceUrls: sourcesOnly });
+  const a = result.menus[0].allergens;
+  assert.equal(a.length, 1);
+  assert.equal(a[0].standard_name, '조개류');
+  assert.equal(a[0].original_text, '조개 / 굴');
+  assert.equal(result.menus[0].name, '더블 데리버거 세트');
+  assert.ok(result.menus[0].notes.includes('세트 기준 표기'));
+  assert.equal(result.shared_notice, '튀김류 조리기구 공유 / 지점에 따라 판매하지 않는 제품이 있을 수 있음');
+  assert.equal(validateResult({ menus: [] }, { place: brandPlace, knownUrls: known }).result.shared_notice, '지점에 따라 판매하지 않는 제품이 있을 수 있음');
+});
+test('브랜드 모드: 메뉴는 10개로 제한', () => {
+  const many = Array.from({ length: 12 }, (_, i) => menu({ name: `M${i}` }));
+  const { result } = validateResult({ menus: many }, { place: brandPlace, knownUrls: known });
+  assert.equal(result.menus.length, 10);
+  assert.ok(result.warnings.some((w) => w.includes('10개 초과')));
+});
+test('브랜드 요청 본문: 도메인 제한·max_output_tokens·브랜드 입력, 가게 모드는 상한 없음', () => {
+  const b = buildRequestBody(brandPlace, { model: 'm', effort: 'low', background: false, maxToolCalls: 0, maxOutputTokens: 32000 });
+  assert.equal(b.max_output_tokens, 32000);
+  assert.deepEqual(b.tools[0].filters, { allowed_domains: ['mcdonalds.co.kr'] });
+  assert.ok(b.input.includes('"brand":"B"') && b.instructions.includes('브랜드 조사 모드') && b.instructions.includes('official_extract'));
+  assert.equal(buildRequestBody(franchise, { model: 'm', effort: 'low', maxToolCalls: 0, maxOutputTokens: 0 }).max_output_tokens, undefined);
+  assert.ok(!buildRequestBody(franchise, { model: 'm', effort: 'low' }).instructions.includes('브랜드 조사 모드'));
+});
+test('응답 추출: sourceUrls 는 sources 만 담는다', () => {
+  const ex = extractResponse({ output: [
+    { type: 'web_search_call', action: { sources: [{ url: OFFICIAL }] } },
+    { type: 'message', content: [{ type: 'output_text', text: '{}', annotations: [{ type: 'url_citation', url: 'https://blog.example.com/x' }] }] },
+  ] });
+  assert.ok(ex.sourceUrls.has(normalizeUrl(OFFICIAL)) && !ex.sourceUrls.has(normalizeUrl('https://blog.example.com/x')));
+});
+
 console.log(`\n${passed} 통과${process.exitCode ? ', 실패 있음' : ''}`);

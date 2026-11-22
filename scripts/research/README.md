@@ -7,4 +7,5 @@
 6. 후처리 로직만 확인(키·네트워크 불필요): `--dry-run`
 7. 자체 테스트: `node scripts/research/selftest.mjs`
 8. 결과: `scripts/research/out/results.json`, `out/report.md` (out/ 은 git 제외)
-9. 옵션 `OPENAI_TIMEOUT_MS`(기본 300000), `OPENAI_MAX_TOOL_CALLS`(비용 상한, 미설정 시 미사용)
+9. 브랜드 모드(공통 대표 메뉴 10개): `node scripts/research/research.mjs --brand scripts/research/test-brands.json` → `out/brand-*.{json,md}`
+10. 옵션 `OPENAI_TIMEOUT_MS`(기본 300000), `OPENAI_MAX_TOOL_CALLS`, `OPENAI_MAX_OUTPUT_TOKENS`(브랜드 기본 32000)

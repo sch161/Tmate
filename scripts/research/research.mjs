@@ -13,7 +13,11 @@ const DEFAULT_MODEL = 'gpt-6.1-sol';
 const SOURCES_INCLUDE = 'web_search_call.action.sources';
 export const ALLOWED_TASTE_TAGS = ['매콤함', '달콤함', '짭조름함', '새콤함', '고소함', '담백함', '느끼함', '쌉싸름함', '감칠맛'];
 const ESTIMATE_PHRASE = '일반 조리법 기준 추정';
-const STATUSES = ['verified', 'estimated', 'unknown'];
+// verified: 공식 페이지 본문을 직접 읽음 / official_extract: 공식 도메인 검색 결과 발췌에서만 읽음(본문 재확인 못 함)
+const STATUSES = ['verified', 'official_extract', 'estimated', 'unknown'];
+const BRAND_MENU_LIMIT = 10;
+const BRAND_FIXED_NOTICE = '지점에 따라 판매하지 않는 제품이 있을 수 있음';
+const DEFAULT_BRAND_MAX_OUTPUT_TOKENS = 32000; // reasoning 가이드: 추론+출력에 최소 25,000 토큰 확보 권장
 const LEVELS = ['contains', 'may_contain'];
 
 const ALLERGENS = JSON.parse(readFileSync(join(HERE, 'standard-allergens.json'), 'utf8'));
@@ -138,12 +142,14 @@ export function validateResult(raw, ctx) {
       allergen_status = 'unknown';
     };
 
-    if (allergen_status === 'verified') {
+    if (allergen_status === 'verified' || allergen_status === 'official_extract') {
       const urls = allergen_sources.map((s) => s.url);
+      // official_extract 는 응답의 sources 목록에 있어야 한다 (sourceUrls 를 주지 않으면 sources+annotations)
+      const pool = allergen_status === 'official_extract' && ctx.sourceUrls ? ctx.sourceUrls : ctx.knownUrls;
       if (urls.length === 0) demote('출처 없음');
-      else if (urls.some((u) => !ctx.knownUrls.has(u))) demote('출처 URL 이 응답의 sources/annotations 에 없음');
+      else if (urls.some((u) => !pool.has(u))) demote(`출처 URL 이 응답의 ${pool === ctx.knownUrls ? 'sources/annotations' : 'sources'} 에 없음`);
       else if (!urls.some((u) => officialDomains.some((d) => hostMatchesDomain(u, d)))) {
-        demote('공식 도메인 출처 없음(공식 출처가 확인되지 않으면 verified 불가)');
+        demote(`공식 도메인 출처 없음(공식 출처가 확인되지 않으면 ${allergen_status} 불가)`);
       }
     } else if (allergen_status === 'estimated' && !notes.includes(ESTIMATE_PHRASE)) {
       demote(`notes 에 "${ESTIMATE_PHRASE}" 명시 없음`);
@@ -156,21 +162,27 @@ export function validateResult(raw, ctx) {
     return { name, description, taste_tags, allergens, allergen_status, allergen_sources, notes };
   });
 
+  if (input.mode === 'brand' && menus.length > BRAND_MENU_LIMIT) {
+    warnings.push(`대표 메뉴 ${BRAND_MENU_LIMIT}개 초과 → 앞 ${BRAND_MENU_LIMIT}개만 사용 (${menus.length}개 반환됨)`);
+    menus.length = BRAND_MENU_LIMIT;
+  }
   const modelWarnings = arr(src.warnings).map(String);
+  // 브랜드 모드: 지점별 판매 여부는 판단하지 않으므로 고정 문구를 항상 덧붙인다
+  const notice = [str(src.shared_notice), input.mode === 'brand' ? BRAND_FIXED_NOTICE : ''].filter(Boolean).join(' / ');
   const result = {
     place: {
       name: str(src.place?.name) || input.name,
-      address: str(src.place?.address) || input.address,
+      address: str(src.place?.address) || input.address || '',
       is_franchise: Boolean(input.is_franchise),
       brand: input.brand ?? null,
     },
     menus,
-    shared_notice: str(src.shared_notice) || null,
+    shared_notice: notice || null,
     sources_used: normList(src.sources_used),
     not_found: arr(src.not_found).map(String),
     warnings: [...modelWarnings, ...warnings],
   };
-  const menuCounts = { verified: 0, estimated: 0, unknown: 0 };
+  const menuCounts = { verified: 0, official_extract: 0, estimated: 0, unknown: 0 };
   for (const m of menus) menuCounts[m.allergen_status] += 1;
   return { result, stats: { ...stats, menus: menuCounts } };
 }
@@ -212,17 +224,29 @@ export function extractResponse(resp) {
     }
   }
   const knownUrls = new Set([...sources, ...citations].map(normalizeUrl).filter(Boolean));
-  return { text, searchCalls, knownUrls, sourceCount: sources.length, citationCount: citations.length };
+  const sourceUrls = new Set(sources.map(normalizeUrl).filter(Boolean));
+  return { text, searchCalls, knownUrls, sourceUrls, sourceCount: sources.length, citationCount: citations.length };
 }
 
 // ---------- 모델 지시문 ----------
 
-export function buildInstructions() {
+const BRAND_RULES = [
+  '',
+  '브랜드 조사 모드(지점이 아니라 브랜드 단위):',
+  `- 입력은 브랜드와 공식 도메인이다. 그 브랜드 공통 정규 메뉴 중 대표 메뉴 ${BRAND_MENU_LIMIT}개(버거류 중심)의 알레르기를 조사한다. 메뉴는 ${BRAND_MENU_LIMIT}개를 넘기지 마라.`,
+  '- 지점별 판매 여부는 판단하지 마라. "지점에 따라 판매하지 않는다"는 공지가 있어도 메뉴를 비우지 말고 공통 정규 메뉴 기준으로 채워라.',
+  '- 알레르기 표가 페이지 로드 후 동적으로 채워져 본문이 비어 보이면, 검색 결과 발췌에 나온 공식 표 값이나 개별 메뉴 상세 페이지를 사용하라.',
+  '- 표가 세트 단위면 메뉴 이름은 표의 행 이름 그대로 쓰고 notes 에 "세트 기준 표기"를 적어라.',
+  '- 원문이 "조개, 굴"처럼 나뉘어 있어도 original_text 에는 공식 표기를 그대로 적고, 표준 이름은 항목마다 적어라(합치기는 코드가 한다).',
+  '- shared_notice 에는 브랜드 공통 조리기구 공유·조리 기름 혼용 공지만 적어라.',
+];
+
+export function buildInstructions(mode = 'place') {
   return [
     '너는 한국 음식점의 메뉴·알레르기 정보를 웹에서 조사하는 조사원이다. 결과는 반드시 아래 JSON 객체 하나만 출력한다(코드블록·설명문 금지).',
     '',
     '규칙:',
-    '- 기억에 의존하지 마라. 실제로 열어 본 페이지만 근거로 써라.',
+    '- 기억에 의존하지 마라. 근거는 실제로 열어 본 페이지 본문, 또는 공식 도메인 검색 결과 발췌(이 경우 반드시 official_extract 로 표시)뿐이다. 발췌에서 읽은 공식 값을 버리지 마라.',
     '- 공식 사이트를 우선하라.',
     '- 접근이 막혀 있으면 그 사실을 warnings 에 보고하고 우회하지 마라.',
     '- 확신이 없으면 값을 채우지 말고 unknown 으로 둬라. 채운 값보다 정직한 빈칸이 낫다.',
@@ -231,10 +255,11 @@ export function buildInstructions() {
     '- 공식 정보가 메뉴 단위가 아니라 재료 단위(빵·소스별 등)면 메뉴 단위로 합치지 말고 notes 에 구조를 설명하라.',
     '- 조리기구 공유·조리 기름 혼용 같은 가게·브랜드 공지는 shared_notice 에 적어라.',
     '- 메뉴를 찾지 못했으면 지어내지 말고 menus 를 빈 배열로 둬라.',
-    '- allergen_status: 공식 페이지에서 확인했으면 "verified"(allergen_sources 에 그 페이지 URL 필수), 일반 조리법 기준 추정이면 "estimated"(notes 에 "일반 조리법 기준 추정" 명시), 모르면 "unknown"(allergens 는 빈 배열).',
+    '- allergen_status: 공식 페이지 본문을 직접 열어 읽었으면 "verified", 공식 도메인 URL 의 검색 결과 발췌에서만 읽었고 본문 재확인은 못 했으면 "official_extract"(둘 다 allergen_sources 에 그 공식 페이지 URL 필수), 일반 조리법 기준 추정이면 "estimated"(notes 에 "일반 조리법 기준 추정" 명시), 모르면 "unknown"(allergens 는 빈 배열).',
     '- description 은 직접 작성한 20자 이내 문구. 공식 문구를 복사하지 마라.',
     `- taste_tags 는 다음 중 1~3개(추정값): ${ALLOWED_TASTE_TAGS.join(', ')}`,
     `- allergens.standard_name 은 식약처 19종 중 하나: ${ALLERGENS.standard.join(', ')}. level 은 함유가 명시되면 "contains", 혼입 가능성 표기(같은 설비·교차 오염 등)면 "may_contain".`,
+    ...(mode === 'brand' ? BRAND_RULES : []),
     '',
     '출력 JSON 형식:',
     JSON.stringify(
@@ -320,16 +345,20 @@ export function buildRequestBody(place, options) {
   };
   const domains = arr(place.official_domains);
   if (place.is_franchise && domains.length > 0) tool.filters = { allowed_domains: domains }; // 도메인만, http 접두사 없이
+  const brandMode = place.mode === 'brand';
   const body = {
     model: options.model,
-    instructions: buildInstructions(),
-    input: `다음 가게를 조사하라.\n${JSON.stringify({ name: place.name, address: place.address, brand: place.brand ?? null, is_franchise: place.is_franchise, official_domains: domains })}`,
+    instructions: buildInstructions(place.mode),
+    input: brandMode
+      ? `다음 브랜드의 대표 메뉴 알레르기를 조사하라.\n${JSON.stringify({ brand: place.brand, official_domains: domains })}`
+      : `다음 가게를 조사하라.\n${JSON.stringify({ name: place.name, address: place.address, brand: place.brand ?? null, is_franchise: place.is_franchise, official_domains: domains })}`,
     tools: [tool],
     tool_choice: 'required',
     include: [SOURCES_INCLUDE],
     reasoning: { effort: options.effort },
   };
   if (options.maxToolCalls) body.max_tool_calls = options.maxToolCalls;
+  if (options.maxOutputTokens) body.max_output_tokens = options.maxOutputTokens; // 추론 토큰 + 출력 토큰 상한 (최소 16)
   if (options.background) body.background = true;
   return body;
 }
@@ -352,15 +381,16 @@ async function callResponses(place, options) {
 
 // ---------- 가게 한 곳 처리 ----------
 
-function normalizePlace(p) {
+function normalizePlace(p, brandMode = false) {
   const domains = arr(p.official_domains).map(String);
+  if (brandMode) return { name: p.brand, address: '', brand: p.brand, is_franchise: true, official_domains: domains, mode: 'brand' };
   return { name: p.name, address: p.address, brand: p.brand ?? null, is_franchise: Boolean(p.brand) || domains.length > 0, official_domains: domains };
 }
 
 async function researchPlace(rawPlace, options) {
-  const place = normalizePlace(rawPlace);
+  const place = normalizePlace(rawPlace, options.brandMode);
   const started = Date.now();
-  const entry = { input: place, model: options.model, mode: options.background ? 'background' : 'sync' };
+  const entry = { input: place, model: options.model, mode: options.background ? 'background' : 'sync', max_output_tokens: options.maxOutputTokens || null };
   try {
     const resp = await callResponses(place, options);
     const ex = extractResponse(resp);
@@ -375,10 +405,14 @@ async function researchPlace(rawPlace, options) {
     entry.web_search_calls = ex.searchCalls;
     entry.source_urls = ex.sourceCount;
     entry.citation_urls = ex.citationCount;
-    if (resp.status && resp.status !== 'completed') entry.error = `응답 상태: ${resp.status}${resp.error ? ` (${resp.error.code ?? ''} ${resp.error.message ?? ''})` : ''}`;
+    entry.incomplete_reason = resp.incomplete_details?.reason ?? null;
+    if (resp.status && resp.status !== 'completed') {
+      // 잘림(incomplete, 예: max_output_tokens)도 여기서 기록해 보고서에 남긴다
+      entry.error = `응답 상태: ${resp.status}${entry.incomplete_reason ? ` (incomplete_details.reason=${entry.incomplete_reason})` : ''}${resp.error ? ` (${resp.error.code ?? ''} ${resp.error.message ?? ''})` : ''}`;
+    }
     const parsed = parseModelJson(ex.text);
     if (!parsed) entry.error = `${entry.error ? `${entry.error}; ` : ''}모델 응답에서 JSON 을 파싱하지 못했어요`;
-    const { result, stats } = validateResult(parsed, { place, knownUrls: ex.knownUrls });
+    const { result, stats } = validateResult(parsed, { place, knownUrls: ex.knownUrls, sourceUrls: ex.sourceUrls });
     if (!parsed) result.warnings.push('모델 응답 JSON 파싱 실패 → 빈 결과');
     entry.result = result;
     entry.stats = stats;
@@ -423,16 +457,17 @@ export function buildReport(entries, options) {
   lines.push('# AI 조사 PoC 보고서', '', `- 모델: ${options.model} (OPENAI_MODEL ${process.env.OPENAI_MODEL ? '지정' : '미지정 → 기본값'})`);
   lines.push(`- 모드: ${options.background ? 'background (3초 폴링, 최대 10분)' : '동기'} / reasoning effort: ${options.effort} / search_context_size: low`);
   lines.push(`- 단가: ${priced ? '설정됨 (pricing.json)' : '단가 미설정 — 토큰·호출 수만 표시'}${priced && pricing.search === null ? ' / 검색 호출 단가 미설정(검색 비용 제외)' : ''}`, '');
-  lines.push('## 가게별 요약', '');
-  lines.push('| 가게 | 메뉴 수 | verified | estimated | unknown | 강등 | 제거(알레르기/태그) | 소요(초) | 검색 호출 | 입력 토큰 | 출력 토큰 | 추정 비용(USD) |');
-  lines.push('|---|---|---|---|---|---|---|---|---|---|---|---|');
+  if (options.brandMode) lines.push(`- 브랜드 모드: 대표 메뉴 ${BRAND_MENU_LIMIT}개 / max_output_tokens: ${options.maxOutputTokens || '미설정'} (추론+출력 상한)`);
+  lines.push(options.brandMode ? '## 브랜드별 요약' : '## 가게별 요약', '');
+  lines.push(`| ${options.brandMode ? '브랜드' : '가게'} | 응답 상태 | 메뉴 수 | verified | official_extract | estimated | unknown | 강등 | 제거(알레르기/태그) | 소요(초) | 검색 호출 | 입력 토큰 | 출력 토큰 | 추정 비용(USD) |`);
+  lines.push('|---|---|---|---|---|---|---|---|---|---|---|---|---|---|');
   const costs = [];
   for (const e of entries) {
     const cost = estimateCost(e, pricing);
     if (cost !== null) costs.push(cost);
     const s = e.stats;
     lines.push(
-      `| ${e.input.name} | ${e.result?.menus.length ?? '-'} | ${s?.menus.verified ?? '-'} | ${s?.menus.estimated ?? '-'} | ${s?.menus.unknown ?? '-'} | ${s?.demoted ?? '-'} | ${s ? `${s.removedAllergens}/${s.removedTags}` : '-'} | ${e.elapsed_sec} | ${e.web_search_calls ?? '-'} | ${e.usage?.input_tokens ?? '-'} | ${e.usage?.output_tokens ?? '-'} | ${cost === null ? (priced ? '-' : '단가 미설정') : cost.toFixed(4)} |`,
+      `| ${e.input.name} | ${e.status ?? '-'}${e.incomplete_reason ? `(잘림: ${e.incomplete_reason})` : ''} | ${e.result?.menus.length ?? '-'} | ${s?.menus.verified ?? '-'} | ${s?.menus.official_extract ?? '-'} | ${s?.menus.estimated ?? '-'} | ${s?.menus.unknown ?? '-'} | ${s?.demoted ?? '-'} | ${s ? `${s.removedAllergens}/${s.removedTags}` : '-'} | ${e.elapsed_sec} | ${e.web_search_calls ?? '-'} | ${e.usage?.input_tokens ?? '-'} | ${e.usage?.output_tokens ?? '-'} | ${cost === null ? (priced ? '-' : '단가 미설정') : cost.toFixed(4)} |`,
     );
   }
   lines.push('');
@@ -453,6 +488,8 @@ export function buildReport(entries, options) {
   lines.push(
     '- 확인됨: web_search 도구(`web_search_preview` 는 filters 미지원), tool_choice "required", user_location(approximate, country 2글자 코드), filters.allowed_domains(http 접두사 없이, 하위 도메인 포함), search_context_size(low/medium/high), include `web_search_call.action.sources`, url_citation annotation, background 요청·retrieve(GET /v1/responses/{id}), max_tool_calls',
     '- 확인됨: reasoning effort 값 목록(none/minimal/low/medium/high/xhigh/max). 모델별 지원 값 중 gpt-6.1-sol 은 none·minimal 을 거부하고 기본 medium 이라 low 사용',
+    '- 확인됨: max_output_tokens(정수, 최소 16, 추론 토큰+출력 토큰 합산 상한), 상한 초과 시 status=incomplete + incomplete_details.reason=max_output_tokens, 추론 모델은 25,000 토큰 이상 확보 권장',
+    '- 미확인: max_output_tokens 의 모델별 최대값, 응답 status 전체 enum(incomplete_details.reason 의 max_output_tokens 외 값은 요약 기준)',
     '- 미확인: 구조화 출력(json_schema)과 web_search 동시 사용 가능 여부 → 텍스트 JSON 을 받아 코드로 검증',
     '- 미확인: background 모드에서 web_search(내장 도구) 지원 여부, retrieve 의 `include[]` 쿼리 배열 표기 방식, 응답 status 전체 enum, 모델 없음·권한 오류의 HTTP 본문 형식, 검색 호출 단가(가격표 직접 확인 필요)',
     '- 미확인: 인용 URL 의 utm_source=openai 부착 규칙(문서에 없음. 사용자 관찰 기준으로 정규화에서 제거)',
@@ -485,7 +522,15 @@ function dryRun() {
   const a = validateResult(franchiseRaw, { place: normalizePlace(SAMPLE_FRANCHISE), knownUrls: new Set([...known, normalizeUrl('https://www.sample-burger.co.kr/menu/1')]) });
   const b = validateResult(individualRaw, { place: normalizePlace(SAMPLE_PLACE), knownUrls: known });
   const c = validateResult({ menus: [] }, { place: normalizePlace(SAMPLE_PLACE), knownUrls: new Set() });
-  console.log(JSON.stringify({ franchise: a, individual: b, empty: c }, null, 2));
+  const brandRaw = {
+    menus: [
+      { name: '빅맥', description: '대표 더블 패티 버거', taste_tags: ['감칠맛'], allergen_status: 'official_extract', allergen_sources: [{ url: 'https://www.sample-burger.co.kr/menu/1' }], allergens: [{ standard_name: '조개', original_text: '조개', level: 'contains' }, { standard_name: '굴', original_text: '굴', level: 'contains' }], notes: '' },
+      { name: '불고기버거 세트', description: '세트 표기', taste_tags: ['달콤함'], allergen_status: 'official_extract', allergen_sources: [{ url: 'https://blog.example.com/review' }], allergens: [{ standard_name: '밀', original_text: '밀', level: 'contains' }], notes: '세트 기준 표기' },
+    ],
+    shared_notice: '튀김류는 같은 조리기구 사용',
+  };
+  const d = validateResult(brandRaw, { place: normalizePlace(SAMPLE_FRANCHISE, true), knownUrls: known, sourceUrls: new Set([normalizeUrl('https://www.sample-burger.co.kr/menu/1')]) });
+  console.log(JSON.stringify({ franchise: a, individual: b, empty: c, brand: d }, null, 2));
 }
 
 async function main() {
@@ -494,9 +539,10 @@ async function main() {
     dryRun();
     return;
   }
+  const brandMode = args.includes('--brand');
   const file = args.find((a) => !a.startsWith('--'));
   if (!file) {
-    console.error('사용법: node scripts/research/research.mjs <places.json> [--background] | --dry-run');
+    console.error('사용법: node scripts/research/research.mjs [--brand] <places.json 또는 brands.json> [--background] | --dry-run');
     process.exit(1);
   }
   if (!process.env.OPENAI_API_KEY) {
@@ -510,15 +556,20 @@ async function main() {
     background: args.includes('--background'),
     timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS) || 300000,
     maxToolCalls: Number(process.env.OPENAI_MAX_TOOL_CALLS) || 0,
+    brandMode,
+    // 브랜드 모드는 메뉴가 늘어 출력이 길어지므로 기본 상한을 둔다. 일반 모드는 env 로 지정했을 때만 사용.
+    maxOutputTokens: Number(process.env.OPENAI_MAX_OUTPUT_TOKENS) || (brandMode ? DEFAULT_BRAND_MAX_OUTPUT_TOKENS : 0),
   };
   mkdirSync(OUT_DIR, { recursive: true });
   const entries = [];
+  // 브랜드 모드는 가게 모드 결과를 덮어쓰지 않도록 별도 파일에 쓴다
+  const prefix = brandMode ? 'brand-' : '';
   const save = () => {
-    writeFileSync(join(OUT_DIR, 'results.json'), `${JSON.stringify(entries, null, 2)}\n`);
-    if (entries.length > 0) writeFileSync(join(OUT_DIR, 'report.md'), buildReport(entries, options));
+    writeFileSync(join(OUT_DIR, `${prefix}results.json`), `${JSON.stringify(entries, null, 2)}\n`);
+    if (entries.length > 0) writeFileSync(join(OUT_DIR, `${prefix}report.md`), buildReport(entries, options));
   };
   for (const place of places) {
-    console.log(`조사 중: ${place.name} (${options.model}${options.background ? ', background' : ''})`);
+    console.log(`조사 중: ${place.brand ?? place.name} (${options.model}${options.background ? ', background' : ''})`);
     try {
       const entry = await researchPlace(place, options);
       entries.push(entry);
@@ -531,7 +582,7 @@ async function main() {
     }
     save();
   }
-  console.log(`완료: ${join(OUT_DIR, 'results.json')}, ${join(OUT_DIR, 'report.md')}`);
+  console.log(`완료: ${join(OUT_DIR, `${prefix}results.json`)}, ${join(OUT_DIR, `${prefix}report.md`)}`);
 }
 
 if (process.argv[1] && resolve(fileURLToPath(import.meta.url)) === resolve(process.argv[1])) {
