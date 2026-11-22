@@ -11,15 +11,16 @@
     <main class="app onboarding">
       <div class="onboarding__progress"><div class="progress" style="--value: 37"></div></div>
       <header class="onboarding__head">
-        <h1 class="onboarding__title">위치 권한을 허용해주세요</h1>
-        <p class="onboarding__desc">더 정확한 맛집 추천을 위해<br />위치 권한이 필요해요</p>
+        <!-- 디자인 대기: Figma 문구와 다름 (실제로는 위치 권한을 요청하지 않고 지역 목록에서 고른다) -->
+        <h1 class="onboarding__title">내 지역을 선택해주세요</h1>
+        <p class="onboarding__desc">선택한 지역의 맛집을<br />추천해 드려요</p>
       </header>
       <section class="onboarding__body onboarding__body--center" id="body">
         <img class="onboarding__map" src="/src/assets/images/onboarding-map.svg" alt="" width="181" height="125" />
         <p class="onboarding__region" id="region-text" hidden></p>
       </section>
       <footer class="onboarding__footer">
-        <button class="btn-primary" id="next" type="button">허용하기</button>
+        <button class="btn-primary" id="next" type="button">지역 선택하기</button>
       </footer>
     </main>
     <script type="module" src="/src/pages/onboarding-location.ts"></script>
