@@ -5,8 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>T:MATE</title>
     <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/auth.css" />
   </head>
   <body>
-    <h1>T:MATE</h1>
+    <main class="app auth auth--splash">
+      <img class="auth__logo" src="/src/assets/images/logo.png" alt="T:MATE" width="210" height="150" />
+      <p class="error-message auth__splash-error" id="splash-error" hidden></p>
+    </main>
+    <script type="module" src="/src/pages/splash.ts"></script>
   </body>
 </html>
