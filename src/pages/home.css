@@ -1,6 +1,8 @@
 /* 홈 화면 전용 스타일. 값은 variables.css 토큰만 쓴다. */
 .home {
-  padding: 60px var(--space-4) 0;
+  /* padding-bottom 은 .has-bottom-nav 가 정한다 (단축 속성으로 덮어쓰지 않는다) */
+  padding-top: 60px;
+  padding-inline: var(--space-4);
 }
 
 .home__location {

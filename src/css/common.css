@@ -17,8 +17,10 @@ body {
   background: var(--color-background);
 }
 
-.app--with-nav {
-  padding-bottom: var(--bottom-nav-height);
+/* 하단 네비게이션을 쓰는 페이지의 본문: 마지막 콘텐츠가 고정 네비(--bottom-nav-height)에 가려지지 않게 한다.
+   페이지 전용 CSS 에서 padding 단축 속성으로 덮어쓰지 말 것 (padding-top / padding-inline 처럼 개별 속성만 쓴다). */
+.has-bottom-nav {
+  padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 16px);
 }
 
 .page {
