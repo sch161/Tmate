@@ -1,2 +1,187 @@
 -- 용도: RLS(Row Level Security) 활성화 및 정책 정의
 -- 규칙: 이 파일을 바꾸면 docs/erd.md 와 src/types/database.types.ts(npm run gen:types)도 같은 PR 에서 갱신한다.
+--
+-- 실행: schema.sql 적용 후 Supabase SQL Editor 에서 한 번에 실행한다. (RLS 활성화는 schema.sql 에 이미 있다)
+-- 원칙: 모든 정책은 `to authenticated` 만 만든다. anon(비로그인)은 정책이 없으므로 어떤 테이블도 읽거나 쓸 수 없다.
+-- 재실행: 정책 이름이 중복되면 오류가 난다. 다시 적용하려면 아래 "초기화" 블록의 주석을 풀어 먼저 실행한다.
+
+-- ---------------------------------------------------------------------
+-- (선택) 초기화: 이 파일이 만든 정책을 모두 지운다.
+-- ---------------------------------------------------------------------
+-- do $$
+-- declare p record;
+-- begin
+--   for p in select schemaname, tablename, policyname from pg_policies where schemaname = 'public' loop
+--     execute format('drop policy %I on %I.%I', p.policyname, p.schemaname, p.tablename);
+--   end loop;
+-- end $$;
+
+-- ---------------------------------------------------------------------
+-- 1. 기준 데이터 / 가게 / 메뉴: 로그인 사용자는 읽기만 가능 (쓰기는 클라이언트에 열지 않는다)
+-- ---------------------------------------------------------------------
+-- 음식 카테고리: 홈 필터에 필요하므로 로그인 사용자 전체 조회 허용
+create policy "food_categories_select" on food_categories
+  for select to authenticated using (true);
+
+-- 맛 태그: 온보딩·칩 표시에 필요하므로 조회 허용
+create policy "taste_tags_select" on taste_tags
+  for select to authenticated using (true);
+
+-- 알레르기 목록: 온보딩·메뉴 상세에 필요하므로 조회 허용
+create policy "allergens_select" on allergens
+  for select to authenticated using (true);
+
+-- 가게: 모든 로그인 사용자가 목록·상세를 볼 수 있어야 한다
+create policy "restaurants_select" on restaurants
+  for select to authenticated using (true);
+
+-- 메뉴: 가게 상세·평가 화면에 필요하므로 조회 허용
+create policy "menus_select" on menus
+  for select to authenticated using (true);
+
+-- 메뉴 맛 태그: 일치도 계산·칩 표시에 필요하므로 조회 허용
+create policy "menu_taste_tags_select" on menu_taste_tags
+  for select to authenticated using (true);
+
+-- 메뉴 알레르기 정보: 알레르기 경고 표시에 필요하므로 조회 허용
+create policy "menu_allergens_select" on menu_allergens
+  for select to authenticated using (true);
+
+-- ---------------------------------------------------------------------
+-- 2. profiles: 본인 행만 조회·수정. insert 는 가입 트리거, delete 는 auth.users 삭제(cascade)로만 일어난다.
+-- ---------------------------------------------------------------------
+-- 다른 사용자의 아이디·닉네임 등 식별 정보가 새지 않도록 본인 행만 조회한다
+create policy "profiles_select_own" on profiles
+  for select to authenticated using (id = (select auth.uid()));
+
+-- 본인 행만 수정한다. 수정 가능한 컬럼은 아래 grant 로 다시 한 번 제한한다
+create policy "profiles_update_own" on profiles
+  for update to authenticated
+  using (id = (select auth.uid()))
+  with check (id = (select auth.uid()));
+
+-- username(로그인 아이디)·id·created_at 은 클라이언트에서 바꿀 수 없게 컬럼 권한으로 막는다
+revoke update on profiles from authenticated;
+grant update (nickname, region, avatar_url, onboarding_done) on profiles to authenticated;
+
+-- ---------------------------------------------------------------------
+-- 3. 본인 데이터 전용 테이블: 본인 행만 select / insert / update / delete
+-- ---------------------------------------------------------------------
+-- 입맛 선택·비율: 본인 것만 조회
+create policy "user_taste_preferences_select_own" on user_taste_preferences
+  for select to authenticated using (user_id = (select auth.uid()));
+-- 입맛 선택·비율: 본인 이름으로만 추가 (with check 로 남의 user_id 삽입 차단)
+create policy "user_taste_preferences_insert_own" on user_taste_preferences
+  for insert to authenticated with check (user_id = (select auth.uid()));
+-- 입맛 선택·비율: 본인 것만 수정하고, 수정 후에도 본인 소유여야 한다
+create policy "user_taste_preferences_update_own" on user_taste_preferences
+  for update to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+-- 입맛 선택·비율: 본인 것만 삭제 (온보딩 재설정)
+create policy "user_taste_preferences_delete_own" on user_taste_preferences
+  for delete to authenticated using (user_id = (select auth.uid()));
+
+-- 사용자 알레르기: 본인 것만 조회 (민감한 건강 정보)
+create policy "user_allergens_select_own" on user_allergens
+  for select to authenticated using (user_id = (select auth.uid()));
+-- 사용자 알레르기: 본인 이름으로만 추가
+create policy "user_allergens_insert_own" on user_allergens
+  for insert to authenticated with check (user_id = (select auth.uid()));
+-- 사용자 알레르기: 본인 것만 수정
+create policy "user_allergens_update_own" on user_allergens
+  for update to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+-- 사용자 알레르기: 본인 것만 삭제
+create policy "user_allergens_delete_own" on user_allergens
+  for delete to authenticated using (user_id = (select auth.uid()));
+
+-- 저장한 가게: 본인 것만 조회
+create policy "saved_restaurants_select_own" on saved_restaurants
+  for select to authenticated using (user_id = (select auth.uid()));
+-- 저장한 가게: 본인 이름으로만 저장
+create policy "saved_restaurants_insert_own" on saved_restaurants
+  for insert to authenticated with check (user_id = (select auth.uid()));
+-- 저장한 가게: 본인 것만 수정
+create policy "saved_restaurants_update_own" on saved_restaurants
+  for update to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+-- 저장한 가게: 본인 것만 저장 해제
+create policy "saved_restaurants_delete_own" on saved_restaurants
+  for delete to authenticated using (user_id = (select auth.uid()));
+
+-- 저장한 메뉴: 본인 것만 조회
+create policy "saved_menus_select_own" on saved_menus
+  for select to authenticated using (user_id = (select auth.uid()));
+-- 저장한 메뉴: 본인 이름으로만 저장
+create policy "saved_menus_insert_own" on saved_menus
+  for insert to authenticated with check (user_id = (select auth.uid()));
+-- 저장한 메뉴: 본인 것만 수정
+create policy "saved_menus_update_own" on saved_menus
+  for update to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+-- 저장한 메뉴: 본인 것만 저장 해제
+create policy "saved_menus_delete_own" on saved_menus
+  for delete to authenticated using (user_id = (select auth.uid()));
+
+-- ---------------------------------------------------------------------
+-- 4. reviews / review_taste_tags
+-- ---------------------------------------------------------------------
+-- 평가: 가게·메뉴 평점 뷰(security_invoker)가 전체 평가를 읽어야 평균이 맞으므로 로그인 사용자 전체에게 조회를 연다.
+--       작성자 식별 정보(아이디·닉네임)는 profiles 정책이 막고 있다.
+create policy "reviews_select_all" on reviews
+  for select to authenticated using (true);
+-- 평가: 본인 이름으로만 작성
+create policy "reviews_insert_own" on reviews
+  for insert to authenticated with check (user_id = (select auth.uid()));
+-- 평가: 본인 평가만 수정하고, 수정 후에도 본인 소유여야 한다
+create policy "reviews_update_own" on reviews
+  for update to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+-- 평가: 본인 평가만 삭제
+create policy "reviews_delete_own" on reviews
+  for delete to authenticated using (user_id = (select auth.uid()));
+
+-- 평가 맛 태그: 메뉴별 맛 집계에 쓰이므로 로그인 사용자 전체 조회 허용
+create policy "review_taste_tags_select_all" on review_taste_tags
+  for select to authenticated using (true);
+-- 평가 맛 태그: 부모 평가가 본인 것일 때만 추가 (남의 평가에 태그를 붙이지 못하게)
+create policy "review_taste_tags_insert_own" on review_taste_tags
+  for insert to authenticated
+  with check (exists (
+    select 1 from reviews r
+    where r.id = review_taste_tags.review_id and r.user_id = (select auth.uid())
+  ));
+-- 평가 맛 태그: 부모 평가가 본인 것일 때만 삭제 (태그 수정은 삭제 후 재추가)
+create policy "review_taste_tags_delete_own" on review_taste_tags
+  for delete to authenticated
+  using (exists (
+    select 1 from reviews r
+    where r.id = review_taste_tags.review_id and r.user_id = (select auth.uid())
+  ));
+
+-- ---------------------------------------------------------------------
+-- RLS 검증 (SQL Editor 에서 아래 주석을 풀어 한 블록씩 실행. 끝에 rollback 으로 되돌린다)
+--   <A>, <B> 는 seed.sql 의 가상 사용자 uuid 로 바꾼다. 예: seed01 = 5eed0000-0000-4000-8000-000000000001
+--   user_allergens 에 행이 있는 사용자를 A 로 쓴다. (seed.sql 기준 seed02 = 000000000002)
+-- ---------------------------------------------------------------------
+-- begin;
+--   set local role authenticated;
+--   select set_config('request.jwt.claims', '{"sub":"<A 사용자 uuid>","role":"authenticated"}', true);
+--
+--   -- (1) A 본인 알레르기: 1행 이상 보여야 한다
+--   select * from user_allergens where user_id = '<A 사용자 uuid>';
+--   -- (2) 다른 사용자 B 의 알레르기: 0행이어야 한다
+--   select * from user_allergens where user_id = '<B 사용자 uuid>';
+--   -- (3) 필터 없이 조회해도 본인 행만 나와야 한다 (count = A 의 행 수)
+--   select count(*) from user_allergens;
+--   -- (4) profiles 는 본인 1행만 (다른 사용자 조회 0행)
+--   select id, username from profiles;
+--   -- (5) username 수정은 거부되어야 한다 (permission denied for table profiles)
+--   update profiles set username = 'hacker01' where id = '<A 사용자 uuid>';
+-- rollback;
+--
+-- anon(비로그인) 확인: 0행이어야 한다 (정책이 없음)
+-- begin;
+--   set local role anon;
+--   select count(*) from restaurants;
+-- rollback;
