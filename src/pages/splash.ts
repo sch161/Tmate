@@ -22,7 +22,7 @@ function showMissingPage(): void {
   if (!main) return;
   main.replaceChildren(
     el('div', { class: 'empty-state' }, el('p', { class: 'empty-state__title' }, '아직 만들어지지 않은 페이지예요')),
-    el('p', { class: 'auth__switch' }, el('a', { href: '/' }, '홈으로 돌아가기')),
+    el('p', { class: 'auth__switch' }, el('a', { href: PATHS.home }, '홈으로 돌아가기')),
   );
 }
 

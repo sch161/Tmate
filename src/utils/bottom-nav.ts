@@ -1,14 +1,15 @@
 import homeIcon from '../assets/icons/nav-home.svg';
 import saveIcon from '../assets/icons/nav-save.svg';
 import mypageIcon from '../assets/icons/nav-mypage.svg';
+import { PATHS } from '../lib/constants';
 import { el } from './dom';
 
 export type NavTab = 'home' | 'save' | 'mypage';
 
 const TABS: { key: NavTab; label: string; icon: string; href: string }[] = [
-  { key: 'home', label: '홈', icon: homeIcon, href: '/index.html' },
-  { key: 'save', label: '저장', icon: saveIcon, href: '/src/pages/save.html' },
-  { key: 'mypage', label: '마이페이지', icon: mypageIcon, href: '/src/pages/mypage.html' },
+  { key: 'home', label: '홈', icon: homeIcon, href: PATHS.home },
+  { key: 'save', label: '저장', icon: saveIcon, href: PATHS.save },
+  { key: 'mypage', label: '마이페이지', icon: mypageIcon, href: PATHS.mypage },
 ];
 
 /** 하단 네비게이션(홈/저장/마이페이지)을 만들어 반환한다. 현재 탭은 강조된다. 삽입은 호출한 쪽에서 한다. */

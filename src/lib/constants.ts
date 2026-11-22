@@ -18,7 +18,11 @@ export const PATHS = {
   onboardingFlavor: '/src/pages/onboarding-flavor.html',
   onboardingRatio: '/src/pages/onboarding-ratio.html',
   onboardingAllergy: '/src/pages/onboarding-allergy.html',
-  home: '/src/pages/home.html', // 아직 없음
+  home: '/src/pages/home.html',
+  save: '/src/pages/save.html', // 아직 없음
+  mypage: '/src/pages/mypage.html', // 아직 없음
+  restaurant: '/src/pages/restaurant.html', // 아직 없음 (?id=가게id)
+  tasteEdit: '/src/pages/taste-edit.html', // 아직 없음
 } as const;
 
 export function toEmail(username: string): string {

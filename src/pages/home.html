@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>홈 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/home.css" />
+  </head>
+  <body>
+    <main class="app has-bottom-nav home" id="app">
+      <header class="home__location">
+        <p class="home__region"><span class="home__region-icon" aria-hidden="true"></span><span id="region-text">불러오는 중…</span></p>
+        <button class="home__region-change" id="region-change" type="button">위치 변경하기</button>
+      </header>
+
+      <form class="home__search" id="search-form" role="search">
+        <button class="home__search-submit" type="submit" aria-label="검색">
+          <img src="/src/assets/images/search-mascot.png" alt="" width="40" height="40" />
+        </button>
+        <input class="home__search-input" id="search-input" type="search" placeholder="메뉴를 검색해보세요!" maxlength="50" aria-label="가게명 또는 메뉴명 검색" />
+      </form>
+
+      <section class="home__section" aria-labelledby="recommend-title">
+        <h2 class="home__title" id="recommend-title">오늘의 추천 메뉴</h2>
+        <div id="recommend-area"></div>
+      </section>
+
+      <section class="home__section" aria-labelledby="nearby-title">
+        <div class="home__title-row">
+          <h2 class="home__title" id="nearby-title">주변 맛집 보기</h2>
+          <button class="home__search-reset" id="search-reset" type="button" hidden>검색 초기화</button>
+        </div>
+        <div class="chip-group home__categories" id="category-area"></div>
+        <a class="home__taste-edit" id="taste-edit" href="#"><span class="home__taste-edit-box" aria-hidden="true"></span>입맛 변경하기</a>
+        <div id="restaurant-area"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/home.ts"></script>
+  </body>
+</html>
