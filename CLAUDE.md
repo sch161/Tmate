@@ -6,7 +6,7 @@
 
 - 프론트: Vite + TypeScript (vanilla-ts), 멀티 페이지(HTML 여러 개). React 등 프레임워크 사용 금지
 - 백엔드: Supabase (Auth, Postgres, RLS, RPC). 별도 서버 없음
-- 유사도·추천 계산: Postgres 함수(RPC). LLM API 사용 금지
+- 유사도·추천 계산: Postgres 함수(RPC). 브라우저(클라이언트)에서 LLM 호출 금지. 서버 측 조사 함수·스크립트에서만 허용. 유사도·추천 계산에는 쓰지 않는다
 - 환경변수: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (.env, 커밋 금지). service_role 키는 어디에도 쓰지 않는다
 
 ## 폴더 구조
