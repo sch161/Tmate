@@ -50,6 +50,7 @@
 
 - Claude Code 는 Supabase 에 직접 SQL 을 실행하지 않는다. SQL 파일만 작성하고, 끝나면 "SQL Editor 에서 실행할 파일과 순서"를 보고한다
 - RPC 는 auth.uid() 로 사용자를 식별하고, 다른 사용자의 데이터를 반환할 때는 닉네임·유사도 같은 최소 정보만 반환한다. SECURITY DEFINER 함수는 set search_path = '' 를 쓴다
+- 새 테이블·뷰를 만들면 authenticated 에 필요한 GRANT 를 policies.sql 에 함께 쓴다 (권한이 없으면 RLS 정책 이전에 permission denied 가 난다).
 
 ## Git 규칙 (반드시 지킨다)
 
