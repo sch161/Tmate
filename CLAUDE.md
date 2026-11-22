@@ -17,7 +17,7 @@
 - src/utils/\*.ts : 공통 유틸 (DOM 헬퍼, 하단 네비, 인증 가드 등)
 - src/types/database.types.ts : 자동 생성 파일. 직접 수정 금지 (npm run gen:types)
 - src/css/ : reset.css, variables.css(디자인 토큰), common.css
-- supabase/ : schema.sql, policies.sql, functions.sql, seed.sql
+- supabase/ : schema.sql(최종 구조), migrations/(기존 DB 에 한 번만 적용), policies.sql, functions.sql, seed_reference.sql(기준 데이터), seed_demo_users.sql(개발용 가상 사용자)
 - docs/erd.md : ERD (DB 구조를 바꾸면 schema.sql, erd.md, 타입 파일을 같이 갱신)
 
 ## 도메인 규칙
