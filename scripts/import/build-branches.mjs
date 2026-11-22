@@ -98,6 +98,12 @@ export function buildRecord(row, brandName) {
     sigungu: gu,
     small_category: row[COL['상권업종소분류명']] || '(없음)',
     shop_name: shop,
+    // 중복 제거·진단용 원본 필드 (SQL 에는 쓰지 않는다)
+    branch_name: branch,
+    road_address: row[COL['도로명주소']],
+    lot_address: row[COL['지번주소']],
+    floor: row[COL['층정보']],
+    ho: row[COL['호정보']],
   };
 }
 
@@ -117,6 +123,48 @@ export function processRow(row, brands) {
   return { record: rec };
 }
 
+// ---------- 중복 제거 ----------
+// 같은 (브랜드, 도로명주소) 는 한 지점이다. 공공데이터에는 같은 매장이 상가업소번호만 다르게 여러 번 등록돼 있다
+// (조사 결과는 scripts/import/out/dedupe-report.md). 같은 건물의 층·호가 서로 다른 별개 매장은 근거가 없어 구분하지 않는다.
+
+/** 앞뒤 공백 제거 + 연속 공백을 한 칸으로 */
+export const normalizeAddress = (s) => String(s ?? '').trim().replace(/\s+/g, ' ');
+
+/** 그룹 키. 도로명주소가 비어 있으면 지번주소(record.address 가 이미 도로명 || 지번)를 쓴다. */
+export const groupKey = (rec) => `${rec.brand}|${normalizeAddress(rec.road_address || rec.lot_address || rec.address)}`;
+
+/**
+ * 그룹의 대표 행(결정적): ① 가장 많이 나온 상호명 ② 지점명이 있는 행 ③ 상호명이 짧은 행 ④ 상가업소번호 사전순 첫 번째.
+ * 상호명은 trim 만 하고 브랜드명으로 고쳐 쓰지 않는다.
+ */
+export function pickRepresentative(rows) {
+  const count = new Map();
+  for (const r of rows) count.set(r.shop_name.trim(), (count.get(r.shop_name.trim()) ?? 0) + 1);
+  return [...rows].sort(
+    (a, b) =>
+      count.get(b.shop_name.trim()) - count.get(a.shop_name.trim()) ||
+      Number(Boolean(b.branch_name)) - Number(Boolean(a.branch_name)) ||
+      a.shop_name.trim().length - b.shop_name.trim().length ||
+      (a.external_id < b.external_id ? -1 : a.external_id > b.external_id ? 1 : 0),
+  )[0];
+}
+
+/** 그룹당 1행만 남긴다. 반환: { kept, removed, groups(Map 키 → 행 배열) } */
+export function dedupeRecords(records) {
+  const groups = new Map();
+  for (const r of records) {
+    const k = groupKey(r);
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(r);
+  }
+  const kept = [];
+  for (const rows of groups.values()) {
+    const rep = pickRepresentative(rows);
+    kept.push({ ...rep, name: rep.name.trim(), address: normalizeAddress(rep.address) });
+  }
+  return { kept, removed: records.length - kept.length, groups };
+}
+
 // ---------- SQL ----------
 
 export function buildSql(brands, records, meta = {}) {
@@ -125,6 +173,8 @@ export function buildSql(brands, records, meta = {}) {
   lines.push('-- seed_branches.sql — 공공데이터 상가(상권)정보에서 뽑은 브랜드 지점 (scripts/import/build-branches.mjs 가 생성, 직접 수정하지 않는다)');
   lines.push(`-- 원본: ${meta.files?.join(', ') ?? '(CSV)'} / 브랜드: ${brands.map((b) => b.name).join(', ')} / 지점 ${records.length}개`);
   lines.push('-- 멱등: 여러 번 실행해도 안전하다 (brands 는 이름, restaurants 는 external_id 로 upsert).');
+  lines.push('-- 같은 (브랜드, 도로명주소) 지점은 1행만 남긴다. 정리 단계가 이번 목록에 없는 대상 브랜드의 지점을 삭제한다.');
+  lines.push('-- 주의: 중복 행 삭제로 사용자가 저장한 가게(saved_restaurants, on delete cascade)의 일부가 함께 사라질 수 있다.');
   lines.push('-- 실행 순서: (schema/policies/functions/seed_reference 이후) 이 파일 → seed_brand_menus.sql');
   lines.push('-- =====================================================================');
   lines.push('begin;');
@@ -138,6 +188,15 @@ export function buildSql(brands, records, meta = {}) {
     );
     lines.push('on conflict (name) where is_franchise do update');
     lines.push('  set is_franchise = true, category_id = excluded.category_id, official_domains = excluded.official_domains;');
+    lines.push('');
+  }
+  if (records.length > 0) {
+    // 정리: 대상 브랜드 지점 중 이번에 유지하는 external_id 가 아닌 행(중복·사라진 지점)을 지운다. 저장한 가게는 cascade 로 함께 지워진다.
+    const keep = [...records].map((r) => r.external_id).sort();
+    lines.push('-- 정리: 중복 지점 삭제 (saved_restaurants 도 cascade 로 삭제됨)');
+    lines.push('delete from restaurants');
+    lines.push(`where brand_id in (select id from brands where is_franchise and name in (${brands.map((b) => sqlRequired(b.name)).join(', ')}))`);
+    lines.push(`  and external_id <> all (array[${keep.map(sqlRequired).join(', ')}]::text[]);`);
     lines.push('');
   }
   const sorted = [...records].sort((a, b) => a.brand.localeCompare(b.brand, 'ko') || a.external_id.localeCompare(b.external_id));
@@ -209,6 +268,65 @@ export function buildReport(brands, records, skipped, stats) {
   return `${L.join('\n')}\n`;
 }
 
+// ---------- 중복 제거 리포트 ----------
+
+const sameName = (rows) => new Set(rows.map((r) => r.shop_name.replace(/\s+/g, ''))).size === 1;
+const floorHo = (r) => `${r.floor}/${r.ho}`;
+
+/** 원인 조사 + 전후 비교를 마크다운으로 만든다. before 는 중복 제거 전 전체 행, kept 는 남긴 행. */
+export function buildDedupeReport(brands, before, kept, groups) {
+  const L = [];
+  const dup = [...groups.entries()].filter(([, rows]) => rows.length > 1).sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], 'ko'));
+  const dist = new Map();
+  for (const rows of groups.values()) inc(dist, rows.length);
+  const show = (rows, rep) => rows.map((r) => `  - ${r.external_id === rep?.external_id ? '★' : ' '} ${r.external_id} | 상호 ${r.shop_name} | 지점 ${r.branch_name || '-'} | ${r.small_category} | 층 ${r.floor || '-'} | 호 ${r.ho || '-'}`);
+
+  L.push('# 지점 중복 제거 리포트', '');
+  L.push('## 요약', '');
+  L.push(`- 중복 제거 전 ${before.length}행 → 그룹(브랜드+도로명주소) ${groups.size}개 → 제거 후 ${kept.length}행 (삭제 대상 ${before.length - kept.length}행)`);
+  L.push(`- 그룹당 행 수 분포: ${[...dist.entries()].sort((a, b) => a[0] - b[0]).map(([n, c]) => `${n}행 ${c}그룹`).join(', ')}`, '');
+
+  L.push('## 원인', '');
+  L.push('- 같은 매장이 상가업소번호만 다르게 여러 번 등록되어 있다. 대표 예: 같은 도로명주소·같은 상호명 5행, 상호 표기만 다른 행("맥도날드 중랑점"/"한국맥도날드 중랑점"), 업종소분류만 다른 행(버거/피자/경양식).');
+  const prefixes = new Map();
+  for (const [, rows] of dup) for (const r of rows) inc(prefixes, r.external_id.slice(0, 8));
+  L.push(`- 중복 그룹에 속한 ${[...dup].reduce((n, [, rows]) => n + rows.length, 0)}행의 상가업소번호 접두어: ${top(prefixes, 5).map(([k, v]) => `${k}… ${v}행`).join(', ')}`);
+  L.push('- 기존 seed_branches.sql 은 상가업소번호(external_id)로만 upsert 해서 이 행들이 모두 별개 지점으로 들어갔다.', '');
+
+  L.push('## 예시 그룹 5개 (★ = 대표로 남는 행)', '');
+  const nameDiff = dup.filter(([, rows]) => !sameName(rows));
+  const examples = [...dup.slice(0, 3), ...nameDiff.filter(([k]) => !dup.slice(0, 3).some(([k2]) => k2 === k)).slice(0, 2)];
+  for (const [k, rows] of examples) {
+    L.push(`- ${k.replace('|', ' / ')} (${rows.length}행)`, ...show(rows, pickRepresentative(rows)));
+  }
+  L.push('');
+
+  const floorDiff = dup.filter(([, rows]) => new Set(rows.map(floorHo)).size > 1);
+  const bothFilled = dup.filter(([, rows]) => new Set(rows.filter((r) => r.floor || r.ho).map(floorHo)).size > 1);
+  const ambiguous = floorDiff.filter(([, rows]) => !sameName(rows));
+  L.push('## 같은 건물의 별개 매장 가능성', '');
+  L.push(`- 중복 그룹 ${dup.length}개 중 층·호 정보가 서로 다른 그룹: ${floorDiff.length}개`);
+  L.push(`- 그중 층·호가 둘 다 채워져 있으면서 서로 다른(=별개 매장일 근거가 되는) 그룹: ${bothFilled.length}개`);
+  L.push(`- 상호명도 다르고 층·호도 다른 그룹(모호): ${ambiguous.length}개`);
+  L.push(bothFilled.length === 0
+    ? '- 판단: 층·호가 모두 채워진 채 서로 다른 그룹이 없다. 층·호가 다른 그룹은 한쪽이 비어 있는 경우(예: 한 행은 1층, 다른 행은 비어 있고 업종이 "피자"로 오분류)뿐이라 같은 매장의 중복 등록으로 본다. 층·호를 키에 넣지 않고 "같은 건물 같은 주소는 한 지점"으로 처리한다.'
+    : '- 판단: 층·호가 모두 채워진 채 서로 다른 그룹이 있어 별개 매장일 수 있다. 아래 그룹을 확인하고 필요하면 키에 층·호를 추가한다.');
+  for (const [k, rows] of ambiguous) L.push(`- 모호 그룹: ${k.replace('|', ' / ')}`, ...show(rows, pickRepresentative(rows)));
+  L.push('');
+
+  L.push('## 브랜드별 지점 수 (전 → 후)', '');
+  for (const b of brands) L.push(`- ${b.name}: ${before.filter((r) => r.brand === b.name).length} → ${kept.filter((r) => r.brand === b.name).length}`);
+  L.push('');
+  L.push('## 구별 지점 수 상위 10 (전 → 후)', '');
+  const guBefore = new Map();
+  const guAfter = new Map();
+  for (const r of before) inc(guBefore, r.sigungu);
+  for (const r of kept) inc(guAfter, r.sigungu);
+  for (const [k, v] of top(guAfter, 10)) L.push(`- ${k}: ${guBefore.get(k) ?? 0} → ${v}`);
+  L.push('');
+  return `${L.join('\n')}\n`;
+}
+
 // ---------- 실행 ----------
 
 /** CSV 파일 하나를 스트리밍으로 읽어 processRow 결과를 모은다 */
@@ -272,11 +390,14 @@ async function main() {
   }
   console.log(`읽은 행 ${acc.rows}개, ${((Date.now() - started) / 1000).toFixed(1)}초`);
 
+  const { kept, removed, groups } = dedupeRecords(acc.records);
   mkdirSync(OUT_DIR, { recursive: true });
-  writeFileSync(join(REPO_ROOT, 'supabase', 'seed_branches.sql'), buildSql(brands, acc.records, { files }));
-  writeFileSync(join(OUT_DIR, 'branches-report.md'), buildReport(brands, acc.records, acc.skipped, { files, rows: acc.rows, badRows: acc.badRows, badSamples: acc.badSamples }));
-  for (const b of brands) console.log(`${b.name}: ${acc.records.filter((r) => r.brand === b.name).length}개`);
-  console.log(`건너뛴 행 ${acc.skipped.length}개 → supabase/seed_branches.sql, scripts/import/out/branches-report.md`);
+  writeFileSync(join(REPO_ROOT, 'supabase', 'seed_branches.sql'), buildSql(brands, kept, { files }));
+  writeFileSync(join(OUT_DIR, 'branches-report.md'), buildReport(brands, kept, acc.skipped, { files, rows: acc.rows, badRows: acc.badRows, badSamples: acc.badSamples }));
+  writeFileSync(join(OUT_DIR, 'dedupe-report.md'), buildDedupeReport(brands, acc.records, kept, groups));
+  for (const b of brands) console.log(`${b.name}: ${acc.records.filter((r) => r.brand === b.name).length}개 → ${kept.filter((r) => r.brand === b.name).length}개`);
+  console.log(`중복 제거: ${acc.records.length}행 → ${kept.length}행 (삭제 대상 ${removed}행)`);
+  console.log(`건너뛴 행 ${acc.skipped.length}개 → supabase/seed_branches.sql, scripts/import/out/branches-report.md, scripts/import/out/dedupe-report.md`);
 }
 
 if (isMain(import.meta.url)) {
