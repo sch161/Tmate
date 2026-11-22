@@ -16,18 +16,80 @@ export type Database = {
     Tables: {
       allergens: {
         Row: {
+          aliases: string[]
+          display_name: string
           id: number
           name: string
         }
         Insert: {
+          aliases?: string[]
+          display_name: string
           id?: never
           name: string
         }
         Update: {
+          aliases?: string[]
+          display_name?: string
           id?: never
           name?: string
         }
         Relationships: []
+      }
+      brands: {
+        Row: {
+          allergen_data_date: string | null
+          allergen_source_url: string | null
+          category_id: number | null
+          created_at: string
+          id: number
+          image_url: string | null
+          is_franchise: boolean
+          name: string
+          official_domains: string[]
+          research_error: string | null
+          research_status: string
+          researched_at: string | null
+          shared_notice: string | null
+        }
+        Insert: {
+          allergen_data_date?: string | null
+          allergen_source_url?: string | null
+          category_id?: number | null
+          created_at?: string
+          id?: never
+          image_url?: string | null
+          is_franchise?: boolean
+          name: string
+          official_domains?: string[]
+          research_error?: string | null
+          research_status?: string
+          researched_at?: string | null
+          shared_notice?: string | null
+        }
+        Update: {
+          allergen_data_date?: string | null
+          allergen_source_url?: string | null
+          category_id?: number | null
+          created_at?: string
+          id?: never
+          image_url?: string | null
+          is_franchise?: boolean
+          name?: string
+          official_domains?: string[]
+          research_error?: string | null
+          research_status?: string
+          researched_at?: string | null
+          shared_notice?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brands_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "food_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       food_categories: {
         Row: {
@@ -49,16 +111,19 @@ export type Database = {
           allergen_id: number
           level: Database["public"]["Enums"]["allergen_level"]
           menu_id: number
+          original_text: string | null
         }
         Insert: {
           allergen_id: number
           level?: Database["public"]["Enums"]["allergen_level"]
           menu_id: number
+          original_text?: string | null
         }
         Update: {
           allergen_id?: number
           level?: Database["public"]["Enums"]["allergen_level"]
           menu_id?: number
+          original_text?: string | null
         }
         Relationships: [
           {
@@ -109,32 +174,50 @@ export type Database = {
       }
       menus: {
         Row: {
+          allergen_checked_at: string | null
+          allergen_note: string | null
+          allergen_source_url: string | null
+          allergen_status: Database["public"]["Enums"]["allergen_status"]
+          brand_id: number
           description: string | null
           id: number
           image_url: string | null
+          menu_source_name: string | null
+          menu_source_url: string | null
           name: string
-          restaurant_id: number
         }
         Insert: {
+          allergen_checked_at?: string | null
+          allergen_note?: string | null
+          allergen_source_url?: string | null
+          allergen_status?: Database["public"]["Enums"]["allergen_status"]
+          brand_id: number
           description?: string | null
           id?: never
           image_url?: string | null
+          menu_source_name?: string | null
+          menu_source_url?: string | null
           name: string
-          restaurant_id: number
         }
         Update: {
+          allergen_checked_at?: string | null
+          allergen_note?: string | null
+          allergen_source_url?: string | null
+          allergen_status?: Database["public"]["Enums"]["allergen_status"]
+          brand_id?: number
           description?: string | null
           id?: never
           image_url?: string | null
+          menu_source_name?: string | null
+          menu_source_url?: string | null
           name?: string
-          restaurant_id?: number
         }
         Relationships: [
           {
-            foreignKeyName: "menus_restaurant_id_fkey"
-            columns: ["restaurant_id"]
+            foreignKeyName: "menus_brand_id_fkey"
+            columns: ["brand_id"]
             isOneToOne: false
-            referencedRelation: "restaurants"
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -172,40 +255,49 @@ export type Database = {
       restaurants: {
         Row: {
           address: string
-          category_id: number | null
+          brand_id: number
           created_at: string
+          external_id: string | null
           id: number
           image_url: string | null
           name: string
           phone: string | null
           region: string
+          sido: string | null
+          sigungu: string | null
         }
         Insert: {
           address: string
-          category_id?: number | null
+          brand_id: number
           created_at?: string
+          external_id?: string | null
           id?: never
           image_url?: string | null
           name: string
           phone?: string | null
           region: string
+          sido?: string | null
+          sigungu?: string | null
         }
         Update: {
           address?: string
-          category_id?: number | null
+          brand_id?: number
           created_at?: string
+          external_id?: string | null
           id?: never
           image_url?: string | null
           name?: string
           phone?: string | null
           region?: string
+          sido?: string | null
+          sigungu?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "restaurants_category_id_fkey"
-            columns: ["category_id"]
+            foreignKeyName: "restaurants_brand_id_fkey"
+            columns: ["brand_id"]
             isOneToOne: false
-            referencedRelation: "food_categories"
+            referencedRelation: "brands"
             referencedColumns: ["id"]
           },
         ]
@@ -336,6 +428,20 @@ export type Database = {
             foreignKeyName: "saved_restaurants_restaurant_id_fkey"
             columns: ["restaurant_id"]
             isOneToOne: false
+            referencedRelation: "restaurant_stats"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "saved_restaurants_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurant_taste_tags"
+            referencedColumns: ["restaurant_id"]
+          },
+          {
+            foreignKeyName: "saved_restaurants_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
             referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
@@ -431,6 +537,22 @@ export type Database = {
       }
     }
     Views: {
+      brand_stats: {
+        Row: {
+          avg_rating: number | null
+          brand_id: number | null
+          review_count: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menus_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_stats: {
         Row: {
           avg_rating: number | null
@@ -453,15 +575,7 @@ export type Database = {
           restaurant_id: number | null
           review_count: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "menus_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       restaurant_taste_tags: {
         Row: {
@@ -474,13 +588,6 @@ export type Database = {
             columns: ["taste_tag_id"]
             isOneToOne: false
             referencedRelation: "taste_tags"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "menus_restaurant_id_fkey"
-            columns: ["restaurant_id"]
-            isOneToOne: false
-            referencedRelation: "restaurants"
             referencedColumns: ["id"]
           },
         ]
@@ -523,8 +630,10 @@ export type Database = {
       get_allergy_menus: {
         Args: { p_restaurant_id: number }
         Returns: {
+          allergen_status: Database["public"]["Enums"]["allergen_status"]
           allergens: Json
           image_url: string
+          kind: string
           menu_id: number
           name: string
         }[]
@@ -532,6 +641,8 @@ export type Database = {
       get_my_reviews: {
         Args: never
         Returns: {
+          brand_id: number
+          brand_name: string
           created_at: string
           image_url: string
           menu_id: number
@@ -558,7 +669,9 @@ export type Database = {
       get_recommended_menus: {
         Args: { p_limit?: number; p_region: string }
         Returns: {
+          allergen_status: Database["public"]["Enums"]["allergen_status"]
           avg_rating: number
+          brand_name: string
           image_url: string
           match_percent: number
           menu_id: number
@@ -569,12 +682,26 @@ export type Database = {
           restaurant_name: string
         }[]
       }
+      get_regions: {
+        Args: never
+        Returns: {
+          region: string
+          restaurant_count: number
+          sido: string
+          sigungu: string
+        }[]
+      }
       get_restaurant_detail: {
         Args: { p_restaurant_id: number }
         Returns: {
           address: string
+          allergen_data_date: string
+          allergen_source_url: string
           avg_rating: number
+          brand_id: number
+          brand_name: string
           image_url: string
+          is_franchise: boolean
           is_saved: boolean
           match_percent: number
           name: string
@@ -583,17 +710,23 @@ export type Database = {
           region: string
           restaurant_id: number
           review_count: number
+          shared_notice: string
         }[]
       }
       get_restaurant_menus: {
         Args: { p_restaurant_id: number }
         Returns: {
+          allergen_checked_at: string
+          allergen_source_url: string
+          allergen_status: Database["public"]["Enums"]["allergen_status"]
           avg_rating: number
           description: string
           image_url: string
           is_saved: boolean
           match_percent: number
           menu_id: number
+          menu_source_name: string
+          menu_source_url: string
           my_rating: number
           name: string
           taste_tags: string[]
@@ -608,7 +741,11 @@ export type Database = {
         }
         Returns: {
           avg_rating: number
+          brand_id: number
+          brand_name: string
+          has_official_allergen: boolean
           image_url: string
+          is_franchise: boolean
           is_saved: boolean
           match_percent: number
           name: string
@@ -644,6 +781,7 @@ export type Database = {
     }
     Enums: {
       allergen_level: "danger" | "caution"
+      allergen_status: "verified" | "official_extract" | "estimated" | "unknown"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -772,6 +910,7 @@ export const Constants = {
   public: {
     Enums: {
       allergen_level: ["danger", "caution"],
+      allergen_status: ["verified", "official_extract", "estimated", "unknown"],
     },
   },
 } as const

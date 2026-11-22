@@ -1,0 +1,31 @@
+[
+  {
+    "name": "맥도날드 고척DT점",
+    "address": "서울 구로구 경인로 393",
+    "brand": "맥도날드",
+    "official_domains": ["mcdonalds.co.kr"],
+    "notes": "주소: 웹 검색에서 여러 출처(polle, 건물정보 사이트)가 일치. 도메인: 검색으로 mcdonalds.co.kr/kor/menu/information/allergens 등 공식 페이지 확인."
+  },
+  {
+    "name": "롯데리아 신도림역점",
+    "address": "서울 구로구 경인로 661",
+    "brand": "롯데리아",
+    "official_domains": ["lotteeatz.com"],
+    "notes": "주소: 알바몬 채용공고 1건 기준(단일 출처, 영업 여부 미확인). 도메인: lotteeatz.com 은 알레르기·영양 페이지로 검색 확인. lotteria.com 은 확인하지 못해 제외."
+  },
+  {
+    "name": "낙성기사식당",
+    "address": "서울 관악구 봉천로 550",
+    "notes": "맛집 소개 사이트(식신) 등록 정보 기준(단일 출처, 영업 여부 미확인)."
+  },
+  {
+    "name": "이조 손칼국수",
+    "address": "서울 구로구 공원로7길 22 1층",
+    "notes": "블로그·후기 사이트 기준 주소(영업 여부 미확인)."
+  },
+  {
+    "name": "306호 삼촌네",
+    "address": "서울 관악구 신림로59길 14 원빌딩 3층 306호",
+    "notes": "신림 원조민속순대타운 내 점포. 같은 건물에 비슷한 이름의 가게가 많아 모호성 테스트를 겸한다."
+  }
+]
