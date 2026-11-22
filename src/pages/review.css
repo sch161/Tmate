@@ -1,0 +1,150 @@
+/* 메뉴 평가 작성 전용 스타일 (디자인 대기: Figma 에 화면이 없어 토큰 기반 임시 UI). 값은 variables.css 토큰만 쓴다. */
+.review {
+  padding-top: 73px;
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+}
+
+.review__back {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin-left: 23px;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.review__body {
+  margin-top: var(--space-4);
+}
+
+.review__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding-inline: var(--space-4);
+}
+
+.review__menu {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.review__image {
+  flex: 0 0 auto;
+  width: 96px;
+  height: 96px;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  object-fit: cover;
+}
+
+.review__menu-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.review__name {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+  overflow-wrap: anywhere;
+}
+
+.review__brand {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.review__desc {
+  font-size: var(--font-size-13);
+  overflow-wrap: anywhere;
+}
+
+.review__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.review__title {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+}
+
+.review__hint {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+}
+
+.stars {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.stars__star {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: none;
+}
+
+.stars__star img {
+  width: 32px;
+  height: 32px;
+  filter: grayscale(1) opacity(0.45);
+}
+
+.stars__star.is-on img {
+  filter: none;
+}
+
+.stars__star:focus-visible {
+  outline: 2px solid var(--color-primary);
+}
+
+.stars__value {
+  margin-left: var(--space-2);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+}
+
+.review__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.review__delete {
+  align-self: center;
+  padding: var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--color-error);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+}
+
+.review__delete:disabled {
+  color: var(--color-disabled);
+}
+
+.review__error {
+  color: var(--color-error);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.review__home-link {
+  display: block;
+  margin-top: var(--space-3);
+  text-align: center;
+  text-decoration: underline;
+}
