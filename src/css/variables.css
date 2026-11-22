@@ -1,5 +1,5 @@
 /* 디자인 토큰. Figma(T:MATE) Home / Flavor Info / Allergy Info / User-Login / Details_s / User 에서 추출. */
-/* 글꼴: 화면 대부분은 Paperlogy, 가게 상세 일부는 Pretendard. Pretendard 는 CDN 으로 불러온다. */
+/* 글꼴: Paperlogy 는 fonts.css(로컬 woff2), Pretendard 는 CDN(폴백 + 가게 상세 일부 화면). */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css');
 
 :root {
@@ -27,8 +27,7 @@
   --color-overlay: rgba(97, 56, 18, 0.9); /* 토스트 배경 (--color-text 기반) */
 
   /* font */
-  --font-family-base: 'Paperlogy', 'Pretendard Variable', Pretendard, -apple-system, 'Malgun Gothic', system-ui,
-    sans-serif;
+  --font-family-base: 'Paperlogy', 'Pretendard Variable', 'Pretendard', system-ui, sans-serif;
   --font-size-10: 0.625rem; /* 칩 */
   --font-size-12: 0.75rem; /* 캡션 */
   --font-size-13: 0.8125rem; /* 보조 본문 */
