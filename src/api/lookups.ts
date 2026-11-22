@@ -27,13 +27,27 @@ export async function getAllergens(): Promise<Allergen[]> {
   }
 }
 
-/** 가게가 있는 지역(구 단위 문자열)을 중복 없이 가나다순으로 돌려준다. */
-export async function getAvailableRegions(): Promise<string[]> {
+/** 지점이 있는 지역 한 건 (get_regions RPC) */
+export interface RegionOption {
+  region: string;
+  sido: string | null;
+  sigungu: string | null;
+  restaurantCount: number;
+}
+
+/** 지점이 있는 지역 목록을 가나다순으로 돌려준다. 지점이 없으면 빈 배열. */
+export async function getAvailableRegions(): Promise<RegionOption[]> {
   try {
-    const { data, error } = await supabase.from('restaurants').select('region');
+    const { data, error } = await supabase.rpc('get_regions');
     if (error) throw error;
-    const regions = new Set((data ?? []).map((row) => row.region));
-    return Array.from(regions).sort((a, b) => a.localeCompare(b, 'ko'));
+    return (data ?? [])
+      .map((row) => ({
+        region: row.region,
+        sido: row.sido ?? null,
+        sigungu: row.sigungu ?? null,
+        restaurantCount: Number(row.restaurant_count) || 0,
+      }))
+      .sort((a, b) => a.region.localeCompare(b.region, 'ko'));
   } catch {
     throw new Error(LOAD_ERROR);
   }

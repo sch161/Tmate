@@ -64,7 +64,7 @@ export function pickRegion(options: PickRegionOptions = {}): Promise<string | nu
     async function load(): Promise<void> {
       renderLoading(content);
       try {
-        renderList(await getAvailableRegions());
+        renderList((await getAvailableRegions()).map((option) => option.region));
       } catch (e) {
         renderError(content, e instanceof Error ? e.message : '목록을 불러오지 못했어요', () => void load());
       }
