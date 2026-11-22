@@ -23,3 +23,60 @@ export async function getMyAllergenCount(): Promise<number> {
     throw new Error('알레르기 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
   }
 }
+
+/** 맛 비율 한 건 (get_my_summary 의 taste_ratios 원소) */
+export interface TasteRatio {
+  name: string;
+  ratio: number;
+}
+
+/** 마이페이지 요약. 입맛 유형·설명은 입맛 정보가 없으면 null 일 수 있다. */
+export interface MySummary {
+  nickname: string;
+  region: string | null;
+  /** 비율 내림차순. 형태가 맞지 않는 항목은 버린다. */
+  tasteRatios: TasteRatio[];
+  tasteTypeName: string | null;
+  tasteTypeDesc: string | null;
+  savedRestaurantCount: number;
+  reviewCount: number;
+  mateCount: number;
+}
+
+/** taste_ratios(jsonb)를 런타임에서 검증해 읽는다. [{"name": "매콤함", "ratio": 60}] 형태만 받는다. */
+export function parseTasteRatios(value: unknown): TasteRatio[] {
+  if (!Array.isArray(value)) return [];
+  const ratios: TasteRatio[] = [];
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) continue;
+    const { name, ratio } = entry as Record<string, unknown>;
+    if (typeof name !== 'string' || name.trim() === '' || typeof ratio !== 'number' || !Number.isFinite(ratio)) continue;
+    ratios.push({ name: name.trim(), ratio: Math.min(100, Math.max(0, ratio)) });
+  }
+  return ratios.sort((a, b) => b.ratio - a.ratio);
+}
+
+const count = (value: number | null | undefined): number => (typeof value === 'number' && Number.isFinite(value) ? value : 0);
+const text = (value: string | null | undefined): string | null => (typeof value === 'string' && value.trim() !== '' ? value.trim() : null);
+
+/** 마이페이지 요약(get_my_summary). 행이 없으면 null. */
+export async function getMySummary(): Promise<MySummary | null> {
+  try {
+    const { data, error } = await supabase.rpc('get_my_summary');
+    if (error) throw error;
+    const row = data?.[0];
+    if (!row) return null;
+    return {
+      nickname: text(row.nickname) ?? '',
+      region: text(row.region),
+      tasteRatios: parseTasteRatios(row.taste_ratios),
+      tasteTypeName: text(row.taste_type_name),
+      tasteTypeDesc: text(row.taste_type_desc),
+      savedRestaurantCount: count(row.saved_restaurant_count),
+      reviewCount: count(row.review_count),
+      mateCount: count(row.mate_count),
+    };
+  } catch {
+    throw new Error('내 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  }
+}
