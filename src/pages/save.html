@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>저장 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/save.css" />
+  </head>
+  <body>
+    <main class="app has-bottom-nav save" id="app">
+      <header class="save__top">
+        <h1 class="save__heading">저장</h1>
+        <p class="save__user" id="user-text"></p>
+      </header>
+
+      <form class="save__search" id="search-form" role="search">
+        <img src="/src/assets/images/search-mascot.png" alt="" width="40" height="40" />
+        <input class="save__search-input" id="search-input" type="search" placeholder="저장한 가게나 메뉴를 검색해보세요!" maxlength="50" aria-label="저장한 가게 또는 메뉴 검색" />
+      </form>
+
+      <section class="save__section" aria-labelledby="saved-restaurants-title">
+        <div class="save__section-head">
+          <div class="save__section-title">
+            <h2 id="saved-restaurants-title">저장한 가게</h2>
+            <span id="restaurant-count"></span>
+          </div>
+          <button class="save__toggle" id="restaurant-toggle" type="button" hidden></button>
+        </div>
+        <div class="save__box" id="restaurant-area"></div>
+      </section>
+
+      <section class="save__section" aria-labelledby="saved-menus-title">
+        <div class="save__section-head">
+          <div class="save__section-title">
+            <h2 id="saved-menus-title">저장한 메뉴</h2>
+            <span id="menu-count"></span>
+          </div>
+          <button class="save__toggle" id="menu-toggle" type="button" hidden></button>
+        </div>
+        <div class="save__box" id="menu-area"></div>
+      </section>
+    </main>
+    <script type="module" src="/src/pages/save.ts"></script>
+  </body>
+</html>

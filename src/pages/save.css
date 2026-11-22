@@ -1,0 +1,241 @@
+/* 저장 화면 전용 스타일 (Figma Save 1:546). 값은 variables.css 토큰만 쓴다. */
+.save {
+  /* padding-bottom 은 .has-bottom-nav 가 정한다 (단축 속성으로 덮어쓰지 않는다) */
+  padding-top: 60px;
+  padding-inline: var(--space-4);
+}
+
+.save__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--font-size-16);
+}
+
+.save__heading {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-regular);
+}
+
+.save__user {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.save__search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-pill);
+  background: var(--color-background);
+}
+
+.save__search img {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+}
+
+.save__search-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+  outline: none;
+}
+
+.save__search-input::placeholder {
+  color: var(--color-text);
+  opacity: 1;
+}
+
+.save__section {
+  margin-top: var(--space-5);
+}
+
+.save__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.save__section-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+.save__section-title h2 {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+}
+
+.save__section-title span {
+  font-size: var(--font-size-12);
+}
+
+.save__toggle {
+  padding: var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+}
+
+.save__box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+/* 카드 (가게·메뉴 공통) */
+.saved-card {
+  position: relative;
+}
+
+.saved-card__main {
+  display: flex;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 0 40px 0 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+}
+
+.saved-card__image {
+  flex: 0 0 100px;
+  width: 100px;
+  height: 100px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  object-fit: cover;
+}
+
+.saved-card__info {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.saved-card__top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.saved-card__name {
+  overflow: hidden;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-card__sub {
+  overflow: hidden;
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.saved-card__place::before {
+  content: '';
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: var(--space-2);
+  vertical-align: -3px;
+  background: url('/src/assets/icons/location-sm.svg') center / contain no-repeat;
+}
+
+.saved-card__rating::before {
+  content: '';
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  margin-right: var(--space-2);
+  vertical-align: -3px;
+  background: url('/src/assets/icons/star.svg') center / 14.4px 13.8px no-repeat;
+}
+
+.saved-card__rating--none {
+  color: var(--color-text-muted);
+}
+
+.saved-card__rating--none::before {
+  display: none;
+}
+
+.saved-card__desc {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.saved-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+/* 디자인 대기: 알레르기 상태 라벨·경고 칩은 Figma 에 없는 임시 UI */
+.saved-card__status {
+  font-size: var(--font-size-10);
+  font-weight: var(--font-weight-medium);
+}
+
+.saved-card__status--unverified {
+  color: var(--color-text-muted);
+}
+
+.chip--warn {
+  border-color: var(--color-error);
+  background: var(--color-background);
+  color: var(--color-error);
+  font-weight: var(--font-weight-semibold);
+}
+
+.saved-card__save {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  background-color: var(--color-text);
+  -webkit-mask: url('/src/assets/icons/bookmark.svg') center / contain no-repeat;
+  mask: url('/src/assets/icons/bookmark.svg') center / contain no-repeat;
+}
+
+.saved-card__save:disabled {
+  opacity: 0.5;
+}

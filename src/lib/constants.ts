@@ -19,7 +19,7 @@ export const PATHS = {
   onboardingRatio: '/src/pages/onboarding-ratio.html',
   onboardingAllergy: '/src/pages/onboarding-allergy.html',
   home: '/src/pages/home.html',
-  save: '/src/pages/save.html', // 아직 없음
+  save: '/src/pages/save.html',
   mypage: '/src/pages/mypage.html', // 아직 없음
   restaurant: '/src/pages/restaurant.html', // 아직 없음 (?id=가게id)
   tasteEdit: '/src/pages/taste-edit.html', // 아직 없음
