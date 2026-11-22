@@ -487,7 +487,160 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      calc_content_match: {
+        Args: { p_menu: number; p_user: string }
+        Returns: number
+      }
+      calc_menu_match: {
+        Args: { p_menu: number; p_user: string }
+        Returns: number
+      }
+      calc_menu_match_detail: {
+        Args: { p_menu: number; p_user: string }
+        Returns: {
+          match: number
+          neighbor_avg: number
+          neighbor_count: number
+        }[]
+      }
+      calc_menu_reason: {
+        Args: { p_menu: number; p_user: string }
+        Returns: string
+      }
+      calc_setting: { Args: { p_key: string }; Returns: number }
+      calc_taste_type: {
+        Args: { p_user: string }
+        Returns: {
+          type_desc: string
+          type_name: string
+        }[]
+      }
+      calc_user_similarity: {
+        Args: { p_a: string; p_b: string }
+        Returns: number
+      }
+      delete_review: { Args: { p_menu_id: number }; Returns: undefined }
+      get_allergy_menus: {
+        Args: { p_restaurant_id: number }
+        Returns: {
+          allergens: Json
+          image_url: string
+          menu_id: number
+          name: string
+        }[]
+      }
+      get_my_reviews: {
+        Args: never
+        Returns: {
+          created_at: string
+          image_url: string
+          menu_id: number
+          menu_name: string
+          rating: number
+          restaurant_id: number
+          restaurant_name: string
+          taste_tags: string[]
+        }[]
+      }
+      get_my_summary: {
+        Args: never
+        Returns: {
+          mate_count: number
+          nickname: string
+          region: string
+          review_count: number
+          saved_restaurant_count: number
+          taste_ratios: Json
+          taste_type_desc: string
+          taste_type_name: string
+        }[]
+      }
+      get_recommended_menus: {
+        Args: { p_limit?: number; p_region: string }
+        Returns: {
+          avg_rating: number
+          image_url: string
+          match_percent: number
+          menu_id: number
+          menu_name: string
+          reason: string
+          region: string
+          restaurant_id: number
+          restaurant_name: string
+        }[]
+      }
+      get_restaurant_detail: {
+        Args: { p_restaurant_id: number }
+        Returns: {
+          address: string
+          avg_rating: number
+          image_url: string
+          is_saved: boolean
+          match_percent: number
+          name: string
+          phone: string
+          reason: string
+          region: string
+          restaurant_id: number
+          review_count: number
+        }[]
+      }
+      get_restaurant_menus: {
+        Args: { p_restaurant_id: number }
+        Returns: {
+          avg_rating: number
+          description: string
+          image_url: string
+          is_saved: boolean
+          match_percent: number
+          menu_id: number
+          my_rating: number
+          name: string
+          taste_tags: string[]
+        }[]
+      }
+      get_restaurants: {
+        Args: {
+          p_category_id?: number
+          p_limit?: number
+          p_query?: string
+          p_region: string
+        }
+        Returns: {
+          avg_rating: number
+          image_url: string
+          is_saved: boolean
+          match_percent: number
+          name: string
+          region: string
+          restaurant_id: number
+          review_count: number
+          taste_tags: string[]
+        }[]
+      }
+      get_taste_mates: {
+        Args: { p_limit?: number }
+        Returns: {
+          common_menu_count: number
+          nickname: string
+          similarity_percent: number
+          taste_type_name: string
+        }[]
+      }
+      has_batchim: { Args: { p_text: string }; Returns: boolean }
+      josa: { Args: { p_pair: string; p_text: string }; Returns: string }
+      save_onboarding: {
+        Args: { p_allergens: number[]; p_region: string; p_tastes: Json }
+        Returns: undefined
+      }
+      taste_short_name: {
+        Args: { p_code: string; p_name: string }
+        Returns: string
+      }
+      upsert_review: {
+        Args: { p_menu_id: number; p_rating: number; p_tag_ids: number[] }
+        Returns: number
+      }
     }
     Enums: {
       allergen_level: "danger" | "caution"
