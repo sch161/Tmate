@@ -126,13 +126,13 @@ function renderDetail(detail: RestaurantDetail): void {
 
   const lines: HTMLElement[] = [
     el('h1', { class: 'restaurant__name' }, detail.name),
-    el('p', { class: 'restaurant__line restaurant__line--place' }, detail.address),
+    el('p', { class: 'restaurant__line restaurant__line--place text-wrap-ko' }, detail.address),
   ];
   if (detail.phone) {
     // 전화번호가 없으면 줄 자체를 만들지 않는다. tel: 링크에는 숫자·+·- 만 허용한다
     const dial = detail.phone.replace(/[^0-9+\-]/g, '');
     const phone = dial ? el('a', { href: `tel:${dial}` }, detail.phone) : el('span', {}, detail.phone);
-    lines.push(el('p', { class: 'restaurant__line restaurant__line--phone' }, phone));
+    lines.push(el('p', { class: 'restaurant__line restaurant__line--phone text-wrap-ko' }, phone));
   }
 
   const rating =
@@ -143,7 +143,7 @@ function renderDetail(detail: RestaurantDetail): void {
   const matchText = detail.matchPercent === null ? null : `취향 일치도 ${Math.round(detail.matchPercent)}%`;
 
   const intro = el('div', { class: 'restaurant__intro' });
-  if (detail.reason) intro.append(el('p', { class: 'restaurant__reason' }, detail.reason));
+  if (detail.reason) intro.append(el('p', { class: 'restaurant__reason text-wrap-ko' }, detail.reason));
   intro.append(el('div', { class: 'restaurant__score' }, rating, ...(matchText ? [el('p', { class: 'restaurant__match' }, matchText)] : [])));
 
   const tabs = el('div', { class: 'tabs', role: 'tablist' });
@@ -190,7 +190,7 @@ function createMenuCard(menu: RestaurantMenu): HTMLElement {
     menu.tasteTags.forEach((tag, index) => tags.append(el('span', { class: index === 0 ? 'chip is-active' : 'chip' }, tag)));
     info.append(tags);
   }
-  if (menu.description) info.append(el('p', { class: 'menu-card__desc' }, menu.description));
+  if (menu.description) info.append(el('p', { class: 'menu-card__desc text-wrap-ko' }, menu.description));
 
   const foot = el('div', { class: 'menu-card__foot' });
   // 디자인 대기: 평가하기 링크 (review.html 은 아직 없다)
@@ -208,7 +208,7 @@ function renderMenus(menus: RestaurantMenu[]): void {
     return;
   }
   // 디자인 대기: 안내 문구와 출처 줄은 Figma 에 없는 임시 UI
-  const content = el('div', { class: 'restaurant__list' }, el('p', { class: 'restaurant__hint' }, '맛 태그는 추정값이에요'));
+  const content = el('div', { class: 'restaurant__list' }, el('p', { class: 'restaurant__hint text-wrap-ko' }, '맛 태그는 추정값이에요'));
   for (const menu of menus) content.append(createMenuCard(menu));
 
   const sources = new Map<string, string | null>();
@@ -216,7 +216,7 @@ function renderMenus(menus: RestaurantMenu[]): void {
     if (menu.menuSourceName && !sources.has(menu.menuSourceName)) sources.set(menu.menuSourceName, safeHttpUrl(menu.menuSourceUrl));
   }
   if (sources.size > 0) {
-    const line = el('p', { class: 'restaurant__source' }, '메뉴 정보 출처: ');
+    const line = el('p', { class: 'restaurant__source text-wrap-ko' }, '메뉴 정보 출처: ');
     let first = true;
     for (const [name, url] of sources) {
       if (!first) line.append(', ');
@@ -252,12 +252,12 @@ const LEVEL_LABEL: Record<AllergenItem['level'], string> = { danger: '위험', c
 
 function createStatusLabel(status: RestaurantMenu['allergenStatus']): HTMLElement {
   const info = getAllergenStatusInfo(status);
-  return el('p', { class: info.unverified ? 'status-label status-label--unverified' : 'status-label' }, info.label);
+  return el('p', { class: info.unverified ? 'status-label status-label--unverified text-wrap-ko' : 'status-label text-wrap-ko' }, info.label);
 }
 
 /** 브랜드 안내 영역: 알레르기가 없든 있든, 결과가 없든 있든 항상 보인다 (디자인 대기: 임시 UI) */
 function createNotice(detail: RestaurantDetail): HTMLElement {
-  const notice = el('section', { class: 'allergy-notice', 'aria-label': '알레르기 정보 안내' });
+  const notice = el('section', { class: 'allergy-notice text-wrap-ko', 'aria-label': '알레르기 정보 안내' });
   const list = el('ul', { class: 'allergy-notice__list' });
   list.append(el('li', {}, STATUS_NOTICES.reference), el('li', {}, STATUS_NOTICES.branch));
   // 공지 조각이 많으면 처음 NOTICE_VISIBLE 개만 보이고 "더보기"로 펼친다
@@ -298,11 +298,11 @@ function createAllergyCard(menu: AllergyMenu): HTMLElement {
     info.append(chips);
     const originals = menu.allergens.filter((item) => item.originalText && item.originalText !== item.name);
     if (originals.length > 0) {
-      info.append(el('p', { class: 'menu-card__desc' }, `공식 표기: ${originals.map((item) => item.originalText).join(', ')}`));
+      info.append(el('p', { class: 'menu-card__desc text-wrap-ko' }, `공식 표기: ${originals.map((item) => item.originalText).join(', ')}`));
     }
   } else {
     // 디자인 대기: "정보 없음" 칩은 위험 칩과 구분되는 중립 색
-    info.append(el('span', { class: 'chip chip--neutral' }, '정보 없음'), el('p', { class: 'menu-card__desc' }, '알레르기 정보가 없어요. 가게에 확인하세요'));
+    info.append(el('span', { class: 'chip chip--neutral' }, '정보 없음'), el('p', { class: 'menu-card__desc text-wrap-ko' }, '알레르기 정보가 없어요. 가게에 확인하세요'));
   }
   info.append(createStatusLabel(menu.allergenStatus));
   return el('article', { class: 'menu-card menu-card--allergy' }, createImage(menu.imageUrl, 'menu-card__image'), info, createSaveButton(menu.menuId));
@@ -310,7 +310,7 @@ function createAllergyCard(menu: AllergyMenu): HTMLElement {
 
 function createGroup(title: string, hint: string | null, menus: AllergyMenu[]): HTMLElement {
   const group = el('section', { class: 'allergy-group' }, el('h2', { class: 'allergy-group__title' }, title));
-  if (hint) group.append(el('p', { class: 'restaurant__hint' }, hint));
+  if (hint) group.append(el('p', { class: 'restaurant__hint text-wrap-ko' }, hint));
   group.append(el('div', { class: 'restaurant__list' }, ...menus.map(createAllergyCard)));
   return group;
 }
@@ -321,14 +321,14 @@ function createNoAllergyView(menus: RestaurantMenu[]): HTMLElement {
   view.append(
     el(
       'div',
-      { class: 'allergy-register' },
+      { class: 'allergy-register text-wrap-ko' },
       el('p', {}, '알레르기를 등록하면 피해야 할 메뉴를 알려드려요'),
       // 디자인 대기: allergy-edit.html 은 아직 없다
       el('a', { href: PATHS.allergyEdit }, '알레르기 등록하기'),
     ),
   );
   if (menus.length > 0) {
-    const list = el('ul', { class: 'allergy-status-list' });
+    const list = el('ul', { class: 'allergy-status-list text-wrap-ko' });
     for (const menu of menus) list.append(el('li', {}, el('span', { class: 'allergy-status-list__name' }, menu.name), createStatusLabel(menu.allergenStatus)));
     view.append(el('h2', { class: 'allergy-group__title' }, '메뉴별 알레르기 정보 상태'), list);
   }
@@ -339,7 +339,7 @@ function renderAllergy(detail: RestaurantDetail, data: AllergyTabData, menus: Re
   if (!panel) return;
   // 디자인 대기: 말풍선 문구와 마스코트는 Figma Details_m 그대로
   const mascot = el('div', { class: 'allergy-head__mascot', 'aria-hidden': 'true' }, el('img', { src: mascotImage, alt: '' }));
-  const head = el('div', { class: 'allergy-head' }, el('p', { class: 'allergy-head__bubble' }, `${data.nickname}님이 피해야 할 음식을 알려드려요`), mascot);
+  const head = el('div', { class: 'allergy-head' }, el('p', { class: 'allergy-head__bubble text-wrap-ko' }, `${data.nickname}님이 피해야 할 음식을 알려드려요`), mascot);
   const body = el('div', { class: 'restaurant__allergy' }, head, createNotice(detail));
 
   if (data.count === 0) {

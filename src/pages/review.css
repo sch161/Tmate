@@ -49,7 +49,6 @@
 .review__name {
   font-size: var(--font-size-18);
   font-weight: var(--font-weight-semibold);
-  overflow-wrap: anywhere;
 }
 
 .review__brand {
@@ -59,7 +58,6 @@
 
 .review__desc {
   font-size: var(--font-size-13);
-  overflow-wrap: anywhere;
 }
 
 .review__section {

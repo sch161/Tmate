@@ -94,9 +94,9 @@ function renderForm(data: MenuForReview, tags: TasteTag[]): void {
   const submitLabel = isEdit ? '수정하기' : '저장하기';
   const selectedTags = new Set<number>(myReview?.tagIds ?? []);
 
-  const info = el('div', { class: 'review__menu-info' }, el('h1', { class: 'review__name' }, menu.name));
+  const info = el('div', { class: 'review__menu-info' }, el('h1', { class: 'review__name text-wrap-ko' }, menu.name));
   if (menu.brandName) info.append(el('p', { class: 'review__brand' }, menu.brandName));
-  if (menu.description) info.append(el('p', { class: 'review__desc' }, menu.description));
+  if (menu.description) info.append(el('p', { class: 'review__desc text-wrap-ko' }, menu.description));
 
   const submit = el('button', { class: 'btn-primary', type: 'button' }, submitLabel);
   const deleteButton = el('button', { class: 'review__delete', type: 'button' }, '평가 삭제');
@@ -172,7 +172,7 @@ function renderForm(data: MenuForReview, tags: TasteTag[]): void {
       { class: 'review__form' },
       el('section', { class: 'review__menu' }, createImage(menu.imageUrl, 'review__image'), info),
       el('section', { class: 'review__section' }, el('h2', { class: 'review__title' }, '별점'), stars.root),
-      el('section', { class: 'review__section' }, el('h2', { class: 'review__title' }, '맛 태그'), el('p', { class: 'review__hint' }, '이 메뉴에서 느낀 맛을 골라주세요'), chips),
+      el('section', { class: 'review__section' }, el('h2', { class: 'review__title' }, '맛 태그'), el('p', { class: 'review__hint text-wrap-ko' }, '이 메뉴에서 느낀 맛을 골라주세요'), chips),
       actions,
     ),
   );
