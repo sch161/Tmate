@@ -39,6 +39,7 @@
 - 화면 폭은 402px 기준 모바일이다. 데스크톱에서는 가운데 정렬한 최대 폭 402px 프레임으로 보여준다
 - 색상·폰트·간격은 반드시 variables.css 의 CSS 변수를 쓴다. 하드코딩 금지
 - 모든 페이지(index.html 포함)의 <head>에는 src/css/index.css 하나만 링크하고, 페이지 전용 스타일은 그 뒤에 별도 파일로 링크한다. 폰트·토큰·공통 CSS 를 개별로 링크하지 않는다.
+- 하단 네비게이션을 쓰는 페이지는 .has-bottom-nav 를 본문에 적용해 마지막 콘텐츠가 네비에 가려지지 않게 한다.
 - 화면 노드 id: Splash 1:199 / User-Login 1:851 / User-Signup 1:884 / Location 1:312 / Flavor Info 1:201 / Allergy Info_g(비율 조절) 1:222 / Allergy Info 1:268 / Home 1:2 / Details_s(가게 상세·메뉴별 평가) 1:329 / Details_m(알레르기 정보 탭) 1:453 / Save 1:546 / User(마이페이지) 1:716
 - Figma 에 아직 없는 화면은 토큰 기반의 단순한 임시 UI 로 만들고 파일 상단에 `// 디자인 대기: 화면 나오면 교체` 주석을 남긴다
 
