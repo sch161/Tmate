@@ -1,11 +1,10 @@
 import { getAllergens, type Allergen } from '../api/lookups';
 import { saveOnboarding } from '../api/onboarding';
 import { PATHS } from '../lib/constants';
-import { getAllergenIcon } from '../utils/allergen-icons';
-import { el, qs, showToast } from '../utils/dom';
+import { createAllergenGrid } from '../utils/allergen-grid';
+import { qs, showToast } from '../utils/dom';
 import { enterStep } from '../utils/onboarding-flow';
 import { clearState, updateState, type OnboardingState } from '../utils/onboarding-state';
-import { createSelectCard, setCardSelected } from '../utils/select-card';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 
 const body = qs<HTMLElement>('#body');
@@ -36,18 +35,7 @@ function render(state: OnboardingState, allergens: Allergen[]): void {
   // 뒤로가기로 돌아왔을 때 이전 선택을 채운다
   const selected = new Set(state.allergenIds.filter((id) => allergens.some((a) => a.id === id)));
 
-  const grid = el('div', { class: 'select-grid' });
-  for (const allergen of allergens) {
-    // 표시는 display_name, 아이콘은 표준 이름(name) 기준, 저장은 id 기준
-    const card = createSelectCard(allergen.display_name, getAllergenIcon(allergen.name), selected.has(allergen.id));
-    card.addEventListener('click', () => {
-      if (selected.has(allergen.id)) selected.delete(allergen.id);
-      else selected.add(allergen.id);
-      setCardSelected(card, selected.has(allergen.id));
-      updateState({ allergenIds: Array.from(selected) });
-    });
-    grid.append(card);
-  }
+  const grid = createAllergenGrid(allergens, selected, () => updateState({ allergenIds: Array.from(selected) }));
   body.replaceChildren(grid);
   bindSubmit(state, selected);
 }

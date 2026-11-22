@@ -70,12 +70,6 @@
   background: var(--color-background);
 }
 
-/* 선택 카드 안의 아이콘 (카드 기본 스타일은 common.css 의 .select-card) */
-.select-card__icon {
-  height: 38px;
-  width: auto;
-}
-
 /* 비율 조절 슬라이더 (input[type=range] 기반, 키보드 조작 가능) */
 .ratio-list {
   display: flex;

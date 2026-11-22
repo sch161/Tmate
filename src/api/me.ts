@@ -80,3 +80,35 @@ export async function getMySummary(): Promise<MySummary | null> {
     throw new Error('내 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
   }
 }
+
+/** 내가 등록한 알레르기 id 목록. user_id = 내 id 로 거른다. */
+export async function getMyAllergenIds(): Promise<number[]> {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error('no session');
+    const { data, error } = await supabase.from('user_allergens').select('allergen_id').eq('user_id', session.user.id);
+    if (error) throw error;
+    return (data ?? []).map((row) => row.allergen_id);
+  } catch {
+    throw new Error('알레르기 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  }
+}
+
+// update_my_allergens 는 npm run gen:types 로 타입이 갱신되기 전까지 생성 타입에 없다.
+// 타입 생성 후에는 이 캐스트를 지우고 supabase.rpc('update_my_allergens', ...) 를 직접 호출한다.
+type LooseRpc = (fn: string, args: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }>;
+
+/** 내 알레르기를 통째로 교체한다(빈 배열이면 모두 해제). 서버 함수 하나가 한 트랜잭션으로 처리한다. */
+export async function updateMyAllergens(allergenIds: number[]): Promise<void> {
+  let message = '저장하지 못했어요. 잠시 후 다시 시도해주세요';
+  try {
+    const rpc = supabase.rpc.bind(supabase) as unknown as LooseRpc;
+    const { error } = await rpc('update_my_allergens', { p_allergen_ids: allergenIds });
+    if (!error) return;
+    // RPC 가 던지는 한국어 예외 메시지는 그대로 보여준다
+    if (/[가-힣]/.test(error.message)) message = error.message;
+  } catch {
+    message = '네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요';
+  }
+  throw new Error(message);
+}

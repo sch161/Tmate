@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>알레르기 수정 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/allergy-edit.css" />
+  </head>
+  <body>
+    <main class="app allergy-edit" id="app">
+      <button class="allergy-edit__back" id="back" type="button" aria-label="뒤로가기">
+        <img src="/src/assets/icons/back.svg" alt="" width="36" height="36" />
+      </button>
+      <header class="allergy-edit__head">
+        <h1 class="allergy-edit__title">알레르기 수정</h1>
+        <p class="allergy-edit__desc text-wrap-ko">해당하는 항목을 선택해주세요 (선택 사항)</p>
+        <!-- 디자인 대기: 안내 문구는 Figma 에 없는 임시 UI -->
+        <p class="allergy-edit__notice text-wrap-ko">알레르기를 바꾸면 추천과 알레르기 표시가 달라져요</p>
+      </header>
+      <section class="allergy-edit__body" id="body"></section>
+      <footer class="allergy-edit__footer">
+        <button class="btn-primary" id="save" type="button" disabled>저장하기</button>
+      </footer>
+    </main>
+    <script type="module" src="/src/pages/allergy-edit.ts"></script>
+  </body>
+</html>
