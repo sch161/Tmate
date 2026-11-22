@@ -1,0 +1,95 @@
+/* 스플래시·로그인·회원가입 전용 스타일 (Figma 1:199 / 1:851 / 1:884) */
+.auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-inline: var(--space-4);
+}
+
+.auth__logo {
+  width: 210px;
+  height: 150px;
+  object-fit: contain;
+}
+
+.auth--splash .auth__splash-error {
+  position: absolute;
+  bottom: var(--space-6);
+}
+
+.auth__brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+
+.auth__title {
+  color: var(--color-text);
+  font-family: 'Arial Rounded MT Bold', var(--font-family-base);
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+
+/* 체크 무늬 장식: 셀 9.6 x 6.9, 2줄 x 8칸 */
+.auth__checker {
+  --cell-w: 9.6px;
+  --cell-h: 6.9px;
+  width: calc(var(--cell-w) * 8);
+  height: calc(var(--cell-h) * 2);
+  background: conic-gradient(
+    var(--color-primary) 25%,
+    transparent 0 50%,
+    var(--color-primary) 0 75%,
+    transparent 0
+  );
+  background-size: calc(var(--cell-w) * 2) calc(var(--cell-h) * 2);
+}
+
+.auth__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.auth__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.auth__field .error-message {
+  padding-inline: var(--space-3);
+  text-align: center;
+}
+
+.auth__form-error {
+  text-align: center;
+}
+
+.auth__submit {
+  margin-top: var(--space-2);
+}
+
+.auth__switch {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: center;
+  margin-top: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+}
+
+.auth__switch a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.auth__switch .auth__switch-link--strong {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}

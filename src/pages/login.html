@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>로그인 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/auth.css" />
+  </head>
+  <body>
+    <main class="app auth">
+      <img class="auth__logo" src="/src/assets/images/logo.png" alt="T:MATE" width="210" height="150" />
+      <div class="auth__brand">
+        <span class="auth__checker" aria-hidden="true"></span>
+        <h1 class="auth__title">Taste Mate</h1>
+        <span class="auth__checker" aria-hidden="true"></span>
+      </div>
+
+      <form class="auth__form" id="auth-form" novalidate>
+        <div class="auth__field">
+          <input class="input" id="username" name="username" type="text" placeholder="아이디를 입력해주세요" autocomplete="username" autocapitalize="none" maxlength="20" />
+          <p class="error-message" id="username-error" role="alert" hidden></p>
+        </div>
+        <div class="auth__field">
+          <input class="input" id="password" name="password" type="password" placeholder="비밀번호를 입력해주세요" autocomplete="current-password" />
+          <p class="error-message" id="password-error" role="alert" hidden></p>
+        </div>
+        <p class="error-message auth__form-error" id="form-error" role="alert" hidden></p>
+        <button class="btn-primary auth__submit" id="submit" type="submit">로그인</button>
+      </form>
+
+      <p class="auth__switch"><a href="/src/pages/signup.html">회원가입</a></p>
+    </main>
+    <script type="module" src="/src/pages/login.ts"></script>
+  </body>
+</html>
