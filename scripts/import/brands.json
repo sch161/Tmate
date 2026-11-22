@@ -1,0 +1,33 @@
+[
+  {
+    "name": "맥도날드",
+    "category": "양식",
+    "name_patterns": [
+      "맥도날드"
+    ],
+    "exclude_patterns": [
+      "맥도날드빌딩"
+    ],
+    "official_domains": [
+      "mcdonalds.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "맥도날드"
+  },
+  {
+    "name": "롯데리아",
+    "category": "양식",
+    "name_patterns": [
+      "롯데리아"
+    ],
+    "exclude_patterns": [
+      "엔제리너스",
+      "크리스피크림"
+    ],
+    "official_domains": [
+      "lotteeatz.com"
+    ],
+    "allergen_table_is_set_based": true,
+    "result_key": "롯데리아"
+  }
+]

@@ -18,3 +18,7 @@ supabase/.temp/
 
 # AI 조사 PoC 결과물
 scripts/research/out/
+
+# 공공데이터 원본 CSV·import 중간 결과 (생성된 supabase/seed_*.sql 은 커밋 대상)
+data/raw/
+scripts/import/out/
