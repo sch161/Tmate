@@ -37,3 +37,15 @@ export async function getAvailableRegions(): Promise<string[]> {
     throw new Error(LOAD_ERROR);
   }
 }
+
+export type FoodCategory = Tables<'food_categories'>;
+
+export async function getFoodCategories(): Promise<FoodCategory[]> {
+  try {
+    const { data, error } = await supabase.from('food_categories').select('id, name').order('id');
+    if (error) throw error;
+    return data ?? [];
+  } catch {
+    throw new Error(LOAD_ERROR);
+  }
+}
