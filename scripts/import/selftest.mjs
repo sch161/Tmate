@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { EXPECTED_HEADER, createCsvParser, scanCsv, buildSql as buildBranchSql, processRow } from './build-branches.mjs';
+import { EXPECTED_HEADER, createCsvParser, scanCsv, buildSql as buildBranchSql, processRow, dedupeRecords, groupKey, normalizeAddress, pickRepresentative } from './build-branches.mjs';
 import { buildSql as buildMenuSql, normalizeMenuName, parseDataDate, prepareMenu, sanitizeNote } from './build-brand-menus.mjs';
 import { sqlString } from './lib.mjs';
 
@@ -198,6 +198,61 @@ await test('메뉴 SQL: 멱등 구조·replace·고정 공지·날짜·이스케
   assert.ok(sql.includes('seed_branches.sql 을 먼저 실행하세요'));
   // 결과가 없는 브랜드(맥도날드)는 SQL 에 나오지 않는다
   assert.ok(!sql.includes("b.name = '맥도날드'"));
+});
+
+
+// ---- 지점 중복 제거 ----
+const dupRec = (o) => ({
+  brand: '맥도날드', external_id: 'X1', name: '한국맥도날드서초점', shop_name: '한국맥도날드서초점', branch_name: '', road_address: '서울특별시 서초구 효령로49길 52',
+  lot_address: '서울특별시 서초구 서초동 1', address: '서울특별시 서초구 효령로49길 52', region: '서울시 서초구', sido: '서울특별시', sigungu: '서초구', small_category: '경양식', floor: '', ho: '', ...o,
+});
+
+await test('중복 제거: 주소 공백 정규화로 같은 그룹, 브랜드가 다르면 다른 그룹', () => {
+  assert.equal(normalizeAddress('  서울특별시   서초구	효령로49길  52 '), '서울특별시 서초구 효령로49길 52');
+  assert.equal(groupKey(dupRec({})), groupKey(dupRec({ road_address: ' 서울특별시  서초구 효령로49길 52  ' })));
+  assert.notEqual(groupKey(dupRec({})), groupKey(dupRec({ brand: '롯데리아' })));
+  const { kept, removed } = dedupeRecords([dupRec({ external_id: 'A' }), dupRec({ external_id: 'B', road_address: '서울특별시  서초구 효령로49길 52' }), dupRec({ external_id: 'C', brand: '롯데리아' })]);
+  assert.equal(kept.length, 2);
+  assert.equal(removed, 1);
+});
+
+await test('중복 제거: 도로명주소가 비면 지번주소로 그룹을 만든다', () => {
+  const a = dupRec({ external_id: 'A', road_address: '', address: '서울특별시 서초구 서초동 1' });
+  const b = dupRec({ external_id: 'B', road_address: '', address: '서울특별시 서초구 서초동 1' });
+  const c = dupRec({ external_id: 'C', road_address: '', lot_address: '서울특별시 서초구 서초동 2', address: '서울특별시 서초구 서초동 2' });
+  assert.equal(groupKey(a), groupKey(b));
+  assert.notEqual(groupKey(a), groupKey(c));
+  assert.equal(dedupeRecords([a, b, c]).kept.length, 2);
+});
+
+await test('중복 제거: 대표 선택 ①최빈 상호명 ②지점명 있는 행 ③짧은 상호명 ④상가업소번호 사전순', () => {
+  // ① 최빈 상호명
+  assert.equal(pickRepresentative([dupRec({ external_id: 'A', shop_name: '맥도날드' }), dupRec({ external_id: 'B', shop_name: '한국맥도날드' }), dupRec({ external_id: 'C', shop_name: '한국맥도날드' })]).external_id, 'B');
+  // ② 동률이면 지점명이 있는 행 (A 가 사전순으로 앞서도 지점명 있는 B)
+  assert.equal(pickRepresentative([dupRec({ external_id: 'A', shop_name: '맥도날드' }), dupRec({ external_id: 'B', shop_name: '한국맥도날드', branch_name: '구의역점' })]).external_id, 'B');
+  // ③ 지점명도 동률이면 짧은 상호명
+  assert.equal(pickRepresentative([dupRec({ external_id: 'A', shop_name: '한국맥도날드' }), dupRec({ external_id: 'B', shop_name: '맥도날드' })]).external_id, 'B');
+  // ④ 전부 동률이면 상가업소번호 사전순 첫 번째 (입력 순서와 무관)
+  const same = [dupRec({ external_id: 'C' }), dupRec({ external_id: 'A' }), dupRec({ external_id: 'B' })];
+  assert.equal(pickRepresentative(same).external_id, 'A');
+  assert.equal(pickRepresentative([...same].reverse()).external_id, 'A');
+});
+
+await test('중복 제거: 상호명은 trim 만 하고 층·호가 달라도 같은 주소는 한 지점', () => {
+  const { kept } = dedupeRecords([dupRec({ external_id: 'A', name: ' 한국맥도날드서초점 ', shop_name: '한국맥도날드서초점', floor: '1' }), dupRec({ external_id: 'B', floor: '' })]);
+  assert.equal(kept.length, 1);
+  assert.equal(kept[0].name, '한국맥도날드서초점');
+});
+
+await test('SQL: 정리 단계(대상 브랜드 + 유지 목록 외 삭제)가 upsert 앞에 있고 cascade 경고가 있다', () => {
+  const brands = [{ name: '맥도날드', category: '양식', official_domains: [] }];
+  const sql = buildBranchSql(brands, [dupRec({ external_id: 'K2' }), dupRec({ external_id: 'K1', road_address: 'x', address: 'x' })], { files: ['a.csv'] });
+  const del = sql.indexOf('delete from restaurants');
+  assert.ok(del > 0 && del < sql.indexOf('insert into restaurants'));
+  assert.ok(sql.includes("name in ('맥도날드')") && sql.includes("external_id <> all (array['K1', 'K2']::text[])"));
+  assert.ok(sql.includes('saved_restaurants') && sql.includes('cascade'));
+  // 지점이 없으면 삭제 단계를 만들지 않는다(전부 지우는 사고 방지)
+  assert.ok(!buildBranchSql(brands, [], { files: ['a.csv'] }).includes('delete from restaurants'));
 });
 
 console.log(`\n${passed} 통과${process.exitCode ? ', 실패 있음' : ''}`);
