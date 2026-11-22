@@ -23,6 +23,8 @@ export const PATHS = {
   mypage: '/src/pages/mypage.html', // 아직 없음
   restaurant: '/src/pages/restaurant.html', // 아직 없음 (?id=가게id)
   tasteEdit: '/src/pages/taste-edit.html', // 아직 없음
+  review: '/src/pages/review.html', // 아직 없음 (?menuId=메뉴id)
+  allergyEdit: '/src/pages/allergy-edit.html', // 아직 없음
 } as const;
 
 export function toEmail(username: string): string {
