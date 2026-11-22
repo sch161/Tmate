@@ -194,7 +194,7 @@ function createMenuCard(menu: RestaurantMenu): HTMLElement {
 
   const foot = el('div', { class: 'menu-card__foot' });
   // 디자인 대기: 평가하기 링크 (review.html 은 아직 없다)
-  foot.append(el('a', { class: 'menu-card__review', href: `${PATHS.review}?menuId=${encodeURIComponent(String(menu.menuId))}` }, '평가하기'));
+  foot.append(el('a', { class: 'menu-card__review', href: `${PATHS.review}?menuId=${encodeURIComponent(String(menu.menuId))}&restaurantId=${encodeURIComponent(String(restaurantId))}` }, '평가하기'));
   if (menu.myRating !== null) foot.append(el('span', { class: 'menu-card__my-rating' }, `내 별점 ${menu.myRating}점`));
   info.append(foot);
 
@@ -429,5 +429,10 @@ async function start(): Promise<void> {
   restaurantId = id;
   await loadDetail();
 }
+
+// 평가 화면에서 뒤로 가기로 돌아오면(bfcache) 평점·내 별점이 낡아 있으므로 새로 불러온다
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) window.location.reload();
+});
 
 void start();
