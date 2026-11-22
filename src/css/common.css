@@ -78,6 +78,16 @@ body {
 }
 
 /* 칩 (맛 태그) */
+/* 한국어 어절 단위 줄바꿈: 어절 중간에서 끊지 않되, 긴 URL·영문·숫자는 컨테이너를 넘치지 않게 끊는다.
+   긴 한국어 문장(안내·소개·라벨)에 .text-wrap-ko 를 붙여 쓴다. 페이지 CSS 에서 같은 규칙을 복사하지 않는다. */
+.text-wrap-ko,
+.chip,
+.empty-state,
+.toast {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;

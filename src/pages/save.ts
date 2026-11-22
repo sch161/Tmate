@@ -145,11 +145,11 @@ function createMenuCard(item: SavedMenu): HTMLElement {
 
   const info = el('div', { class: 'saved-card__info' }, top);
   if (item.tasteTags.length > 0) info.append(tagChips(item.tasteTags));
-  if (item.description) info.append(el('p', { class: 'saved-card__desc' }, item.description));
+  if (item.description) info.append(el('p', { class: 'saved-card__desc text-wrap-ko' }, item.description));
   // 알레르기 안전: 겹치면 경고 칩, 상태 라벨은 항상(unknown/estimated 는 "정보 없음" 계열 그대로)
   const safety = el('div', { class: 'saved-card__tags' });
   if (item.conflictsWithMyAllergens) safety.append(el('span', { class: 'chip chip--warn' }, '내 알레르기와 겹쳐요'));
-  safety.append(el('span', { class: status.unverified ? 'saved-card__status saved-card__status--unverified' : 'saved-card__status' }, status.label));
+  safety.append(el('span', { class: status.unverified ? 'saved-card__status saved-card__status--unverified text-wrap-ko' : 'saved-card__status text-wrap-ko' }, status.label));
   info.append(safety);
 
   const main = el('button', { class: 'saved-card__main', type: 'button' }, createImage(item.imageUrl, 'saved-card__image'), info);
