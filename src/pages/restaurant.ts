@@ -19,6 +19,7 @@ import { getAllergenStatusInfo } from '../utils/allergen-status';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { createImage } from '../utils/image';
+import { splitSharedNotice } from '../utils/notice';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 import { safeHttpUrl } from '../utils/url';
 
@@ -46,6 +47,8 @@ let allergyCache: AllergyTabData | null = null;
 // 메뉴 저장 상태(메뉴 id → 저장 여부). 두 탭이 같은 값을 보도록 페이지 전체에서 공유한다
 const savedMenus = new Map<number, boolean>();
 const savingMenus = new Set<number>();
+
+const NOTICE_VISIBLE = 5;
 
 const STATUS_NOTICES = {
   reference: '알레르기 정보는 참고용이에요. 먹기 전에 가게에 꼭 확인하세요',
@@ -257,9 +260,27 @@ function createNotice(detail: RestaurantDetail): HTMLElement {
   const notice = el('section', { class: 'allergy-notice', 'aria-label': '알레르기 정보 안내' });
   const list = el('ul', { class: 'allergy-notice__list' });
   list.append(el('li', {}, STATUS_NOTICES.reference), el('li', {}, STATUS_NOTICES.branch));
-  if (detail.sharedNotice) list.append(el('li', {}, detail.sharedNotice));
+  // 공지 조각이 많으면 처음 NOTICE_VISIBLE 개만 보이고 "더보기"로 펼친다
+  const parts = splitSharedNotice(detail.sharedNotice);
+  const extra: HTMLElement[] = [];
+  parts.forEach((part, index) => {
+    const item = el('li', {}, part);
+    if (index >= NOTICE_VISIBLE) {
+      item.hidden = true;
+      extra.push(item);
+    }
+    list.append(item);
+  });
   list.append(el('li', {}, detail.allergenDataDate ? `공식 표 기준일: ${detail.allergenDataDate}` : '확인 시점 정보 없음'));
   notice.append(list);
+  if (extra.length > 0) {
+    const more = el('button', { class: 'allergy-notice__more', type: 'button', 'aria-expanded': 'false' }, `더보기 (${extra.length})`);
+    more.addEventListener('click', () => {
+      for (const item of extra) item.hidden = false;
+      more.remove();
+    });
+    notice.append(more);
+  }
   const sourceUrl = safeHttpUrl(detail.allergenSourceUrl);
   if (sourceUrl) {
     notice.append(el('a', { class: 'allergy-notice__source', href: sourceUrl, target: '_blank', rel: 'noopener noreferrer' }, '공식 출처 보기'));

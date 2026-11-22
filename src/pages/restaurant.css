@@ -301,6 +301,13 @@
   list-style: disc;
 }
 
+.allergy-notice__more {
+  align-self: flex-start;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  text-decoration: underline;
+}
+
 .allergy-notice__source {
   align-self: flex-start;
   color: var(--color-primary);
