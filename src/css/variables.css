@@ -73,7 +73,6 @@
   --progress-height: 3px;
   --meter-height: 11px;
   --meter-height-lg: 22px;
-  --select-card-size: 114px;
 
   /* shadow — Figma 디자인에는 그림자가 없다. 토스트 하나만 최소한으로 둔다. */
   --shadow-none: none;
