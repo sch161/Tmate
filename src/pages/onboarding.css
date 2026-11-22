@@ -1,0 +1,131 @@
+/* 온보딩 4개 화면 전용 스타일 (Figma 1:312 / 1:201 / 1:222 / 1:268) */
+.onboarding {
+  display: flex;
+  flex-direction: column;
+  padding-inline: var(--space-4);
+}
+
+.onboarding__progress {
+  margin-top: 80px;
+}
+
+.onboarding__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: 74px;
+  text-align: center;
+}
+
+.onboarding__title {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-semibold);
+}
+
+.onboarding__desc {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-regular);
+}
+
+.onboarding__body {
+  margin-top: 40px;
+}
+
+.onboarding__body--center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: 80px;
+}
+
+.onboarding__body--ratio {
+  margin-top: 70px;
+}
+
+.onboarding__map {
+  width: 181px;
+  height: auto;
+}
+
+.onboarding__region {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-bold);
+}
+
+.onboarding__footer {
+  margin-top: auto;
+  padding-top: var(--space-6);
+  padding-bottom: 80px;
+}
+
+/* 선택 카드 안의 아이콘 (카드 기본 스타일은 common.css 의 .select-card) */
+.select-card__icon {
+  height: 38px;
+  width: auto;
+}
+
+/* 비율 조절 슬라이더 (input[type=range] 기반, 키보드 조작 가능) */
+.ratio-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.ratio-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-bold);
+}
+
+.ratio-slider {
+  --value: 0;
+  display: block;
+  width: 100%;
+  height: 24px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(
+    to right,
+    var(--color-primary) calc(12px + (100% - 24px) * var(--value) / 100),
+    var(--color-surface) 0
+  );
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.ratio-slider:focus-visible {
+  outline: 2px solid var(--color-text);
+  outline-offset: 2px;
+}
+
+.ratio-slider::-webkit-slider-runnable-track {
+  height: 24px;
+  background: transparent;
+}
+
+.ratio-slider::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-text-on-primary);
+  -webkit-appearance: none;
+}
+
+.ratio-slider::-moz-range-track {
+  height: 24px;
+  background: transparent;
+}
+
+.ratio-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-text-on-primary);
+}

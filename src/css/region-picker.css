@@ -1,0 +1,68 @@
+/* 디자인 대기: 지역 선택 하단 시트 (토큰 기반 임시 UI). src/utils/region-picker.ts 가 불러온다. */
+.region-picker {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--z-toast) - 1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.region-picker__backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: var(--color-overlay);
+}
+
+.region-picker__sheet {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  max-width: var(--app-max-width);
+  max-height: 70dvh;
+  padding: var(--space-4);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.region-picker__title {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.region-picker__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  list-style: none;
+}
+
+.region-picker__item {
+  width: 100%;
+  padding: var(--space-3);
+  border: 2px solid var(--color-surface-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-bold);
+}
+
+.region-picker__item.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.region-picker__close {
+  padding: var(--space-2);
+  border: 0;
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+}

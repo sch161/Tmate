@@ -1,6 +1,6 @@
 import { getSession, getMyProfile } from '../api/auth';
 import { PATHS } from '../lib/constants';
-import { qs } from '../utils/dom';
+import { el, qs } from '../utils/dom';
 
 const SPLASH_MS = 1200;
 
@@ -9,6 +9,21 @@ async function route(): Promise<string> {
   if (!session) return PATHS.login;
   const profile = await getMyProfile();
   return profile?.onboarding_done ? PATHS.home : PATHS.onboardingStart;
+}
+
+// 개발 서버는 없는 페이지 요청에 index.html 을 대신 내준다.
+// 그 상태에서 분기하면 아직 없는 경로로 계속 이동하는 루프가 생기므로, 안내만 보여주고 멈춘다.
+function isSplashPath(): boolean {
+  return window.location.pathname === '/' || window.location.pathname === PATHS.splash;
+}
+
+function showMissingPage(): void {
+  const main = qs<HTMLElement>('main');
+  if (!main) return;
+  main.replaceChildren(
+    el('div', { class: 'empty-state' }, el('p', { class: 'empty-state__title' }, '아직 만들어지지 않은 페이지예요')),
+    el('p', { class: 'auth__switch' }, el('a', { href: '/' }, '홈으로 돌아가기')),
+  );
 }
 
 async function start(): Promise<void> {
@@ -28,4 +43,5 @@ async function start(): Promise<void> {
   window.location.replace(target);
 }
 
-void start();
+if (isSplashPath()) void start();
+else showMissingPage();

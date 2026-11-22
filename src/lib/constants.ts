@@ -6,12 +6,18 @@ export const USERNAME_MIN_LENGTH = 4;
 export const USERNAME_MAX_LENGTH = 20;
 export const PASSWORD_MIN_LENGTH = 6;
 
+/** 온보딩 규칙 */
+export const MAX_TASTE_SELECTION = 3;
+
 /** 페이지 이동 경로. 아직 없는 페이지는 경로만 정해 둔다. */
 export const PATHS = {
   splash: '/index.html',
   login: '/src/pages/login.html',
   signup: '/src/pages/signup.html',
-  onboardingStart: '/src/pages/onboarding-location.html', // 아직 없음
+  onboardingStart: '/src/pages/onboarding-location.html',
+  onboardingFlavor: '/src/pages/onboarding-flavor.html',
+  onboardingRatio: '/src/pages/onboarding-ratio.html',
+  onboardingAllergy: '/src/pages/onboarding-allergy.html',
   home: '/src/pages/home.html', // 아직 없음
 } as const;
 

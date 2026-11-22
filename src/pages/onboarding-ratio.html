@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>입맛 비율 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/onboarding.css" />
+  </head>
+  <body>
+    <main class="app onboarding">
+      <div class="onboarding__progress"><div class="progress" style="--value: 79"></div></div>
+      <header class="onboarding__head">
+        <h1 class="onboarding__title">입맛 비율을 조절해 주세요</h1>
+        <p class="onboarding__desc">선택한 입맛의 비율을 조절해 주세요</p>
+      </header>
+      <section class="onboarding__body onboarding__body--ratio" id="body"></section>
+      <footer class="onboarding__footer">
+        <button class="btn-primary" id="next" type="button" disabled>다음으로</button>
+      </footer>
+    </main>
+    <script type="module" src="/src/pages/onboarding-ratio.ts"></script>
+  </body>
+</html>

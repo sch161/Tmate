@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>위치 설정 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/onboarding.css" />
+  </head>
+  <body>
+    <main class="app onboarding">
+      <div class="onboarding__progress"><div class="progress" style="--value: 37"></div></div>
+      <header class="onboarding__head">
+        <h1 class="onboarding__title">위치 권한을 허용해주세요</h1>
+        <p class="onboarding__desc">더 정확한 맛집 추천을 위해<br />위치 권한이 필요해요</p>
+      </header>
+      <section class="onboarding__body onboarding__body--center" id="body">
+        <img class="onboarding__map" src="/src/assets/images/onboarding-map.svg" alt="" width="181" height="125" />
+        <p class="onboarding__region" id="region-text" hidden></p>
+      </section>
+      <footer class="onboarding__footer">
+        <button class="btn-primary" id="next" type="button">허용하기</button>
+      </footer>
+    </main>
+    <script type="module" src="/src/pages/onboarding-location.ts"></script>
+  </body>
+</html>
