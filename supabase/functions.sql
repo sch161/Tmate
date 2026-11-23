@@ -20,7 +20,7 @@
 --   협업 점수    = 유사도 기준 이상인 이웃들의 별점을 유사도로 가중평균한 값 → (예측 별점 - 1) / 4 × 100
 --
 -- 권한 정책
---   * 화면용 RPC(get_*, save_onboarding, update_my_allergens, upsert_review, delete_review): 로그인 사용자(authenticated)만 실행. anon 불가.
+--   * 화면용 RPC(get_*, save_onboarding, update_my_allergens, update_my_tastes, upsert_review, delete_review): 로그인 사용자(authenticated)만 실행. anon 불가.
 --   * 내부 함수(calc_*, 문자열 helper): 임의의 사용자 id 를 받으므로 anon/authenticated 모두 실행 불가.
 --     화면용 RPC 가 security definer(owner 권한)로 실행되어 내부 함수를 호출한다.
 --   * 모든 함수는 auth.uid() 가 null 이면 예외를 던진다. security definer 함수는 set search_path = '' 이므로 모든 객체에 public. 접두어를 쓴다.
@@ -499,6 +499,70 @@ begin
   select distinct v_uid, u.allergen_id
   from unnest(coalesce(p_allergen_ids, '{}'::int[])) as u(allergen_id)
   where u.allergen_id is not null;
+end;
+$$;
+
+-- 내 입맛(맛 선택 + 비율) 교체 저장 (마이페이지 입맛 수정). 검증 규칙은 save_onboarding 의 맛 검증과 같다.
+--   p_taste_ids 와 p_ratios 는 같은 순서의 짝이다. 예: p_taste_ids = {1, 2}, p_ratios = {65, 35}
+--   바꾸는 것은 user_taste_preferences 의 내 행뿐이다 (region·onboarding_done·알레르기는 건드리지 않는다).
+--   함수 전체가 한 트랜잭션이라 삭제 후 삽입 중 실패하면 되돌아간다.
+create or replace function public.update_my_tastes(p_taste_ids int[], p_ratios int[])
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_n int;
+  v_distinct int;
+  v_sum int;
+  v_invalid int;
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if p_taste_ids is null or p_ratios is null then
+    raise exception '입맛 정보 형식이 올바르지 않아요.';
+  end if;
+
+  v_n := coalesce(array_length(p_taste_ids, 1), 0);
+  if v_n < 1 or v_n > 3 then
+    raise exception '맛은 1~3개까지 선택할 수 있어요.';
+  end if;
+  if coalesce(array_length(p_ratios, 1), 0) <> v_n then
+    raise exception '맛과 비율의 개수가 달라요.';
+  end if;
+
+  select count(distinct x.taste_tag_id),
+         coalesce(sum(x.ratio), 0),
+         count(*) filter (where x.taste_tag_id is null or x.ratio is null or x.ratio < 1 or x.ratio > 100)
+  into v_distinct, v_sum, v_invalid
+  from unnest(p_taste_ids, p_ratios) as x(taste_tag_id, ratio);
+
+  if v_invalid > 0 then
+    raise exception '각 맛의 비율은 1~100 사이로 입력해주세요.';
+  end if;
+  if v_distinct <> v_n then
+    raise exception '같은 맛을 중복해서 선택할 수 없어요.';
+  end if;
+  if v_sum <> 100 then
+    raise exception '맛 비율의 합계는 정확히 100이어야 해요.';
+  end if;
+  if exists (
+    select 1
+    from unnest(p_taste_ids) as x(taste_tag_id)
+    where not exists (select 1 from public.taste_tags tt where tt.id = x.taste_tag_id)
+  ) then
+    raise exception '존재하지 않는 맛이에요.';
+  end if;
+
+  delete from public.user_taste_preferences where user_id = v_uid;
+  insert into public.user_taste_preferences (user_id, taste_tag_id, ratio)
+  select v_uid, x.taste_tag_id, x.ratio
+  from unnest(p_taste_ids, p_ratios) as x(taste_tag_id, ratio);
 end;
 $$;
 
@@ -1209,6 +1273,7 @@ revoke all on function public.get_regions()                                    f
 revoke all on function public.upsert_review(bigint, int, int[])                from public, anon;
 revoke all on function public.delete_review(bigint)                            from public, anon;
 revoke all on function public.update_my_allergens(int[])                       from public, anon;
+revoke all on function public.update_my_tastes(int[], int[])                      from public, anon;
 
 grant execute on function public.save_onboarding(text, jsonb, int[])           to authenticated;
 grant execute on function public.get_restaurants(text, int, text, int)         to authenticated;
@@ -1223,6 +1288,7 @@ grant execute on function public.get_regions()                                 t
 grant execute on function public.upsert_review(bigint, int, int[])             to authenticated;
 grant execute on function public.delete_review(bigint)                         to authenticated;
 grant execute on function public.update_my_allergens(int[])                    to authenticated;
+grant execute on function public.update_my_tastes(int[], int[])                   to authenticated;
 
 -- =====================================================================
 -- 검증용 SQL. 각 블록은 /* 와 */ 두 줄만 지우면 begin ~ rollback 을 한 번에 실행할 수 있다.

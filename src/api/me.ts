@@ -132,3 +132,40 @@ export async function updateMyNickname(nickname: string): Promise<void> {
     throw new Error('닉네임을 바꾸지 못했어요. 잠시 후 다시 시도해주세요');
   }
 }
+
+/** 내 입맛 한 건 (맛 id + 비율) */
+export interface MyTaste {
+  tasteId: number;
+  ratio: number;
+}
+
+/** 내가 등록한 입맛(맛 id + 비율), 비율 내림차순. user_id = 내 id 로 거른다. */
+export async function getMyTastes(): Promise<MyTaste[]> {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error('no session');
+    const { data, error } = await supabase
+      .from('user_taste_preferences')
+      .select('taste_tag_id, ratio')
+      .eq('user_id', session.user.id)
+      .order('ratio', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map((row) => ({ tasteId: row.taste_tag_id, ratio: row.ratio }));
+  } catch {
+    throw new Error('입맛 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  }
+}
+
+/** 내 입맛(맛 선택 + 비율)을 통째로 교체한다. tasteIds 와 ratios 는 같은 순서의 짝이고, 서버 함수가 한 트랜잭션으로 검증·저장한다. */
+export async function updateMyTastes(tasteIds: number[], ratios: number[]): Promise<void> {
+  let message = '저장하지 못했어요. 잠시 후 다시 시도해주세요';
+  try {
+    const { error } = await supabase.rpc('update_my_tastes', { p_taste_ids: tasteIds, p_ratios: ratios });
+    if (!error) return;
+    // RPC 가 던지는 한국어 예외 메시지는 그대로 보여준다
+    if (/[가-힣]/.test(error.message)) message = error.message;
+  } catch {
+    message = '네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요';
+  }
+  throw new Error(message);
+}

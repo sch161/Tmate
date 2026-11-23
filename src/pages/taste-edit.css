@@ -1,0 +1,70 @@
+/* 입맛 수정 전용 스타일 (디자인 대기: Figma 에 화면이 없어 온보딩 맛 선택·비율 화면 기반의 임시 UI). 값은 variables.css 토큰만 쓴다. */
+.taste-edit {
+  display: flex;
+  flex-direction: column;
+  padding-top: 73px;
+  padding-inline: var(--space-4);
+}
+
+.taste-edit__back {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin-left: calc(23px - var(--space-4));
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.taste-edit__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  text-align: center;
+}
+
+.taste-edit__title {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-semibold);
+}
+
+.taste-edit__desc {
+  font-size: var(--font-size-16);
+}
+
+.taste-edit__notice {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+}
+
+.taste-edit__body {
+  margin-top: var(--space-5);
+}
+
+/* 버튼은 화면이 스크롤돼도 보이도록 하단에 고정한다 */
+.taste-edit__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: auto;
+  margin-inline: calc(var(--space-4) * -1);
+  padding: var(--space-3) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
+  background: var(--color-background);
+}
+
+/* 비율 단계에서 맛 선택으로 돌아가는 텍스트 버튼 */
+.taste-edit__prev {
+  align-self: center;
+  padding: var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+}

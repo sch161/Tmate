@@ -1,11 +1,10 @@
 import { getTasteTags } from '../api/lookups';
-import { MAX_TASTE_SELECTION, PATHS } from '../lib/constants';
-import { el, qs, showToast } from '../utils/dom';
+import { PATHS } from '../lib/constants';
+import { qs } from '../utils/dom';
 import { enterStep } from '../utils/onboarding-flow';
 import { updateState } from '../utils/onboarding-state';
-import { createSelectCard, setCardSelected } from '../utils/select-card';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
-import { getTasteIcon } from '../utils/taste-icons';
+import { createTasteGrid } from '../utils/taste-grid';
 
 const body = qs<HTMLElement>('#body');
 const next = qs<HTMLButtonElement>('#next');
@@ -36,25 +35,9 @@ function render(
   // 뒤로가기로 돌아왔을 때 이전 선택을 채운다 (목록에 없는 id 는 버린다)
   const selected = new Set(savedIds.filter((id) => tags.some((t) => t.id === id)));
 
-  const grid = el('div', { class: 'select-grid' });
-  const cards = new Map<number, HTMLButtonElement>();
-  for (const tag of tags) {
-    const card = createSelectCard(tag.name, getTasteIcon(tag.code), selected.has(tag.id));
-    card.addEventListener('click', () => {
-      if (selected.has(tag.id)) {
-        selected.delete(tag.id);
-      } else if (selected.size >= MAX_TASTE_SELECTION) {
-        showToast(`최대 ${MAX_TASTE_SELECTION}개까지 선택할 수 있어요`);
-        return;
-      } else {
-        selected.add(tag.id);
-      }
-      setCardSelected(card, selected.has(tag.id));
-      next!.disabled = selected.size === 0;
-    });
-    cards.set(tag.id, card);
-    grid.append(card);
-  }
+  const grid = createTasteGrid(tags, selected, () => {
+    next!.disabled = selected.size === 0;
+  });
   body.replaceChildren(grid);
   next.disabled = selected.size === 0;
 

@@ -140,7 +140,7 @@ function createRecords(): HTMLElement {
 }
 
 function createSettings(summary: MySummary): HTMLElement {
-  // 디자인 대기: tasteEdit 페이지는 아직 없다 (위치 설정은 페이지 없이 지역 선택 시트로 처리)
+  // 위치 설정은 페이지 없이 지역 선택 시트로 처리한다
   // Figma 의 "알림 설정" 줄은 이번 범위에서 제외한다 (나중에 PATHS.notificationSettings 와 함께 추가)
   return el(
     'section',
