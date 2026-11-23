@@ -11,6 +11,8 @@ const PAGE_SIZE = 20;
 //   min_common = 3 : 두 사용자의 유사도를 계산하려면 같은 메뉴를 3개 이상 평가해야 한다
 //   (mate_similarity = 0.7 은 화면에 쓰지 않는다)
 const MIN_COMMON_REVIEWS = 3;
+// 체험용 가상 사용자는 닉네임이 "데모"로 시작한다. 서버가 따로 구분 값을 주지 않아 닉네임 접두사로 판단한다
+const DEMO_NICKNAME_PREFIX = '데모';
 
 const body = qs<HTMLElement>('#body');
 const countText = qs('#count');
@@ -64,6 +66,10 @@ function render(): void {
       render();
     });
     body.append(more);
+  }
+  // 디자인 대기: 화면 나오면 교체 (체험용 안내 문구)
+  if (mates.some((mate) => mate.nickname.startsWith(DEMO_NICKNAME_PREFIX))) {
+    body.append(el('p', { class: 'taste-mates__demo-note text-wrap-ko' }, "'데모'로 시작하는 사용자는 체험을 위한 가상 사용자예요"));
   }
 }
 

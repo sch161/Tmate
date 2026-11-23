@@ -96,6 +96,13 @@
   font-weight: var(--font-weight-medium);
 }
 
+.taste-mates__demo-note {
+  margin-top: var(--space-4);
+  text-align: center;
+  font-size: var(--font-size-12);
+  color: var(--color-text);
+}
+
 .taste-mates__more {
   display: block;
   margin: var(--space-3) auto 0;
