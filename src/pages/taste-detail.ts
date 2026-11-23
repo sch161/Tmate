@@ -40,7 +40,7 @@ function render(summary: MySummary): void {
     nodes.push(
       el(
         'section',
-        {},
+        { class: 'taste-detail__section' },
         el('h2', { class: 'section-title' }, '맛 비율'),
         el('div', { class: 'ratio-rows' }, ...summary.tasteRatios.slice(0, 3).map((r) => createRatioRow(r.name, r.ratio))),
       ),
@@ -50,7 +50,7 @@ function render(summary: MySummary): void {
   nodes.push(
     el(
       'section',
-      {},
+      { class: 'taste-detail__section' },
       el('h2', { class: 'section-title' }, '나의 활동'),
       el('div', { class: 'activity-rows' }, createActivity(summary.reviewCount, '평가한 메뉴'), createActivity(summary.savedRestaurantCount, '저장한 맛집'), createActivity(summary.mateCount, '취향 메이트')),
     ),
