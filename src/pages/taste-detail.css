@@ -1,0 +1,147 @@
+/* 내 입맛 자세히 보기 전용 스타일 (디자인 대기: Figma 에 화면이 없어 마이페이지 카드 기반의 임시 UI). 값은 variables.css 토큰만 쓴다. */
+.taste-detail {
+  padding-top: 73px;
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  padding-inline: var(--space-4);
+}
+
+.taste-detail__back {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin-left: calc(23px - var(--space-4));
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.taste-detail__title {
+  margin-top: var(--space-5);
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+}
+
+.taste-detail__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-top: var(--space-3);
+}
+
+.type-box {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.type-box__label {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-12);
+}
+
+.type-box__name {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+}
+
+.type-box__desc {
+  font-size: var(--font-size-14);
+}
+
+.section-title {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+}
+
+.ratio-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.ratio-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.ratio-row__track {
+  height: 8px;
+  margin-top: var(--space-2);
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface-border);
+}
+
+.ratio-row__fill {
+  width: calc(var(--value) * 1%);
+  height: 100%;
+  border-radius: 10px;
+  background: var(--color-primary);
+}
+
+.activity-rows {
+  display: flex;
+  gap: 6px;
+}
+
+.activity-box {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.activity-box__count {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+}
+
+.activity-box__label {
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  white-space: nowrap;
+}
+
+.taste-detail__hint {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+}
+
+.taste-detail__edit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 50px;
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  text-decoration: none;
+}
+
+.taste-detail__empty-link {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--color-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+}
