@@ -306,3 +306,22 @@
 .store-card__save:disabled {
   opacity: 0.5;
 }
+
+/* 추천 빈 상태의 텍스트 링크 (디자인 대기: Figma 에 없는 임시 UI) */
+.home__empty-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.home__empty-link {
+  padding: var(--space-1);
+  border: 0;
+  background: none;
+  color: var(--color-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+}

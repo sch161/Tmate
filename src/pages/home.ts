@@ -1,6 +1,6 @@
 import { getMyProfile } from '../api/auth';
 import { getFoodCategories, type FoodCategory } from '../api/lookups';
-import { updateMyRegion } from '../api/me';
+import { getMyAllergenIds, updateMyRegion } from '../api/me';
 import {
   getRecommendedMenus,
   getRestaurants,
@@ -26,6 +26,18 @@ let categories: FoodCategory[] = [];
 let menuSeq = 0;
 let restaurantSeq = 0;
 const savingIds = new Set<number>();
+
+/** 가장 최근 주변 맛집 요청의 결과. 추천이 0건일 때 "지역에 가게가 있는지" 판단하는 데 쓴다. */
+interface RestaurantsSnapshot {
+  settled: Promise<void>;
+  /** 요청이 성공했을 때의 건수. 실패하면 null */
+  count: number | null;
+  /** 카테고리·검색어 필터가 걸린 요청인지 (필터 결과 0건은 지역에 가게가 없다는 뜻이 아니다) */
+  filtered: boolean;
+}
+let restaurantsSnapshot: RestaurantsSnapshot | null = null;
+// 내 알레르기 등록 여부는 이 화면에서 바뀌지 않으므로 처음 한 번만 가져온다 (실패하면 null 로 두고 다음에 다시 시도)
+let hasAllergyCache: boolean | null = null;
 
 const recommendArea = qs('#recommend-area');
 const restaurantArea = qs('#restaurant-area');
@@ -103,6 +115,57 @@ function createMenuCard(menu: RecommendedMenu): HTMLElement {
   );
 }
 
+/** 지역에 가게가 있는지: true/false, 확인하지 못하면 null (주변 맛집 요청 실패 등) */
+async function regionHasRestaurants(): Promise<boolean | null> {
+  const snapshot = restaurantsSnapshot;
+  if (!snapshot) return null;
+  await snapshot.settled;
+  if (snapshot.count === null) return null;
+  if (snapshot.count > 0) return true;
+  if (!snapshot.filtered) return false;
+  // 필터 때문에 0건일 수 있으므로 필터 없이 한 번 더 확인한다
+  try {
+    return (await getRestaurants({ region })).length > 0;
+  } catch {
+    return null;
+  }
+}
+
+/** 알레르기를 1개 이상 등록했는지. 조회에 실패하면 null (기존 문구로 폴백하고 에러는 띄우지 않는다). */
+async function hasAllergy(): Promise<boolean | null> {
+  if (hasAllergyCache !== null) return hasAllergyCache;
+  try {
+    hasAllergyCache = (await getMyAllergenIds()).length > 0;
+    return hasAllergyCache;
+  } catch {
+    return null;
+  }
+}
+
+/** 추천이 0건일 때의 빈 상태. 알레르기 때문에 걸러진 경우와 단순히 데이터가 없는 경우를 구분한다. */
+async function renderNoRecommendation(target: HTMLElement, seq: number): Promise<void> {
+  const shops = await regionHasRestaurants();
+  const allergy = shops === true ? await hasAllergy() : null;
+  if (seq !== menuSeq) return;
+  if (shops === false) {
+    // 디자인 대기: Figma 에 없는 문구. 아래 주변 맛집 목록의 빈 상태 문구와 겹치지 않게 쓴다
+    renderEmpty(target, '이 지역에는 추천할 메뉴가 없어요', '다른 지역을 골라보세요');
+    return;
+  }
+  if (shops === true && allergy === true) {
+    // 디자인 대기: Figma 에 없는 문구 (안전 규칙 때문에 추천이 비었다는 것을 알린다)
+    renderEmpty(target, '내 알레르기를 반영하면 추천할 메뉴가 없어요', '알레르기 정보가 없는 메뉴는 안전을 위해 빼고 있어요');
+    target.querySelector('.empty-state__title')?.classList.add('text-wrap-ko');
+    target.querySelector('.empty-state__desc')?.classList.add('text-wrap-ko');
+    const allergyLink = el('a', { class: 'home__empty-link', href: PATHS.allergyEdit }, '알레르기 확인하기');
+    const regionLink = el('button', { class: 'home__empty-link', type: 'button' }, '위치 변경하기');
+    regionLink.addEventListener('click', () => void changeRegion());
+    target.querySelector('.empty-state')?.append(el('div', { class: 'home__empty-links' }, allergyLink, regionLink));
+    return;
+  }
+  renderEmpty(target, '추천할 메뉴가 아직 없어요', '평가가 쌓이면 취향에 맞는 메뉴를 추천해 드려요');
+}
+
 async function loadMenus(): Promise<void> {
   if (!recommendArea) return;
   const seq = ++menuSeq;
@@ -111,7 +174,7 @@ async function loadMenus(): Promise<void> {
     const menus = await getRecommendedMenus(region);
     if (seq !== menuSeq) return;
     if (menus.length === 0) {
-      renderEmpty(recommendArea, '추천할 메뉴가 아직 없어요', '평가가 쌓이면 취향에 맞는 메뉴를 추천해 드려요');
+      await renderNoRecommendation(recommendArea, seq);
       return;
     }
     recommendArea.replaceChildren(el('div', { class: 'menu-grid' }, ...menus.map(createMenuCard)));
@@ -190,8 +253,18 @@ async function loadRestaurants(): Promise<void> {
   if (!restaurantArea) return;
   const seq = ++restaurantSeq;
   renderLoading(restaurantArea);
+  let finish: () => void = () => undefined;
+  const snapshot: RestaurantsSnapshot = {
+    settled: new Promise<void>((resolve) => {
+      finish = resolve;
+    }),
+    count: null,
+    filtered: categoryId !== undefined || query !== '',
+  };
+  restaurantsSnapshot = snapshot;
   try {
     const list = await getRestaurants({ region, categoryId, query: query || undefined });
+    snapshot.count = list.length;
     if (seq !== restaurantSeq) return;
     if (list.length === 0) {
       renderEmpty(
@@ -205,6 +278,8 @@ async function loadRestaurants(): Promise<void> {
   } catch (e) {
     if (seq !== restaurantSeq) return;
     renderError(restaurantArea, e instanceof Error ? e.message : '맛집 목록을 불러오지 못했어요', () => void loadRestaurants());
+  } finally {
+    finish();
   }
 }
 
@@ -256,8 +331,9 @@ function applyQuery(next: string): void {
 
 function reloadAll(): void {
   if (regionText) regionText.textContent = region;
-  void loadMenus();
+  // 추천 빈 상태가 주변 맛집 결과를 참고하므로 맛집 요청을 먼저 시작한다
   void loadRestaurants();
+  void loadMenus();
 }
 
 async function changeRegion(): Promise<void> {
