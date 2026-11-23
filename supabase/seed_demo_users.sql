@@ -1,26 +1,27 @@
 -- =====================================================================
--- T:MATE seed_demo_users.sql  (개발용 가상 사용자)
+-- T:MATE seed_demo_users.sql  (체험용 데모 사용자, 로그인 불가, 행사 후 삭제)
 --
--- !!! 경고: 개발용 가상 사용자입니다. 비밀번호가 공개되어 있으므로 배포 전 반드시 삭제하세요 !!!
--- 평가(reviews) 데이터는 여기에 없습니다. 실제 브랜드·메뉴가 들어온 뒤 별도로 만듭니다.
+-- 체험 행사에서 취향 메이트·협업 추천이 보이도록 만든 가상 사용자 6명(seed01~seed06)이다.
+-- 비밀번호는 만들 때마다 외부에 알려지지 않는 무작위 값으로 정하므로 로그인할 수 없다.
+-- 평가(reviews)는 seed_demo_reviews.sql 이 넣는다. 닉네임은 모두 "데모"로 시작한다.
 --
--- 실행 순서: schema.sql(또는 migrations/001) → policies.sql → functions.sql → seed_reference.sql → 이 파일
+-- 실행 순서: schema.sql(또는 migrations/001) → policies.sql → functions.sql → seed_reference.sql
+--            → seed_branches.sql → seed_brand_menus.sql → 이 파일 → seed_demo_reviews.sql
 --   * seed_reference.sql 이 먼저 실행되어 있어야 합니다 (taste_tags·allergens 를 이름으로 참조).
---   * 가상 사용자는 이메일 확인 완료 상태로 들어가므로 Email 확인 설정과 무관하게 로그인됩니다.
 --
--- 가상 사용자: seed01 ~ seed12 (이메일 seedNN@tmate-app.com, 비밀번호 tmate-seed-1234)
---   매운맛파 seed01~04 / 단짠파 seed05~08 / 담백파 seed09~12
---   알레르기: seed02 알류, seed05 우유·땅콩, seed08 새우, seed11 복숭아·대두
+-- 데모 사용자: seed01~seed06 (이메일 seedNN@tmate-app.com)
+--   데모 매콤러 / 데모 달콤러 / 데모 고소러 / 데모 감칠러 / 데모 단짠러 / 데모 짭짤러
+--   알레르기: seed02 알류, seed05 우유·땅콩 (본인 추천에만 쓰이므로 방문자 화면에는 영향 없음)
 --
--- 재실행: 먼저 아래 한 줄로 가상 사용자를 지운 뒤(profiles·user_* 가 cascade 로 함께 삭제) 다시 실행합니다.
+-- 재실행: 먼저 아래 한 줄로 데모 사용자를 지운 뒤(profiles·user_*·reviews 가 cascade 로 함께 삭제) 다시 실행합니다.
 --   delete from auth.users where email like 'seed%@tmate-app.com';
--- 배포 전 삭제: 위 한 줄만 실행하면 가상 사용자와 그 취향·알레르기 데이터가 모두 사라집니다.
+-- 행사 후 삭제: 위 한 줄만 실행하면 데모 사용자와 그 취향·알레르기·평가 데이터가 모두 사라집니다.
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
--- 6. 가상 사용자 12명
+-- 6. 데모 사용자 6명
 --    auth.users 에 직접 넣으면 handle_new_user 트리거가 profiles 를 만든다. (username = 이메일 앞부분)
---    비밀번호 해시는 pgcrypto(extensions 스키마)로 만든다. 로그인에 필요한 컬럼을 모두 채운다.
+--    비밀번호는 무작위 값의 bcrypt 해시다 (pgcrypto 는 Supabase 에서 extensions 스키마). 원문은 어디에도 남지 않는다.
 -- ---------------------------------------------------------------------
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -31,7 +32,7 @@ insert into auth.users (
 )
 select
   '00000000-0000-0000-0000-000000000000', v.id, 'authenticated', 'authenticated', v.email,
-  extensions.crypt('tmate-seed-1234', extensions.gen_salt('bf')),
+  extensions.crypt(encode(extensions.gen_random_bytes(32), 'hex'), extensions.gen_salt('bf')),
   now(), '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb,
   now(), now(),
   '', '', '', '',
@@ -42,13 +43,7 @@ from (values
   ('5eed0000-0000-4000-8000-000000000003'::uuid, 'seed03@tmate-app.com'),
   ('5eed0000-0000-4000-8000-000000000004'::uuid, 'seed04@tmate-app.com'),
   ('5eed0000-0000-4000-8000-000000000005'::uuid, 'seed05@tmate-app.com'),
-  ('5eed0000-0000-4000-8000-000000000006'::uuid, 'seed06@tmate-app.com'),
-  ('5eed0000-0000-4000-8000-000000000007'::uuid, 'seed07@tmate-app.com'),
-  ('5eed0000-0000-4000-8000-000000000008'::uuid, 'seed08@tmate-app.com'),
-  ('5eed0000-0000-4000-8000-000000000009'::uuid, 'seed09@tmate-app.com'),
-  ('5eed0000-0000-4000-8000-000000000010'::uuid, 'seed10@tmate-app.com'),
-  ('5eed0000-0000-4000-8000-000000000011'::uuid, 'seed11@tmate-app.com'),
-  ('5eed0000-0000-4000-8000-000000000012'::uuid, 'seed12@tmate-app.com')
+  ('5eed0000-0000-4000-8000-000000000006'::uuid, 'seed06@tmate-app.com')
 ) as v(id, email);
 
 -- 이메일 로그인용 identity (provider 'email', provider_id = 사용자 id)
@@ -63,75 +58,52 @@ where u.email like 'seed%@tmate-app.com';
 update profiles p
 set nickname = v.nickname, region = v.region, onboarding_done = true
 from (values
-  ('seed01', '매운고수', '서울시 구로구'),
-  ('seed02', '불꽃혀', '서울시 관악구'),
-  ('seed03', '칼칼러버', '서울시 구로구'),
-  ('seed04', '마라토너', '서울시 관악구'),
-  ('seed05', '단짠단짠', '서울시 구로구'),
-  ('seed06', '달콤짭짤', '서울시 관악구'),
-  ('seed07', '간장마니아', '서울시 구로구'),
-  ('seed08', '꿀짠러', '서울시 관악구'),
-  ('seed09', '담백한하루', '서울시 구로구'),
-  ('seed10', '순한맛러버', '서울시 관악구'),
-  ('seed11', '슴슴이', '서울시 구로구'),
-  ('seed12', '깔끔입맛', '서울시 관악구')
+  ('seed01', '데모 매콤러', '서울시 구로구'),
+  ('seed02', '데모 달콤러', '서울시 관악구'),
+  ('seed03', '데모 고소러', '서울시 구로구'),
+  ('seed04', '데모 감칠러', '서울시 관악구'),
+  ('seed05', '데모 단짠러', '서울시 구로구'),
+  ('seed06', '데모 짭짤러', '서울시 관악구')
 ) as v(username, nickname, region)
 where p.username = v.username;
 
 -- ---------------------------------------------------------------------
--- 7. 취향 클러스터: 매운맛파 seed01~04 / 단짠파 seed05~08 / 담백파 seed09~12
---    user_taste_preferences (33행, 사용자별 ratio 합계 100)
+-- 7. 입맛 비율 (사용자별 합계 100). 닉네임의 맛이 비율 상위 맛이다.
+--    쓰는 맛은 실제 메뉴의 맛 태그(매콤함·달콤함·짭조름함·고소함·감칠맛)뿐이다.
+--    seed_demo_reviews.sql 이 같은 값으로 다시 맞춘다 (옛 데이터가 남은 DB 용).
 -- ---------------------------------------------------------------------
 insert into user_taste_preferences (user_id, taste_tag_id, ratio)
 select p.id, t.id, v.ratio
 from (values
-  ('seed01', 'spicy', 60),
-  ('seed01', 'sweet', 25),
-  ('seed01', 'umami', 15),
-  ('seed02', 'spicy', 50),
-  ('seed02', 'umami', 30),
-  ('seed02', 'salty', 20),
-  ('seed03', 'spicy', 70),
-  ('seed03', 'sweet', 30),
-  ('seed04', 'spicy', 45),
-  ('seed04', 'sweet', 35),
-  ('seed04', 'rich', 20),
-  ('seed05', 'sweet', 45),
-  ('seed05', 'salty', 55),
-  ('seed06', 'salty', 50),
-  ('seed06', 'sweet', 30),
-  ('seed06', 'rich', 20),
-  ('seed07', 'salty', 60),
-  ('seed07', 'umami', 25),
-  ('seed07', 'sweet', 15),
-  ('seed08', 'sweet', 50),
-  ('seed08', 'salty', 30),
-  ('seed08', 'nutty', 20),
-  ('seed09', 'mild', 50),
-  ('seed09', 'nutty', 30),
-  ('seed09', 'umami', 20),
-  ('seed10', 'mild', 60),
-  ('seed10', 'sour', 40),
-  ('seed11', 'mild', 45),
-  ('seed11', 'nutty', 35),
-  ('seed11', 'bitter', 20),
-  ('seed12', 'nutty', 40),
-  ('seed12', 'mild', 40),
-  ('seed12', 'sour', 20)
+  ('seed01', 'spicy', 50),
+  ('seed01', 'salty', 30),
+  ('seed01', 'umami', 20),
+  ('seed02', 'sweet', 55),
+  ('seed02', 'salty', 25),
+  ('seed02', 'umami', 20),
+  ('seed03', 'nutty', 55),
+  ('seed03', 'salty', 25),
+  ('seed03', 'sweet', 20),
+  ('seed04', 'umami', 50),
+  ('seed04', 'nutty', 30),
+  ('seed04', 'sweet', 20),
+  ('seed05', 'salty', 45),
+  ('seed05', 'sweet', 40),
+  ('seed05', 'nutty', 15),
+  ('seed06', 'salty', 60),
+  ('seed06', 'spicy', 25),
+  ('seed06', 'umami', 15)
 ) as v(username, tag, ratio)
 join profiles p on p.username = v.username
 join taste_tags t on t.code = v.tag;
 
--- user_allergens (6행, 4명)
+-- user_allergens (3행, 2명)
 insert into user_allergens (user_id, allergen_id)
 select p.id, a.id
 from (values
   ('seed02', '알류'),
   ('seed05', '우유'),
-  ('seed05', '땅콩'),
-  ('seed08', '새우'),
-  ('seed11', '복숭아'),
-  ('seed11', '대두')
+  ('seed05', '땅콩')
 ) as v(username, allergen)
 join profiles p on p.username = v.username
 join allergens a on a.name = v.allergen;
