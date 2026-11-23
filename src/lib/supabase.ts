@@ -3,7 +3,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database.types';
 
-export const supabase = createClient<Database>(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY,
-);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// 배포 환경에 환경변수가 빠지면 원인이 분명한 에러를 낸다 (그대로 두면 "supabaseUrl is required" 만 보인다)
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase 환경변수가 설정되지 않았어요. VITE_SUPABASE_URL 과 VITE_SUPABASE_ANON_KEY 를 확인하세요 (로컬은 .env, 배포는 호스팅 환경변수).');
+}
+
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
