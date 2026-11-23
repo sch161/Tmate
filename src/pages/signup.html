@@ -3,6 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff7ee" />
+    <link rel="icon" type="image/png" href="/src/assets/images/search-mascot.png" />
     <title>회원가입 - T:MATE</title>
     <link rel="stylesheet" href="/src/css/index.css" />
     <link rel="stylesheet" href="/src/pages/auth.css" />
@@ -28,6 +30,11 @@
         <p class="error-message auth__form-error" id="form-error" role="alert" hidden></p>
         <button class="btn-primary auth__submit" id="submit" type="submit">회원가입</button>
       </form>
+
+      <!-- 디자인 대기: 비밀번호 안내 문구는 Figma 에 없는 임시 UI -->
+      <div class="auth__notice">
+        <p class="text-wrap-ko">비밀번호는 다른 곳에서 쓰는 것과 다르게 정해 주세요. 비밀번호 찾기는 지원하지 않아요.</p>
+      </div>
 
       <p class="auth__switch">
         <span>이미 계정이 있으신가요?</span>

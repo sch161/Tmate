@@ -93,3 +93,16 @@
   color: var(--color-primary);
   font-weight: var(--font-weight-bold);
 }
+
+/* 회원가입 체험 안내 (디자인 대기: Figma 에 없는 임시 UI) */
+.auth__notice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  width: 100%;
+  margin-top: var(--space-3);
+  color: var(--color-text);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+}
