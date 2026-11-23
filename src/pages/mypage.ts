@@ -41,7 +41,6 @@ function createTypeCard(summary: MySummary): HTMLElement {
   if (summary.tasteTypeName) info.append(el('p', { class: 'type-card__name' }, summary.tasteTypeName));
   if (summary.tasteTypeDesc) info.append(el('p', { class: 'type-card__desc text-wrap-ko' }, summary.tasteTypeDesc));
   const ratios = el('div', { class: 'type-card__ratios' }, ...summary.tasteRatios.slice(0, MAX_RATIOS).map((r) => createRatioBox(r.name, r.ratio)));
-  // 디자인 대기: tasteDetail 페이지는 아직 없다
   const more = el('a', { class: 'type-card__more', href: PATHS.tasteDetail }, '내 입맛 자세히 보기 >');
   return el('div', { class: 'type-card' }, info, ratios, more);
 }
@@ -125,7 +124,6 @@ function createLocationRow(summary: MySummary): HTMLElement {
 }
 
 function createRecords(): HTMLElement {
-  // 디자인 대기: myReviews·tasteMates 페이지는 아직 없다
   return el(
     'section',
     { class: 'mypage__section', 'aria-labelledby': 'records-title' },

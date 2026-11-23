@@ -16,9 +16,14 @@
 - src/api/\*.ts : Supabase 호출 함수. 화면 코드에서 supabase 를 직접 import 하지 않는다. 반환 타입 명시
 - src/utils/\*.ts : 공통 유틸 (DOM 헬퍼, 하단 네비, 인증 가드 등)
 - src/types/database.types.ts : 자동 생성 파일. 직접 수정 금지 (npm run gen:types)
-- src/css/ : reset.css, variables.css(디자인 토큰), common.css
-- supabase/ : schema.sql(최종 구조), migrations/(기존 DB 에 한 번만 적용), policies.sql, functions.sql, seed_reference.sql(기준 데이터), seed_demo_users.sql(개발용 가상 사용자)
+- src/lib/ : supabase.ts(클라이언트), constants.ts(PATHS 경로 상수, 아이디 → 이메일 변환)
+- src/css/ : index.css(모든 페이지의 진입점), reset.css, variables.css(디자인 토큰), common.css
+- src/assets/ : 아이콘·이미지·폰트
+- supabase/ : schema.sql(최종 구조), migrations/(기존 DB 에 한 번만 적용), policies.sql, functions.sql, seed_reference.sql(기준 데이터), seed_branches.sql·seed_brand_menus.sql(스크립트가 생성하는 지점·브랜드 메뉴 seed, 직접 수정 금지), seed_demo_users.sql(개발용 가상 사용자, 배포 전 삭제)
 - scripts/import/ : 공공데이터 CSV → 지점·브랜드 메뉴 seed SQL 생성 스크립트 (README 참고)
+- scripts/research/ : 브랜드 메뉴·알레르기 AI 조사 로컬 스크립트 (README 참고, 결과물 out/ 은 git 제외)
+- data/raw/ : 공공데이터 원본 CSV (git 제외)
+- README.md : 프로젝트 소개·기능·화면·실행·DB 설정 순서·데이터 출처와 한계
 - docs/erd.md : ERD (DB 구조를 바꾸면 schema.sql, erd.md, 타입 파일을 같이 갱신)
 
 ## 도메인 규칙
@@ -32,6 +37,8 @@
 - 알레르기는 식약처 공식 19종 표준(allergens.name)으로 통일한다 (화면 표기는 display_name, 조사 결과 매핑은 aliases). 정보가 없으면 "정보 없음(unknown)"으로 저장하고, 모르는 메뉴를 안전하다고 표시하지 않는다. 메뉴의 allergen_status 는 verified(공식 본문 확인) / official_extract(공식 도메인 발췌) / estimated(추정) / unknown(정보 없음)이다
 - 알레르기 추천 규칙: 사용자가 알레르기를 1개 이상 등록했으면 추천에서 겹치는 메뉴와 unknown/estimated 메뉴를 제외한다(안전 우선). 등록한 알레르기가 없으면 상태와 무관하게 포함한다. 가게 상세의 알레르기 탭에서는 겹치는 메뉴를 경고(위험/주의)로, 등록자의 unknown/estimated 메뉴를 "정보 없음"으로 보여준다
 - 하단 네비게이션은 홈 / 저장 / 마이페이지 3개다
+- 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
+- 알레르기·입맛(맛 선택+비율) 수정은 RPC(update_my_allergens, update_my_tastes)가 한 트랜잭션으로 교체 저장한다. 지역·닉네임은 profiles 의 해당 컬럼만 update 한다
 
 ## 디자인 규칙
 
@@ -42,6 +49,14 @@
 - 하단 네비게이션을 쓰는 페이지는 .has-bottom-nav 를 본문에 적용해 마지막 콘텐츠가 네비에 가려지지 않게 한다.
 - 화면 노드 id: Splash 1:199 / User-Login 1:851 / User-Signup 1:884 / Location 1:312 / Flavor Info 1:201 / Allergy Info_g(비율 조절) 1:222 / Allergy Info 1:268 / Home 1:2 / Details_s(가게 상세·메뉴별 평가) 1:329 / Details_m(알레르기 정보 탭) 1:453 / Save 1:546 / User(마이페이지) 1:716
 - Figma 에 아직 없는 화면은 토큰 기반의 단순한 임시 UI 로 만들고 파일 상단에 `// 디자인 대기: 화면 나오면 교체` 주석을 남긴다
+
+## 화면 현황
+
+- 구현된 화면(src/pages): 스플래시(index.html), login, signup, onboarding-location / flavor / ratio / allergy, home, restaurant, review, save, mypage, my-reviews, taste-detail, taste-edit, taste-mates, allergy-edit, profile-edit (ui-preview 는 개발용 임시 페이지)
+- 아직 없는 것: 알림 설정, 프로필 사진 (마이페이지 Figma 의 "알림 설정" 줄은 만들지 않았다)
+- Figma 에 있어 읽고 구현한 화면: Splash, User-Login, User-Signup, Location, Flavor Info, Allergy Info_g, Allergy Info, Home, Details_s, Details_m, Save, User
+- Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, 지역 선택 시트(src/utils/region-picker.ts)
+- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음)
 
 ## 코드 규칙
 

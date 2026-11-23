@@ -193,7 +193,7 @@ function createMenuCard(menu: RestaurantMenu): HTMLElement {
   if (menu.description) info.append(el('p', { class: 'menu-card__desc text-wrap-ko' }, menu.description));
 
   const foot = el('div', { class: 'menu-card__foot' });
-  // 디자인 대기: 평가하기 링크 (review.html 은 아직 없다)
+  // 평가하기 링크: 평가 작성 화면(review.html)으로 이동한다
   foot.append(el('a', { class: 'menu-card__review', href: `${PATHS.review}?menuId=${encodeURIComponent(String(menu.menuId))}&restaurantId=${encodeURIComponent(String(restaurantId))}` }, '평가하기'));
   if (menu.myRating !== null) foot.append(el('span', { class: 'menu-card__my-rating' }, `내 별점 ${menu.myRating}점`));
   info.append(foot);
@@ -323,7 +323,7 @@ function createNoAllergyView(menus: RestaurantMenu[]): HTMLElement {
       'div',
       { class: 'allergy-register text-wrap-ko' },
       el('p', {}, '알레르기를 등록하면 피해야 할 메뉴를 알려드려요'),
-      // 디자인 대기: allergy-edit.html 은 아직 없다
+      // 알레르기 등록 링크: 알레르기 수정 화면(allergy-edit.html)으로 이동한다
       el('a', { href: PATHS.allergyEdit }, '알레르기 등록하기'),
     ),
   );
