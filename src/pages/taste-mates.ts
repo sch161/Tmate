@@ -9,9 +9,8 @@ import { renderError, renderLoading } from '../utils/state-views';
 const PAGE_SIZE = 20;
 // supabase/functions.sql 의 calc_setting 값 (조건 설명 문구에만 쓴다. 계산은 서버가 한다)
 //   min_common = 3 : 두 사용자의 유사도를 계산하려면 같은 메뉴를 3개 이상 평가해야 한다
-//   mate_similarity = 0.7 : 유사도 70% 이상이면 취향 메이트
+//   (mate_similarity = 0.7 은 화면에 쓰지 않는다)
 const MIN_COMMON_REVIEWS = 3;
-const MATE_SIMILARITY_PERCENT = 70;
 
 const body = qs<HTMLElement>('#body');
 const countText = qs('#count');
@@ -42,12 +41,12 @@ function createCard(mate: TasteMate): HTMLElement {
 
 function renderEmpty(reviewCount: number | null): void {
   if (!body) return;
-  // 디자인 대기: 문구는 Figma 에 없는 임시 UI. 숫자는 functions.sql 의 calc_setting 값이다
+  // 디자인 대기: 문구는 Figma 에 없는 임시 UI. 3개는 functions.sql 의 calc_setting(min_common) 값이다
   const box = el(
     'div',
     { class: 'mate-empty' },
     el('p', { class: 'mate-empty__title' }, '아직 취향 메이트가 없어요'),
-    el('p', { class: 'mate-empty__desc text-wrap-ko' }, `다른 사용자와 같은 메뉴를 ${MIN_COMMON_REVIEWS}개 이상 함께 평가하고 별점이 비슷하면(유사도 ${MATE_SIMILARITY_PERCENT}% 이상) 입맛이 비슷한 사람을 찾아드려요`),
+    el('p', { class: 'mate-empty__desc text-wrap-ko' }, `다른 사용자와 같은 메뉴를 ${MIN_COMMON_REVIEWS}개 이상 함께 평가하고 별점이 비슷하면 입맛이 비슷한 사람을 찾아드려요`),
   );
   if (reviewCount !== null) box.append(el('p', { class: 'mate-empty__mine' }, `지금까지 ${reviewCount}개 평가했어요`));
   box.append(el('a', { class: 'mate-empty__link', href: PATHS.home }, '메뉴 평가하러 가기'));
