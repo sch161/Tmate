@@ -94,16 +94,11 @@ export async function getMyAllergenIds(): Promise<number[]> {
   }
 }
 
-// update_my_allergens 는 npm run gen:types 로 타입이 갱신되기 전까지 생성 타입에 없다.
-// 타입 생성 후에는 이 캐스트를 지우고 supabase.rpc('update_my_allergens', ...) 를 직접 호출한다.
-type LooseRpc = (fn: string, args: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }>;
-
 /** 내 알레르기를 통째로 교체한다(빈 배열이면 모두 해제). 서버 함수 하나가 한 트랜잭션으로 처리한다. */
 export async function updateMyAllergens(allergenIds: number[]): Promise<void> {
   let message = '저장하지 못했어요. 잠시 후 다시 시도해주세요';
   try {
-    const rpc = supabase.rpc.bind(supabase) as unknown as LooseRpc;
-    const { error } = await rpc('update_my_allergens', { p_allergen_ids: allergenIds });
+    const { error } = await supabase.rpc('update_my_allergens', { p_allergen_ids: allergenIds });
     if (!error) return;
     // RPC 가 던지는 한국어 예외 메시지는 그대로 보여준다
     if (/[가-힣]/.test(error.message)) message = error.message;
