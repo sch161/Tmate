@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>입맛 수정 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/taste-edit.css" />
+  </head>
+  <body>
+    <main class="app taste-edit" id="app">
+      <button class="taste-edit__back" id="back" type="button" aria-label="뒤로가기">
+        <img src="/src/assets/icons/back.svg" alt="" width="36" height="36" />
+      </button>
+      <header class="taste-edit__head">
+        <h1 class="taste-edit__title" id="title">입맛 수정</h1>
+        <p class="taste-edit__desc text-wrap-ko" id="desc"></p>
+        <!-- 디자인 대기: 안내 문구는 Figma 에 없는 임시 UI -->
+        <p class="taste-edit__notice text-wrap-ko">입맛을 바꾸면 추천이 달라져요</p>
+      </header>
+      <section class="taste-edit__body" id="body"></section>
+      <footer class="taste-edit__footer">
+        <button class="btn-primary" id="next" type="button" disabled>다음으로</button>
+      </footer>
+    </main>
+    <script type="module" src="/src/pages/taste-edit.ts"></script>
+  </body>
+</html>

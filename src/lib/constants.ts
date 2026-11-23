@@ -22,7 +22,7 @@ export const PATHS = {
   save: '/src/pages/save.html',
   mypage: '/src/pages/mypage.html',
   restaurant: '/src/pages/restaurant.html', // 아직 없음 (?id=가게id)
-  tasteEdit: '/src/pages/taste-edit.html', // 아직 없음
+  tasteEdit: '/src/pages/taste-edit.html',
   review: '/src/pages/review.html', // ?menuId=메뉴id&restaurantId=지점id(선택, 돌아가기용)
   allergyEdit: '/src/pages/allergy-edit.html',
   tasteDetail: '/src/pages/taste-detail.html', // 아직 없음

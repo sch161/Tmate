@@ -1,9 +1,10 @@
 import { getTasteTags } from '../api/lookups';
 import { PATHS } from '../lib/constants';
-import { el, qs } from '../utils/dom';
+import { qs } from '../utils/dom';
 import { enterStep } from '../utils/onboarding-flow';
 import { hasValidRatios, updateState } from '../utils/onboarding-state';
-import { adjustRatios, equalSplit } from '../utils/ratio';
+import { equalSplit } from '../utils/ratio';
+import { createRatioSliders } from '../utils/ratio-sliders';
 import { renderError, renderLoading } from '../utils/state-views';
 
 const body = qs<HTMLElement>('#body');
@@ -44,53 +45,18 @@ function render(items: { id: number; name: string }[], savedRatios: Record<numbe
   const saved = { tasteIds: items.map((i) => i.id), ratios: savedRatios, region: null, allergenIds: [] };
   let values = hasValidRatios(saved) ? items.map((i) => savedRatios[i.id]) : equalSplit(items.length);
 
-  const persist = (): void => {
-    updateState({ ratios: Object.fromEntries(items.map((item, i) => [item.id, values[i]])) });
+  const persist = (current: number[]): void => {
+    updateState({ ratios: Object.fromEntries(items.map((item, i) => [item.id, current[i]])) });
   };
 
-  const sliders: HTMLInputElement[] = [];
-  const outputs: HTMLOutputElement[] = [];
-  const paint = (): void => {
-    values.forEach((v, i) => {
-      sliders[i].value = String(v);
-      sliders[i].style.setProperty('--value', String(v));
-      sliders[i].setAttribute('aria-valuetext', `${v}%`);
-      outputs[i].textContent = `${v}%`;
-    });
-  };
-
-  const list = el('div', { class: 'ratio-list' });
-  items.forEach((item, index) => {
-    const slider = el('input', {
-      class: 'ratio-slider',
-      type: 'range',
-      id: `ratio-${item.id}`,
-      min: '1',
-      max: '100',
-      step: '1',
-    });
-    const output = el('output', { class: 'ratio-item__value', for: slider.id });
-    slider.addEventListener('input', () => {
-      values = adjustRatios(values, index, Number(slider.value));
-      paint();
-      persist();
-    });
-    sliders.push(slider);
-    outputs.push(output);
-    list.append(
-      el('div', { class: 'ratio-item' },
-        el('div', { class: 'ratio-item__head' }, el('label', { class: 'ratio-item__name', for: slider.id }, item.name), output),
-        slider,
-      ),
-    );
-  });
-  body.replaceChildren(list);
-  paint();
-  persist();
+  body.replaceChildren(createRatioSliders(items, values, (current) => {
+    values = current;
+    persist(current);
+  }));
   next.disabled = false;
 
   next.addEventListener('click', () => {
-    persist();
+    persist(values);
     window.location.href = PATHS.onboardingAllergy;
   });
 }
