@@ -4,7 +4,8 @@ import { enterStep } from '../utils/onboarding-flow';
 import { updateState } from '../utils/onboarding-state';
 import { pickRegion } from '../utils/region-picker';
 
-// 위치 권한은 받지 않는다 (구 단위 필터라 좌표가 필요 없음). "허용하기" → 지역 선택 시트.
+// 위치 권한은 받지 않는다 (구 단위 필터라 좌표가 필요 없음). "지역 선택하기" → 지역 선택 시트.
+// 디자인 대기: Figma 문구("위치 권한을 허용해주세요")와 다름. 실제 동작에 맞춰 "내 지역을 선택해주세요"로 바꿨다.
 async function start(): Promise<void> {
   const next = qs<HTMLButtonElement>('#next');
   const regionText = qs<HTMLElement>('#region-text');

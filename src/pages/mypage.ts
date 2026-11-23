@@ -1,12 +1,13 @@
 // 마이페이지 (Figma User 1:716)
 // 디자인 대기: 입맛 정보가 없을 때의 대체 카드는 Figma 에 없는 임시 UI
 import { signOut } from '../api/auth';
-import { getMySummary, type MySummary } from '../api/me';
+import { getMySummary, updateMyRegion, type MySummary } from '../api/me';
 import avatarImage from '../assets/images/mypage-avatar.png';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { renderBottomNav } from '../utils/bottom-nav';
 import { el, qs, showToast } from '../utils/dom';
+import { pickRegion } from '../utils/region-picker';
 import { renderError, renderLoading } from '../utils/state-views';
 
 const FALLBACK_ERROR = '문제가 발생했어요. 잠시 후 다시 시도해주세요';
@@ -85,6 +86,43 @@ function createSettingRow(iconName: string, title: string, href: string): HTMLEl
   return el('a', { class: 'row row--setting', href }, icon(iconName, true), el('div', { class: 'row__text' }, el('p', { class: 'row__title' }, title)), el('span', { class: 'row__chevron', 'aria-hidden': 'true' }));
 }
 
+/** 내 주변 맛집 위치 설정: 새 페이지 없이 지역 선택 시트를 열고, 고르면 바로 profiles.region 을 바꾼다. */
+function createLocationRow(summary: MySummary): HTMLElement {
+  // 디자인 대기: 현재 지역을 줄 오른쪽에 작게 보여주는 것은 Figma 에 없는 임시 UI
+  const value = el('span', { class: 'row__value' }, summary.region ?? '지역 미설정');
+  const row = el(
+    'button',
+    { class: 'row row--setting row--button', type: 'button' },
+    icon('location', true),
+    el('div', { class: 'row__text' }, el('p', { class: 'row__title' }, '내 주변 맛집 위치 설정')),
+    value,
+    el('span', { class: 'row__chevron', 'aria-hidden': 'true' }),
+  );
+  row.addEventListener('click', async () => {
+    if (row.disabled) return;
+    row.disabled = true;
+    try {
+      const picked = await pickRegion({ current: summary.region });
+      if (!picked || picked === summary.region) return;
+      const previous = summary.region;
+      // 낙관적 업데이트: 먼저 화면을 바꾸고 실패하면 되돌린다
+      summary.region = picked;
+      value.textContent = picked;
+      try {
+        await updateMyRegion(picked);
+        showToast('지역을 바꿨어요');
+      } catch (e) {
+        summary.region = previous;
+        value.textContent = previous ?? '지역 미설정';
+        showToast(e instanceof Error ? e.message : FALLBACK_ERROR);
+      }
+    } finally {
+      row.disabled = false;
+    }
+  });
+  return row;
+}
+
 function createRecords(): HTMLElement {
   // 디자인 대기: myReviews·tasteMates 페이지는 아직 없다
   return el(
@@ -101,8 +139,8 @@ function createRecords(): HTMLElement {
   );
 }
 
-function createSettings(): HTMLElement {
-  // 디자인 대기: profileEdit·tasteEdit·allergyEdit·locationEdit 페이지는 아직 없다
+function createSettings(summary: MySummary): HTMLElement {
+  // 디자인 대기: tasteEdit 페이지는 아직 없다 (위치 설정은 페이지 없이 지역 선택 시트로 처리)
   // Figma 의 "알림 설정" 줄은 이번 범위에서 제외한다 (나중에 PATHS.notificationSettings 와 함께 추가)
   return el(
     'section',
@@ -114,7 +152,7 @@ function createSettings(): HTMLElement {
       createSettingRow('user', '프로필 수정', PATHS.profileEdit),
       createSettingRow('sliders', '입맛 유형·선호도 수정', PATHS.tasteEdit),
       createSettingRow('protect', '알레르기 및 제외 식재료', PATHS.allergyEdit),
-      createSettingRow('location', '내 주변 맛집 위치 설정', PATHS.locationEdit),
+      createLocationRow(summary),
     ),
   );
 }
@@ -130,7 +168,7 @@ async function load(): Promise<void> {
       renderError(area, '내 정보를 찾지 못했어요', () => void load());
       return;
     }
-    area.replaceChildren(createProfileCard(summary), createActivity(summary), createRecords(), createSettings());
+    area.replaceChildren(createProfileCard(summary), createActivity(summary), createRecords(), createSettings(summary));
   } catch (e) {
     renderError(area, e instanceof Error ? e.message : '내 정보를 불러오지 못했어요', () => void load());
   }

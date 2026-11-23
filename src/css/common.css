@@ -156,6 +156,12 @@ body {
   background: var(--color-primary-soft);
 }
 
+/* 선택 카드 안의 아이콘 */
+.select-card__icon {
+  height: 38px;
+  width: auto;
+}
+
 .select-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

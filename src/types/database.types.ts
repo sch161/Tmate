@@ -774,6 +774,10 @@ export type Database = {
         Args: { p_code: string; p_name: string }
         Returns: string
       }
+      update_my_allergens: {
+        Args: { p_allergen_ids: number[] }
+        Returns: undefined
+      }
       upsert_review: {
         Args: { p_menu_id: number; p_rating: number; p_tag_ids: number[] }
         Returns: number

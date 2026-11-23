@@ -319,3 +319,25 @@
   background: url('/src/assets/icons/mypage-chevron.svg') center / contain no-repeat;
   transform: scaleX(-1);
 }
+
+/* 버튼으로 쓰는 이동 줄 (위치 설정: 지역 선택 시트를 연다) */
+.row--button {
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+}
+
+.row--button:disabled {
+  opacity: 0.6;
+}
+
+.row__value {
+  max-width: 40%;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-13);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

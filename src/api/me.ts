@@ -80,3 +80,55 @@ export async function getMySummary(): Promise<MySummary | null> {
     throw new Error('내 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
   }
 }
+
+/** 내가 등록한 알레르기 id 목록. user_id = 내 id 로 거른다. */
+export async function getMyAllergenIds(): Promise<number[]> {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error('no session');
+    const { data, error } = await supabase.from('user_allergens').select('allergen_id').eq('user_id', session.user.id);
+    if (error) throw error;
+    return (data ?? []).map((row) => row.allergen_id);
+  } catch {
+    throw new Error('알레르기 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  }
+}
+
+/** 내 알레르기를 통째로 교체한다(빈 배열이면 모두 해제). 서버 함수 하나가 한 트랜잭션으로 처리한다. */
+export async function updateMyAllergens(allergenIds: number[]): Promise<void> {
+  let message = '저장하지 못했어요. 잠시 후 다시 시도해주세요';
+  try {
+    const { error } = await supabase.rpc('update_my_allergens', { p_allergen_ids: allergenIds });
+    if (!error) return;
+    // RPC 가 던지는 한국어 예외 메시지는 그대로 보여준다
+    if (/[가-힣]/.test(error.message)) message = error.message;
+  } catch {
+    message = '네트워크 오류가 발생했어요. 잠시 후 다시 시도해주세요';
+  }
+  throw new Error(message);
+}
+
+export const NICKNAME_MAX_LENGTH = 20;
+
+/** 앞뒤 공백을 지운 닉네임이 1~20자인지. schema.sql 에는 닉네임 제약이 없어 앱 규칙으로 정한다. */
+export function validateNickname(value: string): string | null {
+  const nickname = value.trim();
+  if (nickname.length === 0) return '닉네임을 입력해주세요';
+  if (nickname.length > NICKNAME_MAX_LENGTH) return `닉네임은 ${NICKNAME_MAX_LENGTH}자 이하로 입력해주세요`;
+  return null;
+}
+
+/** 닉네임을 바꾼다. RLS·컬럼 권한으로 본인 행의 nickname 만 수정된다. */
+export async function updateMyNickname(nickname: string): Promise<void> {
+  const trimmed = nickname.trim();
+  const invalid = validateNickname(trimmed);
+  if (invalid) throw new Error(invalid);
+  try {
+    const session = await getSession();
+    if (!session) throw new Error('no session');
+    const { error } = await supabase.from('profiles').update({ nickname: trimmed }).eq('id', session.user.id);
+    if (error) throw error;
+  } catch {
+    throw new Error('닉네임을 바꾸지 못했어요. 잠시 후 다시 시도해주세요');
+  }
+}

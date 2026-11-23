@@ -20,7 +20,7 @@
 --   협업 점수    = 유사도 기준 이상인 이웃들의 별점을 유사도로 가중평균한 값 → (예측 별점 - 1) / 4 × 100
 --
 -- 권한 정책
---   * 화면용 RPC(get_*, save_onboarding, upsert_review, delete_review): 로그인 사용자(authenticated)만 실행. anon 불가.
+--   * 화면용 RPC(get_*, save_onboarding, update_my_allergens, upsert_review, delete_review): 로그인 사용자(authenticated)만 실행. anon 불가.
 --   * 내부 함수(calc_*, 문자열 helper): 임의의 사용자 id 를 받으므로 anon/authenticated 모두 실행 불가.
 --     화면용 RPC 가 security definer(owner 권한)로 실행되어 내부 함수를 호출한다.
 --   * 모든 함수는 auth.uid() 가 null 이면 예외를 던진다. security definer 함수는 set search_path = '' 이므로 모든 객체에 public. 접두어를 쓴다.
@@ -466,6 +466,39 @@ begin
   if not found then
     raise exception '프로필을 찾을 수 없어요.';
   end if;
+end;
+$$;
+
+-- 내 알레르기 교체 저장 (마이페이지 알레르기 수정). 빈 배열이면 모두 해제한다.
+--   null·중복은 무시하고, 존재하지 않는 알레르기 id 가 있으면 예외. 함수 전체가 한 트랜잭션이라 삭제 후 삽입 중 실패하면 되돌아간다.
+create or replace function public.update_my_allergens(p_allergen_ids int[])
+returns void
+language plpgsql
+volatile
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if exists (
+    select 1
+    from (select distinct unnest(coalesce(p_allergen_ids, '{}'::int[])) as allergen_id) u
+    where u.allergen_id is not null
+      and not exists (select 1 from public.allergens a where a.id = u.allergen_id)
+  ) then
+    raise exception '존재하지 않는 알레르기 항목이에요.';
+  end if;
+
+  delete from public.user_allergens where user_id = v_uid;
+  insert into public.user_allergens (user_id, allergen_id)
+  select distinct v_uid, u.allergen_id
+  from unnest(coalesce(p_allergen_ids, '{}'::int[])) as u(allergen_id)
+  where u.allergen_id is not null;
 end;
 $$;
 
@@ -1175,6 +1208,7 @@ revoke all on function public.get_my_reviews()                                 f
 revoke all on function public.get_regions()                                    from public, anon;
 revoke all on function public.upsert_review(bigint, int, int[])                from public, anon;
 revoke all on function public.delete_review(bigint)                            from public, anon;
+revoke all on function public.update_my_allergens(int[])                       from public, anon;
 
 grant execute on function public.save_onboarding(text, jsonb, int[])           to authenticated;
 grant execute on function public.get_restaurants(text, int, text, int)         to authenticated;
@@ -1188,6 +1222,7 @@ grant execute on function public.get_my_reviews()                              t
 grant execute on function public.get_regions()                                 to authenticated;
 grant execute on function public.upsert_review(bigint, int, int[])             to authenticated;
 grant execute on function public.delete_review(bigint)                         to authenticated;
+grant execute on function public.update_my_allergens(int[])                    to authenticated;
 
 -- =====================================================================
 -- 검증용 SQL. 각 블록은 /* 와 */ 두 줄만 지우면 begin ~ rollback 을 한 번에 실행할 수 있다.

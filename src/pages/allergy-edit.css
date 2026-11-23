@@ -1,0 +1,55 @@
+/* 알레르기 수정 전용 스타일 (디자인 대기: Figma 에 화면이 없어 온보딩 알레르기 화면 기반의 임시 UI). 값은 variables.css 토큰만 쓴다. */
+.allergy-edit {
+  display: flex;
+  flex-direction: column;
+  padding-top: 73px;
+  padding-inline: var(--space-4);
+}
+
+.allergy-edit__back {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin-left: calc(23px - var(--space-4));
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.allergy-edit__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+  text-align: center;
+}
+
+.allergy-edit__title {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-semibold);
+}
+
+.allergy-edit__desc {
+  font-size: var(--font-size-16);
+}
+
+.allergy-edit__notice {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+}
+
+.allergy-edit__body {
+  margin-top: var(--space-5);
+}
+
+/* 저장 버튼은 카드가 많아 화면이 스크롤되므로 하단에 고정한다 */
+.allergy-edit__footer {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  margin-top: auto;
+  margin-inline: calc(var(--space-4) * -1);
+  padding: var(--space-3) var(--space-4) calc(var(--space-5) + env(safe-area-inset-bottom));
+  background: var(--color-background);
+}
