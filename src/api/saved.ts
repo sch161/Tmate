@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { getConflictingMenuIds } from './allergy-conflicts';
 import { getSession } from './auth';
 import { getTasteTags } from './lookups';
 import type { AllergenStatus } from './restaurants';
@@ -115,19 +116,16 @@ export async function getSavedMenus(): Promise<SavedMenu[]> {
     const ids = (saved ?? []).map((row) => row.menu_id);
     if (ids.length === 0) return [];
 
-    const [menus, stats, tagLinks, menuAllergens, myAllergens, tags] = await Promise.all([
+    const [menus, stats, tagLinks, conflicting, tags] = await Promise.all([
       supabase.from('menus').select('id, name, description, image_url, brand_id, allergen_status, brands(name)').in('id', ids),
       supabase.from('menu_stats').select('menu_id, avg_rating').in('menu_id', ids),
       supabase.from('menu_taste_tags').select('menu_id, taste_tag_id').in('menu_id', ids),
-      supabase.from('menu_allergens').select('menu_id, allergen_id').in('menu_id', ids),
-      supabase.from('user_allergens').select('allergen_id').eq('user_id', userId),
+      getConflictingMenuIds(userId, ids),
       getTasteTags(),
     ]);
     if (menus.error) throw menus.error;
     if (stats.error) throw stats.error;
     if (tagLinks.error) throw tagLinks.error;
-    if (menuAllergens.error) throw menuAllergens.error;
-    if (myAllergens.error) throw myAllergens.error;
 
     const rows = new Map((menus.data ?? []).map((row) => [row.id, row]));
     const ratings = new Map<number, number | null>();
@@ -138,9 +136,6 @@ export async function getSavedMenus(): Promise<SavedMenu[]> {
       const name = tagNames.get(link.taste_tag_id);
       if (name) tagsByMenu.set(link.menu_id, [...(tagsByMenu.get(link.menu_id) ?? []), name]);
     }
-    const mine = new Set((myAllergens.data ?? []).map((row) => row.allergen_id));
-    const conflicting = new Set<number>();
-    for (const row of menuAllergens.data ?? []) if (mine.has(row.allergen_id)) conflicting.add(row.menu_id);
 
     const result: SavedMenu[] = [];
     for (const id of ids) {
