@@ -156,16 +156,11 @@ export async function getMyTastes(): Promise<MyTaste[]> {
   }
 }
 
-// TODO: update_my_tastes 는 npm run gen:types 로 타입이 갱신되기 전까지 생성 타입에 없다.
-// 타입 생성 후에는 이 캐스트를 지우고 supabase.rpc('update_my_tastes', ...) 를 직접 호출한다.
-type LooseTastesRpc = (fn: string, args: Record<string, unknown>) => PromiseLike<{ error: { message: string } | null }>;
-
 /** 내 입맛(맛 선택 + 비율)을 통째로 교체한다. tasteIds 와 ratios 는 같은 순서의 짝이고, 서버 함수가 한 트랜잭션으로 검증·저장한다. */
 export async function updateMyTastes(tasteIds: number[], ratios: number[]): Promise<void> {
   let message = '저장하지 못했어요. 잠시 후 다시 시도해주세요';
   try {
-    const rpc = supabase.rpc.bind(supabase) as unknown as LooseTastesRpc;
-    const { error } = await rpc('update_my_tastes', { p_taste_ids: tasteIds, p_ratios: ratios });
+    const { error } = await supabase.rpc('update_my_tastes', { p_taste_ids: tasteIds, p_ratios: ratios });
     if (!error) return;
     // RPC 가 던지는 한국어 예외 메시지는 그대로 보여준다
     if (/[가-힣]/.test(error.message)) message = error.message;
