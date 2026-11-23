@@ -1,0 +1,142 @@
+/* 나의 취향 메이트 전용 스타일 (디자인 대기: Figma 에 화면이 없어 토큰 기반 임시 UI). 값은 variables.css 토큰만 쓴다. */
+.taste-mates {
+  padding-top: 73px;
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  padding-inline: var(--space-4);
+}
+
+.taste-mates__back {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin-left: calc(23px - var(--space-4));
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.taste-mates__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.taste-mates__title {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+}
+
+.taste-mates__count {
+  font-size: var(--font-size-12);
+}
+
+.taste-mates__body {
+  margin-top: var(--space-3);
+}
+
+.mate-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.mate-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.mate-card__top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.mate-card__name {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mate-card__percent {
+  flex: 0 0 auto;
+  color: var(--color-primary);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mate-card__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--color-surface-border);
+}
+
+.mate-card__fill {
+  width: calc(var(--value) * 1%);
+  height: 100%;
+  border-radius: 10px;
+  background: var(--color-primary);
+}
+
+.mate-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-medium);
+}
+
+.taste-mates__more {
+  display: block;
+  margin: var(--space-3) auto 0;
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-pill);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+}
+
+/* 메이트가 없을 때: 조건 설명 + 내 평가 수 + 평가하러 가기 */
+.mate-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  text-align: center;
+}
+
+.mate-empty__title {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mate-empty__desc {
+  font-size: var(--font-size-14);
+}
+
+.mate-empty__mine {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+}
+
+.mate-empty__link {
+  margin-top: var(--space-2);
+  color: var(--color-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-decoration: underline;
+}

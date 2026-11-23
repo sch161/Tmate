@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>나의 취향 메이트 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/taste-mates.css" />
+  </head>
+  <body>
+    <main class="app taste-mates" id="app">
+      <button class="taste-mates__back" id="back" type="button" aria-label="뒤로가기">
+        <img src="/src/assets/icons/back.svg" alt="" width="36" height="36" />
+      </button>
+      <div class="taste-mates__head">
+        <h1 class="taste-mates__title">나의 취향 메이트</h1>
+        <span class="taste-mates__count" id="count"></span>
+      </div>
+      <div class="taste-mates__body" id="body"></div>
+    </main>
+    <script type="module" src="/src/pages/taste-mates.ts"></script>
+  </body>
+</html>

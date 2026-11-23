@@ -25,9 +25,9 @@ export const PATHS = {
   tasteEdit: '/src/pages/taste-edit.html',
   review: '/src/pages/review.html', // ?menuId=메뉴id&restaurantId=지점id(선택, 돌아가기용)
   allergyEdit: '/src/pages/allergy-edit.html',
-  tasteDetail: '/src/pages/taste-detail.html', // 아직 없음
+  tasteDetail: '/src/pages/taste-detail.html',
   myReviews: '/src/pages/my-reviews.html',
-  tasteMates: '/src/pages/taste-mates.html', // 아직 없음
+  tasteMates: '/src/pages/taste-mates.html',
   profileEdit: '/src/pages/profile-edit.html',
 } as const;
 

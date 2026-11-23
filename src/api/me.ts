@@ -169,3 +169,35 @@ export async function updateMyTastes(tasteIds: number[], ratios: number[]): Prom
   }
   throw new Error(message);
 }
+
+/** 취향 메이트 한 명. 다른 사용자의 정보는 닉네임·유형·유사도·공통 평가 수만 받는다(아이디·이메일은 RPC 가 주지 않는다). */
+export interface TasteMate {
+  nickname: string;
+  /** 입맛 정보가 없으면 null */
+  tasteTypeName: string | null;
+  /** 0~100 정수 */
+  similarityPercent: number;
+  /** 함께 평가한 메뉴 수 */
+  commonMenuCount: number;
+}
+
+export const MAX_TASTE_MATES = 100;
+
+/** 취향 메이트 목록, 유사도 큰 순. 서버가 한 번에 줄 수 있는 최대(100명)까지 받는다. */
+export async function getTasteMates(): Promise<TasteMate[]> {
+  try {
+    const { data, error } = await supabase.rpc('get_taste_mates', { p_limit: MAX_TASTE_MATES });
+    if (error) throw error;
+    return (data ?? [])
+      .filter((row) => typeof row.nickname === 'string' && Number.isFinite(row.similarity_percent))
+      .map((row) => ({
+        nickname: row.nickname,
+        tasteTypeName: text(row.taste_type_name),
+        similarityPercent: Math.min(100, Math.max(0, Math.round(row.similarity_percent))),
+        commonMenuCount: count(row.common_menu_count),
+      }))
+      .sort((a, b) => b.similarityPercent - a.similarityPercent);
+  } catch {
+    throw new Error('취향 메이트를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  }
+}
