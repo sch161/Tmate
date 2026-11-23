@@ -249,6 +249,29 @@ function createRestaurantCard(restaurant: RestaurantSummary): HTMLElement {
   return el('article', { class: 'store-card' }, link, save);
 }
 
+/** 가게 목록이 비었을 때: 검색 결과 없음 / 빈 카테고리 / 지역에 가게 없음을 구분해 앱 오류로 오해하지 않게 한다. */
+function renderNoRestaurants(target: HTMLElement): void {
+  if (query) {
+    renderEmpty(target, `'${query}'에 맞는 맛집이 없어요`, '다른 검색어로 찾아보세요');
+    return;
+  }
+  if (categoryId !== undefined) {
+    // 디자인 대기: Figma 에 없는 문구. 데이터가 없는 카테고리(현재는 양식 외)를 눌렀을 때 보인다
+    renderEmpty(target, '이 카테고리의 맛집은 아직 준비 중이에요', '곧 더 많은 맛집을 보여드릴게요');
+    target.querySelector('.empty-state__title')?.classList.add('text-wrap-ko');
+    target.querySelector('.empty-state__desc')?.classList.add('text-wrap-ko');
+    const all = el('button', { class: 'home__empty-link', type: 'button' }, '전체 보기');
+    all.addEventListener('click', () => {
+      categoryId = undefined;
+      renderCategories();
+      void loadRestaurants();
+    });
+    target.querySelector('.empty-state')?.append(el('div', { class: 'home__empty-links' }, all));
+    return;
+  }
+  renderEmpty(target, '이 지역에는 아직 등록된 맛집이 없어요', '다른 지역을 선택해 보세요');
+}
+
 async function loadRestaurants(): Promise<void> {
   if (!restaurantArea) return;
   const seq = ++restaurantSeq;
@@ -267,11 +290,7 @@ async function loadRestaurants(): Promise<void> {
     snapshot.count = list.length;
     if (seq !== restaurantSeq) return;
     if (list.length === 0) {
-      renderEmpty(
-        restaurantArea,
-        query ? `'${query}'에 맞는 맛집이 없어요` : '이 지역에는 아직 등록된 맛집이 없어요',
-        query ? '다른 검색어로 찾아보세요' : '다른 지역을 선택해 보세요',
-      );
+      renderNoRestaurants(restaurantArea);
       return;
     }
     restaurantArea.replaceChildren(el('div', { class: 'store-list' }, ...list.map(createRestaurantCard)));
