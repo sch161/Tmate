@@ -8,15 +8,11 @@
 - 공통 코드는 `src/utils/` 에 둔다. 공통 파일(`lib/supabase.ts`, `common.css` 등)을 바꿀 때는 팀에 먼저 알린다.
 - 파일명은 소문자 + 하이픈, 변수·함수는 camelCase, 타입·인터페이스는 PascalCase, CSS 클래스는 kebab-case.
 - `any` 사용을 지양한다. 불가피하면 이유를 주석으로 남긴다.
-- `src/types/database.types.ts` 는 자동 생성 파일이므로 직접 수정하지 않는다. DB 구조·정책·RPC 를 바꾸면 `supabase/*.sql` 과 `docs/erd.md` 를 수정하고 `npm run gen:types` 로 타입을 갱신해 같은 PR 에 포함하며, PR 에 명시한다.
+- `src/types/database.types.ts` 는 자동 생성 파일이므로 직접 수정하지 않는다. DB 구조·정책·RPC 를 바꾸면 `supabase/*.sql` 과 `docs/erd.md` 를 수정하고 `npm run gen:types` 로 타입을 갱신해 같은 브랜치에 포함하고, 작업 보고에 명시한다.
 
-## 협업 규칙 (반드시 지킬 것)
+## 작업 규칙
 
-1. main 에서 직접 개발하지 않는다. 개인 브랜치에서 작업한다.
-2. 기능별로 브랜치를 만든다. 로그인, 회원가입 등 작업 단위를 분리한다.
-3. 작업 전 최신 코드를 확인한다. 작업 시작 전과 PR 올리기 전에 main 을 pull 한다.
-4. PR 을 통해 병합한다. 팀원 리뷰(최소 1명 승인)를 거친 뒤 main 에 반영한다.
-5. 커밋 메시지는 무엇을 변경했는지 알 수 있게 작성한다.
+브랜치 작업, 병합, push 등 작업 흐름은 [CLAUDE.md](CLAUDE.md) 의 Git 규칙을 따른다. (기능별 브랜치에서 작업하고, 로컬에서 `merge --no-ff` 로 합치며, push 는 요청할 때만 한다. PR·리뷰어 승인 절차는 쓰지 않는다.)
 
 ## 브랜치 이름
 
@@ -31,15 +27,6 @@
 
 - 예) `feat: 메뉴 별점 입력 UI 추가`
 - 나쁜 예) `수정`, `작업중`
-
-## 작업 흐름
-
-1. `git checkout main && git pull origin main`
-2. `git checkout -b feature/작업내용`
-3. 작업 → 작은 단위로 자주 커밋
-4. `git pull origin main` 으로 최신 main 반영, 충돌 해결
-5. `git push origin feature/작업내용` → GitHub 에서 PR 생성
-6. 승인 후 병합, 병합된 브랜치는 삭제
 
 ## 주의
 
