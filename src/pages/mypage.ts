@@ -56,8 +56,9 @@ function createProfileCard(summary: MySummary): HTMLElement {
 // ---------- 활동 / 내 기록 / 설정 ----------
 
 function createActivity(summary: MySummary): HTMLElement {
-  const card = (iconName: string, count: number, label: string): HTMLElement =>
-    el('div', { class: 'activity__card' }, icon(iconName), el('p', { class: 'activity__count' }, String(count)), el('p', { class: 'activity__label' }, label));
+  // 각 칸은 해당 목록 화면으로 이동한다
+  const card = (iconName: string, count: number, label: string, href: string): HTMLElement =>
+    el('a', { class: 'activity__card', href }, icon(iconName), el('p', { class: 'activity__count' }, String(count)), el('p', { class: 'activity__label' }, label));
   return el(
     'section',
     { class: 'mypage__section', 'aria-labelledby': 'activity-title' },
@@ -65,9 +66,9 @@ function createActivity(summary: MySummary): HTMLElement {
     el(
       'div',
       { class: 'activity' },
-      card('bookmark', summary.savedRestaurantCount, '저장한 맛집'),
-      card('food', summary.reviewCount, '평가한 메뉴'),
-      card('users', summary.mateCount, '취향 메이트'),
+      card('bookmark', summary.savedRestaurantCount, '저장한 맛집', PATHS.save),
+      card('food', summary.reviewCount, '평가한 메뉴', PATHS.myReviews),
+      card('users', summary.mateCount, '취향 메이트', PATHS.tasteMates),
     ),
   );
 }

@@ -27,7 +27,7 @@ export const PATHS = {
   allergyEdit: '/src/pages/allergy-edit.html',
   tasteDetail: '/src/pages/taste-detail.html',
   myReviews: '/src/pages/my-reviews.html',
-  tasteMates: '/src/pages/taste-mates.html', // 아직 없음 (곧 추가)
+  tasteMates: '/src/pages/taste-mates.html',
   profileEdit: '/src/pages/profile-edit.html',
 } as const;
 
