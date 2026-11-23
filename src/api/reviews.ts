@@ -1,5 +1,7 @@
 import { supabase } from '../lib/supabase';
+import { getConflictingMenuIds } from './allergy-conflicts';
 import { getSession } from './auth';
+import type { AllergenStatus } from './restaurants';
 
 /** 평가 작성 화면용 메뉴 정보. 평가는 브랜드 메뉴 단위라 같은 브랜드의 모든 지점이 공유한다. */
 export interface ReviewMenu {
@@ -93,5 +95,61 @@ export async function deleteReview(menuId: number): Promise<void> {
     if (error) throw new Error(rpcMessage(error, '평가를 삭제하지 못했어요. 잠시 후 다시 시도해주세요'));
   } catch (e) {
     throw new Error(e instanceof Error && /[가-힣]/.test(e.message) ? e.message : GENERIC_ERROR);
+  }
+}
+
+/** 내가 평가한 메뉴 한 건 (get_my_reviews + 알레르기 안전 정보) */
+export interface MyReviewItem {
+  menuId: number;
+  menuName: string;
+  brandId: number;
+  brandName: string;
+  imageUrl: string | null;
+  /** 1~5 */
+  rating: number;
+  /** 내가 평가에 붙인 맛 태그 */
+  tasteTags: string[];
+  /** ISO 날짜 문자열 */
+  createdAt: string;
+  /** 수정 링크용 대표 지점. 브랜드에 지점이 하나도 없으면 null */
+  restaurantId: number | null;
+  allergenStatus: AllergenStatus;
+  conflictsWithMyAllergens: boolean;
+}
+
+/** 내가 평가한 메뉴, 최신순(get_my_reviews 의 정렬 그대로). 모양이 맞지 않는 행(별점 1~5 정수 아님 등)은 버린다. */
+export async function getMyReviews(): Promise<MyReviewItem[]> {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error('no session');
+    const { data, error } = await supabase.rpc('get_my_reviews');
+    if (error) throw error;
+    const rows = (data ?? []).filter((row) => Number.isInteger(row.rating) && row.rating >= 1 && row.rating <= 5);
+    const ids = rows.map((row) => row.menu_id);
+    if (ids.length === 0) return [];
+
+    const [statuses, conflicting] = await Promise.all([
+      supabase.from('menus').select('id, allergen_status').in('id', ids),
+      getConflictingMenuIds(session.user.id, ids),
+    ]);
+    if (statuses.error) throw statuses.error;
+    const statusById = new Map((statuses.data ?? []).map((row) => [row.id, row.allergen_status]));
+
+    return rows.map((row) => ({
+      menuId: row.menu_id,
+      menuName: row.menu_name,
+      brandId: row.brand_id,
+      brandName: row.brand_name,
+      imageUrl: row.image_url?.trim() || null,
+      rating: row.rating,
+      tasteTags: Array.isArray(row.taste_tags) ? row.taste_tags.filter((tag): tag is string => typeof tag === 'string' && tag !== '') : [],
+      createdAt: row.created_at,
+      restaurantId: typeof row.restaurant_id === 'number' ? row.restaurant_id : null,
+      // 상태를 못 읽으면 안전하다고 표시하지 않도록 unknown 으로 둔다
+      allergenStatus: statusById.get(row.menu_id) ?? 'unknown',
+      conflictsWithMyAllergens: conflicting.has(row.menu_id),
+    }));
+  } catch {
+    throw new Error('평가한 메뉴를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
   }
 }

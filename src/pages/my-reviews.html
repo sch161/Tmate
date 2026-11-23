@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>내가 평가한 메뉴 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/my-reviews.css" />
+  </head>
+  <body>
+    <main class="app my-reviews" id="app">
+      <button class="my-reviews__back" id="back" type="button" aria-label="뒤로가기">
+        <img src="/src/assets/icons/back.svg" alt="" width="36" height="36" />
+      </button>
+      <div class="my-reviews__head">
+        <h1 class="my-reviews__title">내가 평가한 메뉴</h1>
+        <span class="my-reviews__count" id="count"></span>
+      </div>
+      <div class="my-reviews__body" id="body"></div>
+    </main>
+    <script type="module" src="/src/pages/my-reviews.ts"></script>
+  </body>
+</html>
