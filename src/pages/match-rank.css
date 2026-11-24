@@ -11,6 +11,11 @@
 }
 
 .rank__head {
+  /* 오른쪽 위 QR(높이 약 10em)과 아래 카드 격자가 겹치지 않게 머리말 높이를 확보한다 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 10em;
   text-align: center;
 }
 
@@ -25,64 +30,66 @@
 }
 
 .rank__body {
-  max-width: 60em;
-  margin: var(--space-6) auto 0;
+  margin: var(--space-4) auto 0;
 }
 
+/* 랭킹 카드 격자: 화면 폭에 맞춰 한 줄에 들어가는 만큼 채운다 */
 .rank__list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10em, 1fr));
+  gap: var(--space-3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.rank-row {
+.rank-card {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 1em;
-  padding: 0.6em 1.2em;
+  gap: 0.2em;
+  min-width: 0;
+  padding: 0.8em 0.6em;
   border: 2px solid var(--color-surface-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface);
+  text-align: center;
 }
 
-.rank-row--top {
+.rank-card--top {
   border-color: var(--color-primary);
   background: var(--color-primary-soft);
 }
 
-.rank-row__rank {
-  flex-shrink: 0;
-  width: 1.6em;
-  font-size: 1.8em;
+.rank-card__rank {
+  padding: 0.1em 0.7em;
+  border-radius: var(--radius-pill);
+  background: var(--color-background);
+  font-size: 0.8em;
   font-weight: var(--font-weight-bold);
-  text-align: center;
 }
 
-.rank-row__names {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
+.rank-card--top .rank-card__rank {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
 }
 
-.rank-row__pair {
-  font-size: 1.3em;
+.rank-card__score {
+  color: var(--color-primary);
+  font-size: 2em;
+  font-weight: var(--font-weight-bold);
+  line-height: 1.2;
+}
+
+.rank-card__pair {
+  max-width: 100%;
+  font-size: 1em;
   font-weight: var(--font-weight-bold);
   overflow-wrap: anywhere;
 }
 
-.rank-row__tier {
-  font-size: 0.9em;
-}
-
-.rank-row__score {
-  flex-shrink: 0;
-  color: var(--color-primary);
-  font-size: 2em;
-  font-weight: var(--font-weight-bold);
+.rank-card__tier {
+  font-size: 0.7em;
 }
 
 .rank__updated {
@@ -172,6 +179,10 @@
 }
 
 @media (max-width: 720px) {
+  .rank__head {
+    min-height: 0;
+  }
+
   .rank__qr {
     position: static;
     margin-top: var(--space-3);

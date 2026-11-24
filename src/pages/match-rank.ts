@@ -8,20 +8,23 @@ import { getMatchTier } from '../utils/match-results';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 
 const REFRESH_MS = 5000;
-const LIMIT = 10;
+// 카드 격자라 한 화면에 여러 팀이 들어간다 (서버 한도는 50)
+const LIMIT = 30;
 const PHOTO_LIMIT = 6;
 
 const body = qs<HTMLElement>('#body');
 const updated = qs('#updated');
 let lastKey = '';
 
-function row(item: MatchRankingRow): HTMLElement {
+/** 랭킹 카드 한 장: 순위 · 점수 · 두 사람 닉네임 · 결과 문구 */
+function card(item: MatchRankingRow): HTMLElement {
   return el(
     'li',
-    { class: item.rank <= 3 ? 'rank-row rank-row--top' : 'rank-row' },
-    el('span', { class: 'rank-row__rank' }, String(item.rank)),
-    el('span', { class: 'rank-row__names' }, el('span', { class: 'rank-row__pair' }, `${item.nicknameA} · ${item.nicknameB}`), el('span', { class: 'rank-row__tier' }, getMatchTier(item.score).title)),
-    el('span', { class: 'rank-row__score' }, `${item.score}%`),
+    { class: item.rank <= 3 ? 'rank-card rank-card--top' : 'rank-card' },
+    el('span', { class: 'rank-card__rank' }, `${item.rank}위`),
+    el('span', { class: 'rank-card__score' }, `${item.score}%`),
+    el('span', { class: 'rank-card__pair' }, `${item.nicknameA} · ${item.nicknameB}`),
+    el('span', { class: 'rank-card__tier' }, getMatchTier(item.score).title),
   );
 }
 
@@ -36,7 +39,7 @@ function paint(list: MatchRankingRow[]): void {
     renderEmpty(body, '아직 검사를 마친 팀이 없어요', '첫 번째 주인공이 되어 보세요');
     return;
   }
-  body.replaceChildren(el('ol', { class: 'rank__list' }, ...list.map(row)));
+  body.replaceChildren(el('ol', { class: 'rank__list' }, ...list.map(card)));
 }
 
 const photoArea = qs<HTMLElement>('#photos');
