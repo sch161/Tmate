@@ -414,3 +414,10 @@
   color: var(--color-primary);
   font-weight: var(--font-weight-semibold);
 }
+
+/* 디자인 대기: 추천 메뉴의 알레르기 추정 표시 (Figma 에 없는 임시 UI) */
+.menu-card__allergy-note {
+  color: var(--color-primary);
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-semibold);
+}

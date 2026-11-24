@@ -93,7 +93,8 @@ function ratingLabel(avg: number): string {
 
 // ---------- 오늘의 추천 메뉴 ----------
 
-function createMenuCard(menu: RecommendedMenu): HTMLElement {
+/** allergyNote: 알레르기를 등록한 사용자에게 추정 메뉴임을 알린다 (추정 메뉴는 내 알레르기와 겹치지 않아도 확실하지 않다) */
+function createMenuCard(menu: RecommendedMenu, allergyNote = false): HTMLElement {
   const body = el(
     'div',
     { class: 'menu-card__body' },
@@ -109,6 +110,8 @@ function createMenuCard(menu: RecommendedMenu): HTMLElement {
   if (menu.matchPercent !== null) {
     meters.append(createMeter('match', menu.matchPercent, `${Math.round(menu.matchPercent)} %`));
   }
+  // 디자인 대기: Figma 에 없는 임시 표시
+  if (allergyNote && menu.allergenStatus === 'estimated') meters.append(el('p', { class: 'menu-card__allergy-note text-wrap-ko' }, '알레르기 추정 · 가게 확인'));
   return el(
     'a',
     { class: 'menu-card', href: restaurantHref(menu.restaurantId), 'aria-label': `${menu.menuName} - ${menu.restaurantName}` },
@@ -157,7 +160,7 @@ async function renderNoRecommendation(target: HTMLElement, seq: number): Promise
   }
   if (shops === true && allergy === true) {
     // 디자인 대기: Figma 에 없는 문구 (안전 규칙 때문에 추천이 비었다는 것을 알린다)
-    renderEmpty(target, '내 알레르기를 반영하면 추천할 메뉴가 없어요', '알레르기 정보가 없는 메뉴는 안전을 위해 빼고 있어요');
+    renderEmpty(target, '내 알레르기를 반영하면 추천할 메뉴가 없어요', '내 알레르기가 들어 있거나 알레르기 정보가 없는 메뉴는 빼고 있어요');
     target.querySelector('.empty-state__title')?.classList.add('text-wrap-ko');
     target.querySelector('.empty-state__desc')?.classList.add('text-wrap-ko');
     const allergyLink = el('a', { class: 'home__empty-link', href: withReturnTo(PATHS.allergyEdit) }, '알레르기 확인하기');
@@ -180,7 +183,10 @@ async function loadMenus(): Promise<void> {
       await renderNoRecommendation(recommendArea, seq);
       return;
     }
-    recommendArea.replaceChildren(el('div', { class: 'menu-grid' }, ...menus.map(createMenuCard)));
+    // 추정 메뉴가 섞여 있으면 알레르기를 등록한 사용자에게만 표시를 붙인다
+    const allergy = menus.some((menu) => menu.allergenStatus === 'estimated') ? (await hasAllergy()) === true : false;
+    if (seq !== menuSeq) return;
+    recommendArea.replaceChildren(el('div', { class: 'menu-grid' }, ...menus.map((menu) => createMenuCard(menu, allergy))));
   } catch (e) {
     if (seq !== menuSeq) return;
     renderError(recommendArea, e instanceof Error ? e.message : '추천 메뉴를 불러오지 못했어요', () => void loadMenus());
