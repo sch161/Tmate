@@ -158,6 +158,13 @@
   justify-content: space-between;
 }
 
+/* 디자인 대기: 가까운 순 버튼은 Figma 에 없는 임시 UI */
+.home__near {
+  flex: 0 0 auto;
+  margin-bottom: var(--space-3);
+  margin-left: auto;
+}
+
 .home__search-reset {
   margin-bottom: var(--space-3);
   border: 0;

@@ -23,6 +23,9 @@ let region = '';
 let categoryId: number | undefined;
 let query = '';
 let categories: FoodCategory[] = [];
+/** 내 위치. "가까운 순"을 켰을 때만 있다. 이 탭에서만 기억하고(sessionStorage) 서버에 저장하지 않는다 */
+let myLocation: { lat: number; lng: number } | null = null;
+const LOCATION_KEY = 'tmate.location';
 
 // 늦게 도착한 이전 응답이 새 결과를 덮어쓰지 않도록 영역별 요청 순번을 둔다
 let menuSeq = 0;
@@ -49,6 +52,7 @@ const searchForm = qs<HTMLFormElement>('#search-form');
 const searchInput = qs<HTMLInputElement>('#search-input');
 const searchReset = qs<HTMLButtonElement>('#search-reset');
 const nearbyTitle = qs('#nearby-title');
+const nearToggle = qs<HTMLButtonElement>('#near-toggle');
 
 function restaurantHref(id: number): string {
   return `${PATHS.restaurant}?id=${encodeURIComponent(String(id))}`;
@@ -280,7 +284,7 @@ function createRestaurantCard(restaurant: RestaurantSummary): HTMLElement {
       'div',
       { class: 'store-card__top' },
       el('p', { class: 'store-card__name' }, restaurant.name),
-      el('p', { class: 'place' }, restaurant.region),
+      el('p', { class: 'place' }, restaurant.distanceM === null ? restaurant.region : `${restaurant.region} · ${distanceLabel(restaurant.distanceM)}`),
       rating,
     ),
     tags,
@@ -337,7 +341,7 @@ async function loadRestaurants(): Promise<void> {
   };
   restaurantsSnapshot = snapshot;
   try {
-    const list = await getRestaurants({ region, categoryId, query: query || undefined });
+    const list = await getRestaurants({ region, categoryId, query: query || undefined, location: myLocation ?? undefined });
     snapshot.count = list.length;
     if (seq !== restaurantSeq) return;
     if (list.length === 0) {
@@ -351,6 +355,66 @@ async function loadRestaurants(): Promise<void> {
   } finally {
     finish();
   }
+}
+
+// ---------- 가까운 순 (디자인 대기: Figma 에 없는 임시 UI) ----------
+
+function distanceLabel(meters: number): string {
+  return meters < 1000 ? `${Math.max(10, Math.round(meters / 10) * 10)}m` : `${(meters / 1000).toFixed(1)}km`;
+}
+
+function loadSavedLocation(): { lat: number; lng: number } | null {
+  try {
+    const data: unknown = JSON.parse(sessionStorage.getItem(LOCATION_KEY) ?? 'null');
+    if (typeof data !== 'object' || data === null) return null;
+    const { lat, lng } = data as Record<string, unknown>;
+    return typeof lat === 'number' && typeof lng === 'number' && Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  } catch {
+    return null;
+  }
+}
+
+function setLocation(next: { lat: number; lng: number } | null): void {
+  myLocation = next;
+  try {
+    if (next) sessionStorage.setItem(LOCATION_KEY, JSON.stringify(next));
+    else sessionStorage.removeItem(LOCATION_KEY);
+  } catch {
+    // 저장하지 못해도 이번 화면에서는 그대로 쓴다
+  }
+  if (nearToggle) {
+    nearToggle.classList.toggle('is-active', next !== null);
+    nearToggle.setAttribute('aria-pressed', String(next !== null));
+    nearToggle.textContent = '가까운 순';
+    nearToggle.disabled = false;
+  }
+}
+
+/** 버튼을 눌렀을 때만 위치 권한을 묻는다. 다시 누르면 원래 순서로 돌아간다 */
+function onToggleNear(): void {
+  if (!nearToggle) return;
+  if (myLocation) {
+    setLocation(null);
+    void loadRestaurants();
+    return;
+  }
+  if (!('geolocation' in navigator)) {
+    showToast('이 브라우저에서는 위치를 쓸 수 없어요');
+    return;
+  }
+  nearToggle.disabled = true;
+  nearToggle.textContent = '위치 확인 중...';
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
+      void loadRestaurants();
+    },
+    (error) => {
+      setLocation(null);
+      showToast(error.code === error.PERMISSION_DENIED ? '위치 권한을 허용하면 가까운 순으로 볼 수 있어요' : '위치를 확인하지 못했어요. 잠시 후 다시 시도해주세요');
+    },
+    { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 },
+  );
 }
 
 // ---------- 카테고리 칩 ----------
@@ -482,6 +546,8 @@ async function start(): Promise<void> {
     applyQuery(searchInput?.value ?? '');
   });
   searchReset?.addEventListener('click', () => applyQuery(''));
+  nearToggle?.addEventListener('click', onToggleNear);
+  setLocation(loadSavedLocation());
   // 입력을 모두 지우거나 검색창의 X 버튼을 누르면 제출 없이 바로 원래 홈 구성으로 돌아온다
   searchInput?.addEventListener('input', () => {
     if (searchInput.value.trim() === '' && query !== '') applyQuery('');
