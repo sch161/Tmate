@@ -34,7 +34,7 @@ function loadWithImageElement(file: File): Promise<Drawable> {
 }
 
 /** 사진을 그릴 수 있는 형태로 읽는다. 폰 카메라의 큰 사진도 읽히도록 createImageBitmap 을 먼저 쓰고, 안 되면 img 로 읽는다 */
-async function loadDrawable(file: File): Promise<Drawable> {
+export async function loadDrawable(file: File): Promise<Drawable> {
   if (typeof createImageBitmap === 'function') {
     try {
       const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });

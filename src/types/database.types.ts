@@ -1365,6 +1365,10 @@ export type Database = {
         Args: { p_allergens: number[]; p_region: string; p_tastes: Json }
         Returns: undefined
       }
+      set_my_store_photo: {
+        Args: { p_restaurant_id: number; p_url: string }
+        Returns: undefined
+      }
       taste_short_name: {
         Args: { p_code: string; p_name: string }
         Returns: string

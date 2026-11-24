@@ -1,6 +1,7 @@
 // 가게 추가. Edge Function(add-store)이 메뉴 이름으로 알레르기·맛을 AI 로 추정해 저장한다 (브라우저에서 AI 를 직접 부르지 않는다).
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { getSession } from './auth';
 
 /** 한 번에 넣을 수 있는 메뉴 수 (functions.sql 의 store_menu_max 와 같다) */
 export const STORE_MENU_MAX = 8;
@@ -64,4 +65,23 @@ export async function addStoreMenus(restaurantId: number, menus: NewStoreMenu[])
   const result = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
   const unknownMenus = Array.isArray(result.unknown_menus) ? result.unknown_menus.filter((name): name is string => typeof name === 'string') : [];
   return { restaurantId, unknownMenus };
+}
+
+const STORE_PHOTO_BUCKET = 'store-photos';
+
+/** 내가 추가한 가게의 사진을 올리고 가게에 연결한다. 올린 사진의 주소를 돌려준다 (파일은 '내 id/가게id-시각.확장자' 로 저장된다) */
+export async function uploadStorePhoto(restaurantId: number, blob: Blob, extension: 'jpg' | 'png'): Promise<string> {
+  try {
+    const session = await getSession();
+    if (!session) throw new Error('no session');
+    const path = `${session.user.id}/${restaurantId}-${Date.now()}.${extension}`;
+    const { error: uploadError } = await supabase.storage.from(STORE_PHOTO_BUCKET).upload(path, blob, { contentType: blob.type, cacheControl: '31536000' });
+    if (uploadError) throw uploadError;
+    const url = supabase.storage.from(STORE_PHOTO_BUCKET).getPublicUrl(path).data.publicUrl;
+    const { error } = await supabase.rpc('set_my_store_photo', { p_restaurant_id: restaurantId, p_url: url });
+    if (error) throw error;
+    return url;
+  } catch {
+    throw new Error('사진을 올리지 못했어요. 잠시 후 다시 시도해주세요');
+  }
 }
