@@ -1,5 +1,6 @@
 /* 맛궁합 랭킹 (부스 큰 화면용, 디자인 대기: 토큰 기반 임시 UI). 값은 variables.css 토큰만 쓰고, 화면 폭에 따라 글자 크기를 키운다. */
 .rank {
+  position: relative;
   box-sizing: border-box;
   min-height: 100dvh;
   padding: var(--space-6);
@@ -100,4 +101,79 @@
 .rank__tool-link {
   text-decoration: underline;
   opacity: 0.6;
+}
+
+/* 바로가기 QR (화면 오른쪽 위) */
+.rank__qr {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.rank__qr-image {
+  width: 8em;
+  height: 8em;
+  border-radius: var(--radius-md);
+  image-rendering: pixelated;
+}
+
+.rank__qr-text {
+  font-size: 0.8em;
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+/* 손님이 띄워도 된다고 한 사진 줄 */
+.rank__photos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  max-width: 60em;
+  margin: var(--space-5) auto 0;
+}
+
+.rank-photo {
+  width: 9.5em;
+  margin: 0;
+}
+
+.rank-photo__image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.rank-photo__caption {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: 0.7em;
+}
+
+.rank-photo__names {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rank-photo__score {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+@media (max-width: 720px) {
+  .rank__qr {
+    position: static;
+    margin-top: var(--space-3);
+  }
 }

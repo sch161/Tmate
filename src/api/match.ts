@@ -177,9 +177,9 @@ export async function getMatchPairFoods(code: string, memberNoA: number, memberN
   }));
 }
 
-/** 손님: 결과 화면에서 찍은 사진(JPEG data URL)과 함께 영수증 인쇄를 요청한다. 그 방에서 검사를 마친 두 사람만 할 수 있다. */
-export async function requestMatchPrint(code: string, photo: string): Promise<void> {
-  const { error } = await supabase.rpc('request_match_print', { p_code: code, p_photo: photo });
+/** 손님: 결과 화면에서 찍은 사진(JPEG data URL)과 함께 영수증 인쇄를 요청한다. 그 방에서 검사를 마친 두 사람만 할 수 있다. showOnRank 는 랭킹 화면에 사진을 띄워도 된다는 동의다. */
+export async function requestMatchPrint(code: string, photo: string, showOnRank: boolean): Promise<void> {
+  const { error } = await supabase.rpc('request_match_print', { p_code: code, p_photo: photo, p_show_on_rank: showOnRank });
   if (error) throw toError(error, '사진을 올리지 못했어요. 잠시 후 다시 시도해주세요');
 }
 
@@ -224,4 +224,22 @@ export async function getMatchPairChoices(code: string, memberNoA: number, membe
   const { data, error } = await supabase.rpc('get_match_pair_choices', { p_code: code, p_member_no_a: memberNoA, p_member_no_b: memberNoB });
   if (error) throw toError(error, '문항 결과를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
   return (data ?? []).map((row) => ({ optionA: row.option_a, optionB: row.option_b, aChoice: row.a_choice, bChoice: row.b_choice }));
+}
+
+/** 랭킹 화면에 띄울 사진 (손님이 동의한 것만) */
+export interface MatchRankPhoto {
+  requestId: number;
+  nicknameA: string;
+  nicknameB: string;
+  score: number;
+  /** JPEG data URL */
+  photo: string;
+}
+
+/** 랭킹 화면: 손님이 띄워도 된다고 한 사진을 최근 것부터 */
+export async function getMatchRankPhotos(limit = 6): Promise<MatchRankPhoto[]> {
+  const { data, error } = await supabase.rpc('get_match_rank_photos', { p_limit: limit });
+  if (error) throw toError(error, '사진을 불러오지 못했어요');
+  // DB 가 JPEG data URL 만 받지만, 화면에 그대로 넣는 값이라 한 번 더 확인한다
+  return (data ?? []).filter((row) => row.photo.startsWith('data:image/jpeg;base64,')).map((row) => ({ requestId: row.request_id, nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score, photo: row.photo }));
 }

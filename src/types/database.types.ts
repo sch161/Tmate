@@ -220,6 +220,7 @@ export type Database = {
           printed_at: string | null
           requested_by: string
           room_id: number
+          show_on_rank: boolean
         }
         Insert: {
           created_at?: string
@@ -228,6 +229,7 @@ export type Database = {
           printed_at?: string | null
           requested_by: string
           room_id: number
+          show_on_rank?: boolean
         }
         Update: {
           created_at?: string
@@ -236,6 +238,7 @@ export type Database = {
           printed_at?: string | null
           requested_by?: string
           room_id?: number
+          show_on_rank?: boolean
         }
         Relationships: [
           {
@@ -1066,6 +1069,16 @@ export type Database = {
           question_id: number
         }[]
       }
+      get_match_rank_photos: {
+        Args: { p_limit?: number }
+        Returns: {
+          nickname_a: string
+          nickname_b: string
+          photo: string
+          request_id: number
+          score: number
+        }[]
+      }
       get_match_ranking: {
         Args: { p_hours?: number; p_limit?: number }
         Returns: {
@@ -1245,7 +1258,7 @@ export type Database = {
         Returns: undefined
       }
       request_match_print: {
-        Args: { p_code: string; p_photo: string }
+        Args: { p_code: string; p_photo: string; p_show_on_rank?: boolean }
         Returns: undefined
       }
       save_match_test: {
