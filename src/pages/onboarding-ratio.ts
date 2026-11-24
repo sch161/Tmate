@@ -39,7 +39,7 @@ async function start(): Promise<void> {
   }
 }
 
-function render(items: { id: number; name: string }[], savedRatios: Record<number, number>): void {
+function render(items: { id: number; code: string; name: string }[], savedRatios: Record<number, number>): void {
   if (!body || !next) return;
 
   const saved = { tasteIds: items.map((i) => i.id), ratios: savedRatios, region: null, allergenIds: [] };

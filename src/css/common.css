@@ -170,6 +170,23 @@ body {
   gap: 9px;
 }
 
+/* 선택 카드의 보조 설명 한 줄 (예: 맛의 예시 음식) */
+.select-card__desc {
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-regular);
+}
+
+/* 설명이 있는 카드용 2열 그리드: 글자가 들어가도록 정사각형 대신 내용 높이에 맞춘다 */
+.select-grid--wide {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.select-grid--wide .select-card {
+  aspect-ratio: auto;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+}
+
 /* 진행률 막대 (온보딩 상단) — --value 는 0~100 */
 .progress {
   --value: 0;
@@ -361,6 +378,13 @@ body {
   padding: var(--space-2);
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-bold);
+}
+
+/* 슬라이더 이름 아래의 예시 음식 한 줄 */
+.ratio-item__example {
+  margin: 0;
+  padding: 0 var(--space-2) var(--space-2);
+  font-size: var(--font-size-12);
 }
 
 .ratio-slider {

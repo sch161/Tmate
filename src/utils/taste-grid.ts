@@ -2,6 +2,7 @@
 import { MAX_TASTE_SELECTION } from '../lib/constants';
 import { el, showToast } from './dom';
 import { createSelectCard, setCardSelected } from './select-card';
+import { getTasteExample } from './taste-examples';
 import { getTasteIcon } from './taste-icons';
 
 export interface TasteTagItem {
@@ -11,13 +12,13 @@ export interface TasteTagItem {
 }
 
 /**
- * 3열 선택 카드 그리드. selected 는 호출한 쪽이 넘긴 Set 을 그대로 갱신하고, 바뀔 때마다 onChange 를 부른다.
+ * 2열 선택 카드 그리드(카드마다 예시 음식 한 줄을 보여주려고 맛 선택만 2열이다). selected 는 호출한 쪽이 넘긴 Set 을 그대로 갱신하고, 바뀔 때마다 onChange 를 부른다.
  * 최대 개수를 넘기려 하면 토스트만 보여주고 선택하지 않는다.
  */
 export function createTasteGrid(tags: TasteTagItem[], selected: Set<number>, onChange: (selected: Set<number>) => void): HTMLElement {
-  const grid = el('div', { class: 'select-grid' });
+  const grid = el('div', { class: 'select-grid select-grid--wide' });
   for (const tag of tags) {
-    const card = createSelectCard(tag.name, getTasteIcon(tag.code), selected.has(tag.id));
+    const card = createSelectCard(tag.name, getTasteIcon(tag.code), selected.has(tag.id), getTasteExample(tag.code));
     card.addEventListener('click', () => {
       if (selected.has(tag.id)) {
         selected.delete(tag.id);
