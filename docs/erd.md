@@ -146,7 +146,7 @@ erDiagram
 
 - `allergen_status`: `verified`(공식 본문 직접 확인) / `official_extract`(공식 도메인 검색 발췌) / `estimated`(일반 조리법 추정) / `unknown`(정보 없음)
 - `menu_allergens.level`: `danger` = 함유(조사 결과의 contains), `caution` = 혼입 가능(may_contain). 정보 없는 메뉴는 행을 만들지 않는다
-- 알레르기를 등록한 사용자의 추천에서는 겹치는 메뉴와 `unknown`/`estimated` 메뉴를 제외한다. 등록하지 않았다면 상태와 무관하게 포함한다
+- 알레르기를 등록한 사용자의 추천에서는 겹치는 메뉴(추정 포함)와 `unknown` 메뉴를 제외한다. `estimated` 메뉴는 겹치지 않으면 추천하고 화면이 "알레르기 추정 · 가게 확인"을 붙인다(migrations/018). 등록하지 않았다면 상태와 무관하게 포함한다
 
 ## RPC로 계산하는 값 (functions.sql)
 
