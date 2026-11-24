@@ -1,6 +1,6 @@
 /* 가게 상세 전용 스타일 (Figma Details_s 1:329 / Details_m 1:453). 값은 variables.css 토큰만 쓴다. */
 .restaurant {
-  padding-top: 73px;
+  padding-top: calc(var(--space-3) + env(safe-area-inset-top));
   padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
 }
 
@@ -15,7 +15,7 @@
 }
 
 .restaurant__body {
-  margin-top: var(--space-6);
+  margin-top: var(--space-3);
 }
 
 .restaurant__hero {
@@ -103,6 +103,7 @@
 
 .restaurant__rating .meter__bar {
   flex: 0 0 141px;
+  width: 141px;
   height: var(--meter-height-lg);
   border-radius: var(--radius-chip);
 }
@@ -192,6 +193,7 @@
 
 .menu-card .meter__bar {
   flex: 0 0 84px;
+  width: 84px;
 }
 
 .menu-card__tags {
