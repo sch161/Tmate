@@ -45,6 +45,15 @@ export interface MatchRankingRow {
   score: number;
 }
 
+/** 방 안에서 둘 다 검사를 마친 두 사람 (영수증 인쇄용). memberNoA < memberNoB */
+export interface MatchRoomPair {
+  memberNoA: number;
+  memberNoB: number;
+  nicknameA: string;
+  nicknameB: string;
+  score: number;
+}
+
 export interface MatchChoiceAnswer {
   questionId: number;
   choice: 1 | 2;
@@ -142,4 +151,27 @@ export async function getMatchRanking(limit = 10): Promise<MatchRankingRow[]> {
   const { data, error } = await supabase.rpc('get_match_ranking', { p_limit: limit });
   if (error) throw toError(error, '랭킹을 불러오지 못했어요. 잠시 후 다시 시도해주세요');
   return (data ?? []).map((row) => ({ rank: row.rank, nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score }));
+}
+
+/** 영수증 인쇄(진행자용): 방 번호로 그 방에서 둘 다 검사를 마친 두 사람 조합과 궁합을 본다. 방 멤버가 아니어도 된다. */
+export async function getMatchRoomPairs(code: string): Promise<MatchRoomPair[]> {
+  const { data, error } = await supabase.rpc('get_match_room_pairs', { p_code: code });
+  if (error) throw toError(error, '방 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  return (data ?? []).map((row) => ({ memberNoA: row.member_no_a, memberNoB: row.member_no_b, nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score }));
+}
+
+/** 영수증 인쇄(진행자용): 두 사람(member_no)의 음식별 답. buildResultCards 에 그대로 넣을 수 있게 A 를 my, B 를 friend 자리에 담는다. */
+export async function getMatchPairFoods(code: string, memberNoA: number, memberNoB: number): Promise<MatchFoodCompare[]> {
+  const { data, error } = await supabase.rpc('get_match_pair_foods', { p_code: code, p_member_no_a: memberNoA, p_member_no_b: memberNoB });
+  if (error) throw toError(error, '음식 결과를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  // 생성된 타입은 nullable 을 표현하지 못해 number/boolean 으로 나오지만, 해당하지 않는 칸에는 null 이 온다
+  return (data ?? []).map((row) => ({
+    foodName: row.food_name,
+    myEaten: row.a_eaten,
+    myRating: (row.a_rating as number | null) ?? null,
+    myWantTry: (row.a_want_try as boolean | null) ?? null,
+    friendEaten: row.b_eaten,
+    friendRating: (row.b_rating as number | null) ?? null,
+    friendWantTry: (row.b_want_try as boolean | null) ?? null,
+  }));
 }

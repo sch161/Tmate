@@ -890,6 +890,18 @@ export type Database = {
           name: string
         }[]
       }
+      get_match_pair_foods: {
+        Args: { p_code: string; p_member_no_a: number; p_member_no_b: number }
+        Returns: {
+          a_eaten: boolean
+          a_rating: number
+          a_want_try: boolean
+          b_eaten: boolean
+          b_rating: number
+          b_want_try: boolean
+          food_name: string
+        }[]
+      }
       get_match_questions: {
         Args: { p_code: string }
         Returns: {
@@ -916,6 +928,16 @@ export type Database = {
           is_me: boolean
           member_no: number
           nickname: string
+          score: number
+        }[]
+      }
+      get_match_room_pairs: {
+        Args: { p_code: string }
+        Returns: {
+          member_no_a: number
+          member_no_b: number
+          nickname_a: string
+          nickname_b: string
           score: number
         }[]
       }
