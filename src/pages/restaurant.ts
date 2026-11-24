@@ -19,6 +19,7 @@ import { getAllergenStatusInfo } from '../utils/allergen-status';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { createImage } from '../utils/image';
+import { withReturnTo } from '../utils/navigation';
 import { splitSharedNotice } from '../utils/notice';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 import { safeHttpUrl } from '../utils/url';
@@ -324,7 +325,7 @@ function createNoAllergyView(menus: RestaurantMenu[]): HTMLElement {
       { class: 'allergy-register text-wrap-ko' },
       el('p', {}, '알레르기를 등록하면 피해야 할 메뉴를 알려드려요'),
       // 알레르기 등록 링크: 알레르기 수정 화면(allergy-edit.html)으로 이동한다
-      el('a', { href: PATHS.allergyEdit }, '알레르기 등록하기'),
+      el('a', { href: withReturnTo(PATHS.allergyEdit) }, '알레르기 등록하기'),
     ),
   );
   if (menus.length > 0) {

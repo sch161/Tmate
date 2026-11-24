@@ -2,10 +2,10 @@
 // 디자인 대기: 화면 나오면 교체 (Figma 에 알레르기 수정 화면이 없다)
 import { getAllergens, type Allergen } from '../api/lookups';
 import { getMyAllergenIds, updateMyAllergens } from '../api/me';
-import { PATHS } from '../lib/constants';
 import { createAllergenGrid } from '../utils/allergen-grid';
 import { requireAuth } from '../utils/auth-guard';
 import { qs, showToast } from '../utils/dom';
+import { goAfterSave, goBack } from '../utils/navigation';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 
 const LEAVE_DELAY_MS = 700;
@@ -19,8 +19,7 @@ function sameSet(a: Set<number>, b: Set<number>): boolean {
 }
 
 function leave(): void {
-  if (window.history.length > 1) window.history.back();
-  else window.location.replace(PATHS.mypage);
+  goBack();
 }
 
 function render(allergens: Allergen[], mine: number[]): void {
@@ -49,7 +48,7 @@ function render(allergens: Allergen[], mine: number[]): void {
     try {
       await updateMyAllergens([...selected]);
       showToast('알레르기를 바꿨어요');
-      window.setTimeout(() => window.location.replace(PATHS.mypage), LEAVE_DELAY_MS);
+      window.setTimeout(goAfterSave, LEAVE_DELAY_MS);
     } catch (e) {
       showToast(e instanceof Error ? e.message : '저장하지 못했어요. 잠시 후 다시 시도해주세요');
       busy = false;

@@ -2,9 +2,9 @@
 // 디자인 대기: 화면 나오면 교체 (Figma 에 프로필 수정 화면이 없다)
 import { getMyProfile, type MyProfile } from '../api/auth';
 import { NICKNAME_MAX_LENGTH, updateMyNickname, validateNickname } from '../api/me';
-import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
+import { goAfterSave, goBack } from '../utils/navigation';
 import { renderError, renderLoading } from '../utils/state-views';
 
 const LEAVE_DELAY_MS = 700;
@@ -13,8 +13,7 @@ const body = qs<HTMLElement>('#body');
 const backButton = qs<HTMLButtonElement>('#back');
 
 function leave(): void {
-  if (window.history.length > 1) window.history.back();
-  else window.location.replace(PATHS.mypage);
+  goBack();
 }
 
 function renderForm(profile: MyProfile): void {
@@ -55,7 +54,7 @@ function renderForm(profile: MyProfile): void {
     try {
       await updateMyNickname(nickname.value);
       showToast('프로필을 바꿨어요');
-      window.setTimeout(() => window.location.replace(PATHS.mypage), LEAVE_DELAY_MS);
+      window.setTimeout(goAfterSave, LEAVE_DELAY_MS);
     } catch (e) {
       serverError = e instanceof Error ? e.message : '문제가 발생했어요. 잠시 후 다시 시도해주세요';
       busy = false;

@@ -4,6 +4,7 @@ import { getMySummary, type MySummary } from '../api/me';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs } from '../utils/dom';
+import { withReturnTo } from '../utils/navigation';
 import { renderError, renderLoading } from '../utils/state-views';
 
 const body = qs<HTMLElement>('#body');
@@ -30,7 +31,7 @@ function render(summary: MySummary): void {
 
   if (summary.tasteRatios.length === 0) {
     // 비율 데이터가 없으면 안내와 입맛 등록 링크로 대체한다
-    nodes.push(el('div', { class: 'type-box' }, el('p', { class: 'type-box__name text-wrap-ko' }, '입맛 정보를 등록해 주세요'), el('a', { class: 'taste-detail__empty-link', href: PATHS.tasteEdit }, '입맛 등록하기')));
+    nodes.push(el('div', { class: 'type-box' }, el('p', { class: 'type-box__name text-wrap-ko' }, '입맛 정보를 등록해 주세요'), el('a', { class: 'taste-detail__empty-link', href: withReturnTo(PATHS.tasteEdit) }, '입맛 등록하기')));
   } else {
     const box = el('div', { class: 'type-box' }, el('p', { class: 'type-box__label' }, 'My Taste Type'));
     if (summary.tasteTypeName) box.append(el('p', { class: 'type-box__name' }, summary.tasteTypeName));
@@ -57,7 +58,7 @@ function render(summary: MySummary): void {
   );
   // 디자인 대기: 안내 문구는 Figma 에 없는 임시 UI
   nodes.push(el('p', { class: 'taste-detail__hint text-wrap-ko' }, '평가를 남길수록 입맛이 더 정확해져요'));
-  if (summary.tasteRatios.length > 0) nodes.push(el('a', { class: 'taste-detail__edit', href: PATHS.tasteEdit }, '입맛 수정하기'));
+  if (summary.tasteRatios.length > 0) nodes.push(el('a', { class: 'taste-detail__edit', href: withReturnTo(PATHS.tasteEdit) }, '입맛 수정하기'));
   body.replaceChildren(...nodes);
 }
 
