@@ -261,3 +261,6 @@ revoke all on store_add_attempts from anon, authenticated;
 --    클라이언트에 직접 열지 않는다. functions.sql 의 RPC 로만 읽고 쓴다.
 -- ---------------------------------------------------------------------
 revoke all on match_print_requests, match_print_settings from anon, authenticated;
+
+-- 다른 폰으로 사진 보내기 표 (match_photo_tokens): 클라이언트에 직접 열지 않는다
+revoke all on match_photo_tokens from anon, authenticated;
