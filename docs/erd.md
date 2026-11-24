@@ -171,6 +171,7 @@ erDiagram
 
 - `match_print_requests`(id, room_id unique, requested_by, photo, created_at, printed_at): 손님이 폰으로 올린 사진(JPEG data URL, 200,000자 이하)과 인쇄 요청. 방마다 1건, 다시 올리면 바뀐다. 하루가 지나면 새 요청이 올 때 지운다
 - `match_print_settings`(id, passcode): 진행자 번호 1행. 값은 저장소에 두지 않는다
+- `get_match_pair_choices(p_code, p_member_no_a, p_member_no_b)`(migrations/009): 두 사람의 PART 1 문항별 답. 결과 화면과 영수증의 "통한 취향 / 갈린 취향"에 쓴다
 - 손님 RPC `request_match_print(p_code, p_photo)`: 그 방에서 검사를 마친 두 사람만 가능
 - 진행자 RPC `get_match_print_queue(p_passcode)` · `get_match_print_photo(p_passcode, p_request_id)` · `mark_match_printed(p_passcode, p_request_id)`: 진행자 번호가 맞아야 한다
 
