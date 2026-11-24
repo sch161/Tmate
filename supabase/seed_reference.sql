@@ -9,7 +9,8 @@ insert into food_categories (name) values
   ('한식'),
   ('중식'),
   ('일식'),
-  ('양식')
+  ('양식'),
+  ('카페·디저트')
 on conflict (name) do nothing;
 
 -- 2. 맛 태그 9개
