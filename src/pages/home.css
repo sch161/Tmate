@@ -395,3 +395,22 @@
   font-weight: var(--font-weight-medium);
   text-decoration: underline;
 }
+
+/* 디자인 대기: 가게 추가 링크 (Figma 에 없는 임시 UI) */
+.home__store-add {
+  display: block;
+  margin-top: var(--space-5);
+  padding: var(--space-3);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: inherit;
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+  text-decoration: none;
+}
+
+.home__store-add-action {
+  color: var(--color-primary);
+  font-weight: var(--font-weight-semibold);
+}
