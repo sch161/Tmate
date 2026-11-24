@@ -1,6 +1,6 @@
-// 내 입맛 자세히 보기 (마이페이지 → "내 입맛 자세히 보기"). get_my_summary 의 값만 읽어서 보여준다.
+// 내 입맛 자세히 보기 (마이페이지 → "내 입맛 자세히 보기"). get_my_summary(유형·활동)와 get_my_taste_profile(평가로 보정한 맛 비율)을 읽어서 보여준다.
 // 디자인 대기: 화면 나오면 교체 (Figma 에 이 화면이 없다)
-import { getMySummary, type MySummary } from '../api/me';
+import { getMySummary, getMyTasteProfile, type MySummary, type TasteProfile } from '../api/me';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs } from '../utils/dom';
@@ -25,11 +25,30 @@ function createActivity(count: number, label: string): HTMLElement {
   return el('div', { class: 'activity-box' }, el('p', { class: 'activity-box__count' }, String(count)), el('p', { class: 'activity-box__label' }, label));
 }
 
-function render(summary: MySummary): void {
+/** 한 화면에 보여줄 맛 비율 줄 수 (고른 맛 3개 + 평가로 새로 드러난 맛) */
+const MAX_RATIO_ROWS = 5;
+
+// 디자인 대기: 평가 반영 안내는 Figma 에 없는 임시 UI
+function createLearnNote(profile: TasteProfile): HTMLElement {
+  const declared = profile.items
+    .filter((item) => item.declared > 0)
+    .sort((a, b) => b.declared - a.declared)
+    .map((item) => `${item.name} ${item.declared}%`)
+    .join(' · ');
+  return el(
+    'div',
+    { class: 'learn-note' },
+    el('p', { class: 'learn-note__title text-wrap-ko' }, `내 평가 ${profile.reviewCount}개를 ${profile.learnPercent}% 반영한 비율이에요`),
+    el('p', { class: 'learn-note__desc text-wrap-ko' }, `처음 고른 입맛: ${declared}`),
+  );
+}
+
+function render(summary: MySummary, profile: TasteProfile): void {
   if (!body) return;
   const nodes: HTMLElement[] = [];
 
-  if (summary.tasteRatios.length === 0) {
+  const ratios = profile.items.filter((item) => item.ratio > 0);
+  if (ratios.length === 0) {
     // 비율 데이터가 없으면 안내와 입맛 등록 링크로 대체한다
     nodes.push(el('div', { class: 'type-box' }, el('p', { class: 'type-box__name text-wrap-ko' }, '입맛 정보를 등록해 주세요'), el('a', { class: 'taste-detail__empty-link', href: withReturnTo(PATHS.tasteEdit) }, '입맛 등록하기')));
   } else {
@@ -37,15 +56,15 @@ function render(summary: MySummary): void {
     if (summary.tasteTypeName) box.append(el('p', { class: 'type-box__name' }, summary.tasteTypeName));
     if (summary.tasteTypeDesc) box.append(el('p', { class: 'type-box__desc text-wrap-ko' }, summary.tasteTypeDesc));
     nodes.push(box);
-    // 맛 비율 전체(최대 3개). get_my_summary 가 비율 큰 순으로 준다
-    nodes.push(
-      el(
-        'section',
-        { class: 'taste-detail__section' },
-        el('h2', { class: 'section-title' }, '맛 비율'),
-        el('div', { class: 'ratio-rows' }, ...summary.tasteRatios.slice(0, 3).map((r) => createRatioRow(r.name, r.ratio))),
-      ),
+    // 맛 비율(평가로 보정한 지금 입맛). get_my_taste_profile 이 비율 큰 순으로 준다
+    const section = el(
+      'section',
+      { class: 'taste-detail__section' },
+      el('h2', { class: 'section-title' }, '맛 비율'),
+      el('div', { class: 'ratio-rows' }, ...ratios.slice(0, MAX_RATIO_ROWS).map((r) => createRatioRow(r.name, r.ratio))),
     );
+    if (profile.learnPercent > 0) section.append(createLearnNote(profile));
+    nodes.push(section);
   }
 
   nodes.push(
@@ -57,8 +76,8 @@ function render(summary: MySummary): void {
     ),
   );
   // 디자인 대기: 안내 문구는 Figma 에 없는 임시 UI
-  nodes.push(el('p', { class: 'taste-detail__hint text-wrap-ko' }, '평가를 남길수록 입맛이 더 정확해져요'));
-  if (summary.tasteRatios.length > 0) nodes.push(el('a', { class: 'taste-detail__edit', href: withReturnTo(PATHS.tasteEdit) }, '입맛 수정하기'));
+  nodes.push(el('p', { class: 'taste-detail__hint text-wrap-ko' }, '평가를 남길수록 맛 비율이 내 입맛에 맞게 바뀌어요'));
+  if (ratios.length > 0) nodes.push(el('a', { class: 'taste-detail__edit', href: withReturnTo(PATHS.tasteEdit) }, '입맛 수정하기'));
   body.replaceChildren(...nodes);
 }
 
@@ -66,12 +85,12 @@ async function load(): Promise<void> {
   if (!body) return;
   renderLoading(body);
   try {
-    const summary = await getMySummary();
+    const [summary, profile] = await Promise.all([getMySummary(), getMyTasteProfile()]);
     if (!summary) {
       renderError(body, '내 정보를 찾지 못했어요', () => void load());
       return;
     }
-    render(summary);
+    render(summary, profile);
   } catch (e) {
     renderError(body, e instanceof Error ? e.message : '내 정보를 불러오지 못했어요', () => void load());
   }
