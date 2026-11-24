@@ -1,0 +1,363 @@
+/* 친구랑 궁합 검사 전용 스타일 (디자인 대기: Figma 에 화면이 없어 토큰 기반 임시 UI). 값은 variables.css 토큰만 쓴다. */
+.match {
+  display: flex;
+  flex-direction: column;
+  padding-top: 73px;
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  padding-inline: var(--space-4);
+}
+
+.match__back {
+  display: block;
+  width: 36px;
+  height: 36px;
+  margin-left: calc(23px - var(--space-4));
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+.match__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.match__head {
+  text-align: center;
+}
+
+.match__title {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+
+.match__desc {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-14);
+}
+
+.match__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.match__card-title {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+}
+
+.match__card-desc {
+  font-size: var(--font-size-13);
+}
+
+.match__join {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.match__code-input {
+  text-align: center;
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3em;
+}
+
+.match__recent,
+.match__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.match__actions {
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.match__actions .btn-primary {
+  width: 100%;
+}
+
+.match__link {
+  padding: var(--space-2);
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+  text-decoration: underline;
+}
+
+.match__hint {
+  font-size: var(--font-size-14);
+  text-align: center;
+}
+
+/* 방 번호 */
+.match__code-box {
+  padding: var(--space-4);
+  border: 2px solid var(--color-primary);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+  text-align: center;
+}
+
+.match__code-label,
+.match__code-desc {
+  font-size: var(--font-size-13);
+}
+
+.match__code {
+  font-size: calc(var(--font-size-24) * 2);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.2em;
+  line-height: 1.2;
+}
+
+/* 방 멤버 */
+.match__members {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.match-member {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-3);
+  border: 2px solid var(--color-surface-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  text-align: left;
+}
+
+.match-member--result {
+  border-color: var(--color-primary);
+}
+
+.match-member__text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.match-member__name {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.match-member__state,
+.match-member__tier {
+  font-size: var(--font-size-13);
+}
+
+.match-member__score {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+
+/* 검사 단계 */
+.match-step__top {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.match-step__count {
+  font-size: var(--font-size-13);
+  text-align: right;
+}
+
+.match-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+}
+
+.match-step__part {
+  color: var(--color-primary);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+.match-step__body {
+  min-height: 3em;
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+.match-step__food {
+  font-size: calc(var(--font-size-24) * 1.5);
+  font-weight: var(--font-weight-bold);
+  text-align: center;
+}
+
+.match-step__ask {
+  font-size: var(--font-size-15);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.match-step__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.match-option {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 56px;
+  padding: var(--space-3);
+  border: 2px solid var(--color-surface-border);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+}
+
+.match-option.is-selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+.match-stars {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+.match-stars__star {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: none;
+}
+
+.match-stars__star img {
+  width: 40px;
+  height: 40px;
+  filter: grayscale(1) opacity(0.45);
+}
+
+.match-stars__star.is-on img {
+  filter: none;
+}
+
+.match-option:focus-visible,
+.match-stars__star:focus-visible,
+.match-member--result:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.match-nav {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+}
+
+.match-nav__prev {
+  flex: 1;
+  border: 2px solid var(--color-surface-border);
+  border-radius: var(--radius-xl);
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-bold);
+}
+
+.match-nav__prev:disabled {
+  color: var(--color-disabled);
+}
+
+.match-nav__next {
+  flex: 2;
+}
+
+/* 결과 */
+.match-result {
+  padding: var(--space-5) var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-primary-soft);
+  text-align: center;
+}
+
+.match-result__with {
+  font-size: var(--font-size-14);
+}
+
+.match-result__score {
+  color: var(--color-primary);
+  font-size: calc(var(--font-size-24) * 2.5);
+  font-weight: var(--font-weight-bold);
+  line-height: 1.1;
+}
+
+.match-result__title {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+
+.match-result__desc {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-14);
+}
+
+.match-result__cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.match-result__card {
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.match-result__label {
+  color: var(--color-primary);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-bold);
+}
+
+.match-result__food {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+}
+
+.match-result__detail {
+  font-size: var(--font-size-13);
+}
