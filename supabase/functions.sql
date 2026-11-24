@@ -363,6 +363,73 @@ begin
 end;
 $$;
 
+-- 모든 메뉴의 일치도를 한 번에 계산한다 (calc_menu_match_detail 과 같은 값. 목록·추천처럼 메뉴가 많은 곳에서 쓴다).
+--   메뉴마다 함수를 부르면 이웃 유사도를 메뉴 수만큼 다시 계산해 느리다. 여기서는 이웃을 한 번만 구한다.
+--   계산식을 바꾸면 calc_menu_match_detail 도 같이 바꾼다 (추천 이유 문장이 그 함수를 쓴다).
+create or replace function public.calc_menu_matches(p_user uuid)
+returns table (menu_id bigint, match int, neighbor_count int, neighbor_avg numeric)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_use_collab boolean;
+  v_min numeric;
+  v_sim numeric;
+  v_w_collab numeric;
+  v_w_content numeric;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  v_use_collab := (select count(*) from public.reviews r where r.user_id = p_user) >= public.calc_setting('collab_min_reviews');
+  v_min := public.calc_setting('min_common');
+  v_sim := public.calc_setting('mate_similarity');
+  v_w_collab := public.calc_setting('collab_weight');
+  v_w_content := public.calc_setting('content_weight');
+
+  return query
+  with profile as (
+    select tp.taste_tag_id, tp.ratio from public.calc_taste_profile(p_user) tp
+  ),
+  content as (
+    select m.id as menu_id, coalesce(sum(pf.ratio), 0)::int as content
+    from public.menus m
+    left join public.menu_taste_tags mtt on mtt.menu_id = m.id
+    left join profile pf on pf.taste_tag_id = mtt.taste_tag_id
+    group by m.id
+  ),
+  -- 유사도 기준 이상인 이웃 (공통 평가 메뉴가 min_common 개 이상)
+  neighbors as (
+    select rb.user_id as user_id, 1 - (avg(abs(ra.rating - rb.rating)) / 4) as sim
+    from public.reviews ra
+    join public.reviews rb on rb.menu_id = ra.menu_id
+    where v_use_collab and ra.user_id = p_user and rb.user_id <> p_user
+    group by rb.user_id
+    having count(*) >= v_min and 1 - (avg(abs(ra.rating - rb.rating)) / 4) >= v_sim
+  ),
+  collab as (
+    select r.menu_id as menu_id,
+           count(*)::int as n,
+           round(avg(r.rating), 1) as avg_rating,
+           sum(nb.sim * r.rating) / sum(nb.sim) as pred
+    from public.reviews r
+    join neighbors nb on nb.user_id = r.user_id
+    group by r.menu_id
+  )
+  select c.menu_id,
+         case when cb.n is null then c.content
+              else round((((cb.pred - 1) / 4 * 100) * v_w_collab + c.content * v_w_content) / (v_w_collab + v_w_content))::int end,
+         coalesce(cb.n, 0),
+         cb.avg_rating
+  from content c
+  left join collab cb on cb.menu_id = c.menu_id;
+end;
+$$;
+
 -- 메뉴 일치도(%)만 반환하는 래퍼
 create or replace function public.calc_menu_match(p_user uuid, p_menu bigint)
 returns int
@@ -475,6 +542,7 @@ revoke all on function public.calc_content_match(uuid, bigint)      from public,
 revoke all on function public.calc_user_similarity(uuid, uuid)      from public, anon, authenticated;
 revoke all on function public.calc_menu_match_detail(uuid, bigint)  from public, anon, authenticated;
 revoke all on function public.calc_menu_match(uuid, bigint)         from public, anon, authenticated;
+revoke all on function public.calc_menu_matches(uuid)               from public, anon, authenticated;
 revoke all on function public.calc_menu_reason(uuid, bigint)        from public, anon, authenticated;
 revoke all on function public.calc_taste_type(uuid)                 from public, anon, authenticated;
 
@@ -752,7 +820,7 @@ begin
     select m.brand_id as brand_id, round(avg(d.match))::int as match_percent
     from public.menus m
     join brand_ids bi on bi.brand_id = m.brand_id
-    cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
+    join public.calc_menu_matches(v_uid) d on d.menu_id = m.id
     group by m.brand_id
   ),
   brand_info as (
@@ -878,7 +946,7 @@ begin
     left join public.food_categories fc on fc.id = b.category_id
     join public.menus m on m.brand_id = b.id
     left join public.menu_stats ms on ms.menu_id = m.id
-    cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
+    join public.calc_menu_matches(v_uid) d on d.menu_id = m.id
     where not exists (
         select 1 from public.reviews rv
         where rv.user_id = v_uid and rv.menu_id = m.id
@@ -936,7 +1004,7 @@ begin
     select m.id as menu_id, d.match as menu_match
     from public.restaurants rr
     join public.menus m on m.brand_id = rr.brand_id
-    cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
+    join public.calc_menu_matches(v_uid) d on d.menu_id = m.id
     where rr.id = p_restaurant_id
   )
   select r.id,
@@ -1036,7 +1104,7 @@ begin
     join public.brands b on b.id = rr.brand_id
     join public.menus m on m.brand_id = rr.brand_id
     left join public.menu_stats ms on ms.menu_id = m.id
-    cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
+    join public.calc_menu_matches(v_uid) d on d.menu_id = m.id
     where rr.id = p_restaurant_id
   ) x
   order by x.match_percent desc, x.menu_id;
@@ -2729,6 +2797,12 @@ begin
   select p.region into v_region from public.profiles p where p.id = v_uid;
 
   return query
+  with mine as materialized (
+    select mm.menu_id, mm.match from public.calc_menu_matches(v_uid) mm
+  ),
+  theirs as materialized (
+    select mm.menu_id, mm.match from public.calc_menu_matches(v_friend) mm
+  )
   select x.restaurant_id, x.restaurant_name, x.brand_name, x.category_name, x.region,
          round((x.my_match + x.friend_match) / 2.0)::int, x.my_match, x.friend_match
   from (
@@ -2738,8 +2812,8 @@ begin
            pick.id as restaurant_id,
            pick.name as restaurant_name,
            pick.region as region,
-           coalesce((select round(avg(public.calc_menu_match(v_uid, m.id)))::int from public.menus m where m.brand_id = b.id), 0) as my_match,
-           coalesce((select round(avg(public.calc_menu_match(v_friend, m.id)))::int from public.menus m where m.brand_id = b.id), 0) as friend_match,
+           coalesce((select round(avg(mm.match))::int from public.menus m join mine mm on mm.menu_id = m.id where m.brand_id = b.id), 0) as my_match,
+           coalesce((select round(avg(mm.match))::int from public.menus m join theirs mm on mm.menu_id = m.id where m.brand_id = b.id), 0) as friend_match,
            bs.avg_rating as avg_rating
     from public.brands b
     left join public.food_categories c on c.id = b.category_id
