@@ -20,6 +20,7 @@ import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { createMascot, type MascotName } from '../utils/mascots';
+import { getMatchFoodImage } from '../utils/match-food-images';
 import { buildResultCards, getMatchTier } from '../utils/match-results';
 import { renderError, renderLoading } from '../utils/state-views';
 
@@ -215,6 +216,16 @@ function optionButton(label: string, selected: boolean, onClick: () => void): HT
   return button;
 }
 
+/** 음식 사진과 출처 표시(작가·라이선스, 원본 페이지 링크). 사진이 없는 음식이면 빈 배열 */
+function foodPhoto(foodName: string): HTMLElement[] {
+  const image = getMatchFoodImage(foodName);
+  if (!image) return [];
+  // 음식 이름이 바로 아래에 글자로 나오므로 사진의 alt 는 비운다
+  const photo = el('img', { class: 'match-step__photo', src: image.src, alt: '', width: '480', height: '480' });
+  const credit = el('a', { class: 'match-step__credit', href: image.sourceUrl, target: '_blank', rel: 'noopener noreferrer' }, `사진: ${image.artist} · ${image.license}`);
+  return [el('figure', { class: 'match-step__figure' }, photo, el('figcaption', {}, credit))];
+}
+
 async function showTest(code: string): Promise<void> {
   if (!body) return;
   stopPolling();
@@ -299,6 +310,7 @@ async function showTest(code: string): Promise<void> {
       };
       content.append(
         el('p', { class: 'match-step__part' }, '입맛 탐구 생활'),
+        ...foodPhoto(f.name),
         el('h2', { class: 'match-step__food' }, f.name),
         el('p', { class: 'match-step__ask' }, '이 음식을 먹어본 적 있나요?'),
         el(

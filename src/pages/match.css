@@ -209,6 +209,28 @@
   text-align: center;
 }
 
+/* 음식 사진 (자유 이용 사진, 출처는 사진 아래 캡션) */
+.match-step__figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.match-step__photo {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+}
+
+.match-step__credit {
+  color: var(--color-text);
+  font-size: var(--font-size-10);
+  text-decoration: underline;
+}
+
 .match-step__food {
   font-size: calc(var(--font-size-24) * 1.5);
   font-weight: var(--font-weight-bold);
