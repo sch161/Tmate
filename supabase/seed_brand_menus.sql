@@ -1463,4 +1463,3478 @@ cross join (values ('달콤함'), ('짭조름함')) as v(name)
 join taste_tags t on t.name = v.name
 where b.name = '파파존스' and b.is_franchise and m.name = '하와이안 (오리지널 크러스트)';
 
+-- ===== 본죽 (메뉴 8개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '본죽' and b.is_franchise) then
+    raise exception '브랜드 본죽 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '본죽' and b.is_franchise;
+
+-- 본죽 / 전복죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '전복죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '전복죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('조개류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('잣', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '전복죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '전복죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '전복죽';
+
+-- 본죽 / 소고기야채죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '소고기야채죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '소고기야채죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쇠고기', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('잣', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '소고기야채죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '소고기야채죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '소고기야채죽';
+
+-- 본죽 / 삼계죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '삼계죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '삼계죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('잣', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '삼계죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '삼계죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('담백함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '삼계죽';
+
+-- 본죽 / 참치야채죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '참치야채죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '참치야채죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '참치야채죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '참치야채죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '참치야채죽';
+
+-- 본죽 / 낙지김치죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '낙지김치죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '낙지김치죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('새우', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '낙지김치죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '낙지김치죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '낙지김치죽';
+
+-- 본죽 / 단호박죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '단호박죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '단호박죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'caution', 'AI 추정'), ('잣', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '단호박죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '단호박죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '단호박죽';
+
+-- 본죽 / 동지팥죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '동지팥죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '동지팥죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'caution', 'AI 추정'), ('잣', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '동지팥죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '동지팥죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '동지팥죽';
+
+-- 본죽 / 불낙죽
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '불낙죽', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '본죽' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '불낙죽');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쇠고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('잣', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '불낙죽';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '본죽' and b.is_franchise and m.name = '불낙죽');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '본죽' and b.is_franchise and m.name = '불낙죽';
+
+-- ===== 김가네 (메뉴 8개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '김가네' and b.is_franchise) then
+    raise exception '브랜드 김가네 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '김가네' and b.is_franchise;
+
+-- 김가네 / 김가네김밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '김가네김밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '김가네김밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '김가네김밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '김가네김밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('담백함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '김가네김밥';
+
+-- 김가네 / 참치마요김밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '참치마요김밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '참치마요김밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '참치마요김밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '참치마요김밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '참치마요김밥';
+
+-- 김가네 / 멸추김밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '멸추김밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '멸추김밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('잣', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '멸추김밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '멸추김밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '멸추김밥';
+
+-- 김가네 / 라볶이
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '라볶이', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '라볶이');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '라볶이';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '라볶이');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '라볶이';
+
+-- 김가네 / 쫄면
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '쫄면', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '쫄면');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '쫄면';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '쫄면');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('새콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '쫄면';
+
+-- 김가네 / 돈까스
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '돈까스', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '돈까스');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '돈까스';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '돈까스');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '돈까스';
+
+-- 김가네 / 김치찌개
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '김치찌개', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '김치찌개');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('새우', 'danger', 'AI 추정'), ('돼지고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '김치찌개';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '김치찌개');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '김치찌개';
+
+-- 김가네 / 제육덮밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '제육덮밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '김가네' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '제육덮밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '제육덮밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '김가네' and b.is_franchise and m.name = '제육덮밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '김가네' and b.is_franchise and m.name = '제육덮밥';
+
+-- ===== 한솥도시락 (메뉴 8개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '한솥도시락' and b.is_franchise) then
+    raise exception '브랜드 한솥도시락 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '한솥도시락' and b.is_franchise;
+
+-- 한솥도시락 / 치킨마요
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치킨마요', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '치킨마요');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '치킨마요';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '치킨마요');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '치킨마요';
+
+-- 한솥도시락 / 참치마요
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '참치마요', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '참치마요');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '참치마요';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '참치마요');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '참치마요';
+
+-- 한솥도시락 / 도련님 도시락
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '도련님 도시락', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '도련님 도시락');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('돼지고기', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '도련님 도시락';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '도련님 도시락');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '도련님 도시락';
+
+-- 한솥도시락 / 동백 도시락
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '동백 도시락', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '동백 도시락');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '동백 도시락';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '동백 도시락');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '동백 도시락';
+
+-- 한솥도시락 / 매화 도시락
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '매화 도시락', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '매화 도시락');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '매화 도시락';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '매화 도시락');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '매화 도시락';
+
+-- 한솥도시락 / 제육볶음 도시락
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '제육볶음 도시락', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '제육볶음 도시락');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '제육볶음 도시락';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '제육볶음 도시락');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '제육볶음 도시락';
+
+-- 한솥도시락 / 돈까스도련님 도시락
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '돈까스도련님 도시락', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '돈까스도련님 도시락');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('닭고기', 'danger', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '돈까스도련님 도시락';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '돈까스도련님 도시락');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '돈까스도련님 도시락';
+
+-- 한솥도시락 / 김치볶음밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '김치볶음밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '한솥도시락' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '김치볶음밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('새우', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '김치볶음밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '한솥도시락' and b.is_franchise and m.name = '김치볶음밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('새콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '한솥도시락' and b.is_franchise and m.name = '김치볶음밥';
+
+-- ===== 동대문엽기떡볶이 (메뉴 6개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '동대문엽기떡볶이' and b.is_franchise) then
+    raise exception '브랜드 동대문엽기떡볶이 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '동대문엽기떡볶이' and b.is_franchise;
+
+-- 동대문엽기떡볶이 / 엽기떡볶이
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '엽기떡볶이', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '동대문엽기떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기떡볶이');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기떡볶이';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기떡볶이');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기떡볶이';
+
+-- 동대문엽기떡볶이 / 엽기오뎅
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '엽기오뎅', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '동대문엽기떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기오뎅');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기오뎅';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기오뎅');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기오뎅';
+
+-- 동대문엽기떡볶이 / 엽기반반
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '엽기반반', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '동대문엽기떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기반반');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기반반';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기반반');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기반반';
+
+-- 동대문엽기떡볶이 / 엽기닭볶음탕
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '엽기닭볶음탕', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '동대문엽기떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기닭볶음탕');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기닭볶음탕';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기닭볶음탕');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '엽기닭볶음탕';
+
+-- 동대문엽기떡볶이 / 주먹김밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '주먹김밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '동대문엽기떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '주먹김밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '주먹김밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '주먹김밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '주먹김밥';
+
+-- 동대문엽기떡볶이 / 계란찜
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '계란찜', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '동대문엽기떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '계란찜');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '계란찜';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '계란찜');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('담백함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '동대문엽기떡볶이' and b.is_franchise and m.name = '계란찜';
+
+-- ===== 원할머니보쌈족발 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '원할머니보쌈족발' and b.is_franchise) then
+    raise exception '브랜드 원할머니보쌈족발 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '원할머니보쌈족발' and b.is_franchise;
+
+-- 원할머니보쌈족발 / 보쌈
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '보쌈', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '원할머니보쌈족발' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈';
+
+-- 원할머니보쌈족발 / 족발
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '족발', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '원할머니보쌈족발' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '족발');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '족발';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '족발');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '족발';
+
+-- 원할머니보쌈족발 / 보쌈정식
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '보쌈정식', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '원할머니보쌈족발' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈정식');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈정식';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈정식');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '보쌈정식';
+
+-- 원할머니보쌈족발 / 막국수
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '막국수', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '원할머니보쌈족발' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '막국수');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('메밀', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '막국수';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '막국수');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('새콤함'), ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '원할머니보쌈족발' and b.is_franchise and m.name = '막국수';
+
+-- ===== 명륜진사갈비 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '명륜진사갈비' and b.is_franchise) then
+    raise exception '브랜드 명륜진사갈비 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '명륜진사갈비' and b.is_franchise;
+
+-- 명륜진사갈비 / 숯불돼지갈비
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '숯불돼지갈비', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '명륜진사갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '숯불돼지갈비');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '숯불돼지갈비';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '숯불돼지갈비');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('짭조름함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '숯불돼지갈비';
+
+-- 명륜진사갈비 / 된장찌개
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '된장찌개', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '명륜진사갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '된장찌개');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '된장찌개';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '된장찌개');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '된장찌개';
+
+-- 명륜진사갈비 / 물냉면
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '물냉면', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '명륜진사갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '물냉면');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('메밀', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('쇠고기', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '물냉면';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '물냉면');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('새콤함'), ('달콤함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '물냉면';
+
+-- 명륜진사갈비 / 비빔냉면
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '비빔냉면', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '명륜진사갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '비빔냉면');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('메밀', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '비빔냉면';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '명륜진사갈비' and b.is_franchise and m.name = '비빔냉면');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '명륜진사갈비' and b.is_franchise and m.name = '비빔냉면';
+
+-- ===== 신전떡볶이 (메뉴 5개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '신전떡볶이' and b.is_franchise) then
+    raise exception '브랜드 신전떡볶이 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '신전떡볶이' and b.is_franchise;
+
+-- 신전떡볶이 / 신전떡볶이
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '신전떡볶이', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '신전떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전떡볶이');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전떡볶이';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전떡볶이');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전떡볶이';
+
+-- 신전떡볶이 / 신전치즈김밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '신전치즈김밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '신전떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전치즈김밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전치즈김밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전치즈김밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '신전치즈김밥';
+
+-- 신전떡볶이 / 튀김오뎅
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '튀김오뎅', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '신전떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '튀김오뎅');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '튀김오뎅';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '튀김오뎅');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '튀김오뎅';
+
+-- 신전떡볶이 / 모둠튀김
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '모둠튀김', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '신전떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '모둠튀김');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '모둠튀김';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '모둠튀김');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '모둠튀김';
+
+-- 신전떡볶이 / 참치마요컵밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '참치마요컵밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '신전떡볶이' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '참치마요컵밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '참치마요컵밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '신전떡볶이' and b.is_franchise and m.name = '참치마요컵밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '신전떡볶이' and b.is_franchise and m.name = '참치마요컵밥';
+
+-- ===== 유가네닭갈비 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '유가네닭갈비' and b.is_franchise) then
+    raise exception '브랜드 유가네닭갈비 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '유가네닭갈비' and b.is_franchise;
+
+-- 유가네닭갈비 / 닭갈비
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '닭갈비', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '유가네닭갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭갈비');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭갈비';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭갈비');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭갈비';
+
+-- 유가네닭갈비 / 치즈닭갈비
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치즈닭갈비', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '유가네닭갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '치즈닭갈비');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '치즈닭갈비';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '치즈닭갈비');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '치즈닭갈비';
+
+-- 유가네닭갈비 / 닭야채철판볶음밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '닭야채철판볶음밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '유가네닭갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭야채철판볶음밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭야채철판볶음밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭야채철판볶음밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '닭야채철판볶음밥';
+
+-- 유가네닭갈비 / 철판볶음밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '철판볶음밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '유가네닭갈비' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '철판볶음밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '철판볶음밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '유가네닭갈비' and b.is_franchise and m.name = '철판볶음밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '유가네닭갈비' and b.is_franchise and m.name = '철판볶음밥';
+
+-- ===== 홍콩반점0410 (메뉴 7개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '홍콩반점0410' and b.is_franchise) then
+    raise exception '브랜드 홍콩반점0410 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '홍콩반점0410' and b.is_franchise;
+
+-- 홍콩반점0410 / 짜장면
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '짜장면', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '홍콩반점0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짜장면');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('돼지고기', 'danger', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짜장면';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짜장면');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짜장면';
+
+-- 홍콩반점0410 / 짬뽕
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '짬뽕', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '홍콩반점0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('오징어', 'danger', 'AI 추정'), ('조개류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕';
+
+-- 홍콩반점0410 / 탕수육
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '탕수육', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '홍콩반점0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '탕수육');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '탕수육';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '탕수육');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '탕수육';
+
+-- 홍콩반점0410 / 볶음밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '볶음밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '홍콩반점0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '볶음밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '볶음밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '볶음밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '볶음밥';
+
+-- 홍콩반점0410 / 군만두
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '군만두', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '홍콩반점0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '군만두');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('돼지고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '군만두';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '군만두');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '군만두';
+
+-- 홍콩반점0410 / 쟁반짜장
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '쟁반짜장', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '홍콩반점0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '쟁반짜장');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('돼지고기', 'danger', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '쟁반짜장';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '쟁반짜장');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '쟁반짜장';
+
+-- 홍콩반점0410 / 짬뽕밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '짬뽕밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '홍콩반점0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('오징어', 'danger', 'AI 추정'), ('조개류', 'danger', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '홍콩반점0410' and b.is_franchise and m.name = '짬뽕밥';
+
+-- ===== 역전우동0410 (메뉴 7개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '역전우동0410' and b.is_franchise) then
+    raise exception '브랜드 역전우동0410 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '역전우동0410' and b.is_franchise;
+
+-- 역전우동0410 / 옛날우동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '옛날우동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '역전우동0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '옛날우동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '옛날우동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '옛날우동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('담백함'), ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '옛날우동';
+
+-- 역전우동0410 / 어묵우동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '어묵우동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '역전우동0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '어묵우동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '어묵우동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '어묵우동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '어묵우동';
+
+-- 역전우동0410 / 튀김우동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '튀김우동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '역전우동0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '튀김우동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '튀김우동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '튀김우동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '튀김우동';
+
+-- 역전우동0410 / 김치우동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '김치우동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '역전우동0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '김치우동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '김치우동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '김치우동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '김치우동';
+
+-- 역전우동0410 / 냉모밀
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '냉모밀', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '역전우동0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '냉모밀');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('메밀', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '냉모밀';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '냉모밀');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('담백함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '냉모밀';
+
+-- 역전우동0410 / 돈까스
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '돈까스', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '역전우동0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '돈까스');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '돈까스';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '돈까스');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '돈까스';
+
+-- 역전우동0410 / 제육덮밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '제육덮밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '역전우동0410' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '제육덮밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '제육덮밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '역전우동0410' and b.is_franchise and m.name = '제육덮밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '역전우동0410' and b.is_franchise and m.name = '제육덮밥';
+
+-- ===== 아비꼬 (메뉴 6개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '아비꼬' and b.is_franchise) then
+    raise exception '브랜드 아비꼬 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '아비꼬' and b.is_franchise;
+
+-- 아비꼬 / 카레라이스
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카레라이스', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '아비꼬' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '카레라이스');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '카레라이스';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '카레라이스');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('감칠맛'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '카레라이스';
+
+-- 아비꼬 / 카레우동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카레우동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '아비꼬' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '카레우동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '카레우동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '카레우동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('감칠맛'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '카레우동';
+
+-- 아비꼬 / 돈까스 카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '돈까스 카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '아비꼬' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '돈까스 카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('돼지고기', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '돈까스 카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '돈까스 카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '돈까스 카레';
+
+-- 아비꼬 / 새우튀김 카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '새우튀김 카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '아비꼬' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '새우튀김 카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('새우', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '새우튀김 카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '새우튀김 카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '새우튀김 카레';
+
+-- 아비꼬 / 치킨가라아게 카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치킨가라아게 카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '아비꼬' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '치킨가라아게 카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('닭고기', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '치킨가라아게 카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '치킨가라아게 카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '치킨가라아게 카레';
+
+-- 아비꼬 / 하이라이스
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '하이라이스', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '아비꼬' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '하이라이스');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쇠고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('토마토', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '하이라이스';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '아비꼬' and b.is_franchise and m.name = '하이라이스');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('새콤함'), ('달콤함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '아비꼬' and b.is_franchise and m.name = '하이라이스';
+
+-- ===== 코코이찌방야 (메뉴 7개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '코코이찌방야' and b.is_franchise) then
+    raise exception '브랜드 코코이찌방야 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '코코이찌방야' and b.is_franchise;
+
+-- 코코이찌방야 / 포크카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '포크카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '코코이찌방야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '포크카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '포크카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '포크카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('짭조름함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '포크카레';
+
+-- 코코이찌방야 / 비프카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '비프카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '코코이찌방야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '비프카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쇠고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '비프카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '비프카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('짭조름함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '비프카레';
+
+-- 코코이찌방야 / 로스까스카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '로스까스카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '코코이찌방야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '로스까스카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '로스까스카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '로스까스카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('감칠맛'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '로스까스카레';
+
+-- 코코이찌방야 / 치킨까스카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치킨까스카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '코코이찌방야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '치킨까스카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('닭고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '치킨까스카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '치킨까스카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('감칠맛'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '치킨까스카레';
+
+-- 코코이찌방야 / 해물카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '해물카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '코코이찌방야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '해물카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('새우', 'danger', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '해물카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '해물카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('짭조름함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '해물카레';
+
+-- 코코이찌방야 / 야채카레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '야채카레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '코코이찌방야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '야채카레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '야채카레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '야채카레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('달콤함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '야채카레';
+
+-- 코코이찌방야 / 카레우동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카레우동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '코코이찌방야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '카레우동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '카레우동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '코코이찌방야' and b.is_franchise and m.name = '카레우동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('짭조름함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '코코이찌방야' and b.is_franchise and m.name = '카레우동';
+
+-- ===== 미소야 (메뉴 7개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '미소야' and b.is_franchise) then
+    raise exception '브랜드 미소야 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '미소야' and b.is_franchise;
+
+-- 미소야 / 로스까스
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '로스까스', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '미소야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '로스까스');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '로스까스';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '로스까스');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '로스까스';
+
+-- 미소야 / 히레까스
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '히레까스', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '미소야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '히레까스');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '히레까스';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '히레까스');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '히레까스';
+
+-- 미소야 / 치즈까스
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치즈까스', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '미소야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '치즈까스');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '치즈까스';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '치즈까스');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '치즈까스';
+
+-- 미소야 / 가츠동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '가츠동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '미소야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '가츠동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '가츠동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '가츠동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('짭조름함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '가츠동';
+
+-- 미소야 / 냉모밀
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '냉모밀', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '미소야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '냉모밀');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('메밀', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '냉모밀';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '냉모밀');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('달콤함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '냉모밀';
+
+-- 미소야 / 김치우동
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '김치우동', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '미소야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '김치우동');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정'), ('조개류', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('오징어', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '김치우동';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '김치우동');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '김치우동';
+
+-- 미소야 / 알밥
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '알밥', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '미소야' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '알밥');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('게', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('고등어', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '알밥';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '미소야' and b.is_franchise and m.name = '알밥');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '미소야' and b.is_franchise and m.name = '알밥';
+
+-- ===== 스타벅스 (메뉴 6개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '스타벅스' and b.is_franchise) then
+    raise exception '브랜드 스타벅스 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '스타벅스' and b.is_franchise;
+
+-- 스타벅스 / 아메리카노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아메리카노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '스타벅스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '아메리카노');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '아메리카노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '아메리카노';
+
+-- 스타벅스 / 카페 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카페 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '스타벅스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '카페 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '카페 라떼';
+
+-- 스타벅스 / 카라멜 마키아또
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카라멜 마키아또', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '스타벅스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '카라멜 마키아또');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '카라멜 마키아또';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '카라멜 마키아또');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '카라멜 마키아또';
+
+-- 스타벅스 / 자바 칩 프라푸치노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '자바 칩 프라푸치노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '스타벅스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '자바 칩 프라푸치노');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '자바 칩 프라푸치노';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '자바 칩 프라푸치노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '자바 칩 프라푸치노';
+
+-- 스타벅스 / 돌체 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '돌체 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '스타벅스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '돌체 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '돌체 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '돌체 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '돌체 라떼';
+
+-- 스타벅스 / 자몽 허니 블랙 티
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '자몽 허니 블랙 티', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '스타벅스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '자몽 허니 블랙 티');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '스타벅스' and b.is_franchise and m.name = '자몽 허니 블랙 티');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('새콤함'), ('달콤함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '스타벅스' and b.is_franchise and m.name = '자몽 허니 블랙 티';
+
+-- ===== 투썸플레이스 (메뉴 5개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '투썸플레이스' and b.is_franchise) then
+    raise exception '브랜드 투썸플레이스 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '투썸플레이스' and b.is_franchise;
+
+-- 투썸플레이스 / 아메리카노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아메리카노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '투썸플레이스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '아메리카노');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '아메리카노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '아메리카노';
+
+-- 투썸플레이스 / 카페 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카페 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '투썸플레이스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '카페 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '카페 라떼';
+
+-- 투썸플레이스 / 스트로베리 초콜릿 생크림 케이크
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '스트로베리 초콜릿 생크림 케이크', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '투썸플레이스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '스트로베리 초콜릿 생크림 케이크');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '스트로베리 초콜릿 생크림 케이크';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '스트로베리 초콜릿 생크림 케이크');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '스트로베리 초콜릿 생크림 케이크';
+
+-- 투썸플레이스 / 아이스박스 케이크
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아이스박스 케이크', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '투썸플레이스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '아이스박스 케이크');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '아이스박스 케이크';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '아이스박스 케이크');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '아이스박스 케이크';
+
+-- 투썸플레이스 / 떠먹는 티라미수
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '떠먹는 티라미수', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '투썸플레이스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '떠먹는 티라미수');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '떠먹는 티라미수';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '투썸플레이스' and b.is_franchise and m.name = '떠먹는 티라미수');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '투썸플레이스' and b.is_franchise and m.name = '떠먹는 티라미수';
+
+-- ===== 이디야커피 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '이디야커피' and b.is_franchise) then
+    raise exception '브랜드 이디야커피 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '이디야커피' and b.is_franchise;
+
+-- 이디야커피 / 아메리카노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아메리카노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '이디야커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '아메리카노');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '아메리카노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '이디야커피' and b.is_franchise and m.name = '아메리카노';
+
+-- 이디야커피 / 카페 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카페 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '이디야커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '이디야커피' and b.is_franchise and m.name = '카페 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '이디야커피' and b.is_franchise and m.name = '카페 라떼';
+
+-- 이디야커피 / 토피 넛 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '토피 넛 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '이디야커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '토피 넛 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '이디야커피' and b.is_franchise and m.name = '토피 넛 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '토피 넛 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '이디야커피' and b.is_franchise and m.name = '토피 넛 라떼';
+
+-- 이디야커피 / 복숭아 아이스티
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '복숭아 아이스티', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '이디야커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '복숭아 아이스티');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('복숭아', 'danger', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '이디야커피' and b.is_franchise and m.name = '복숭아 아이스티';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '이디야커피' and b.is_franchise and m.name = '복숭아 아이스티');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '이디야커피' and b.is_franchise and m.name = '복숭아 아이스티';
+
+-- ===== 메가MGC커피 (메뉴 5개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '메가MGC커피' and b.is_franchise) then
+    raise exception '브랜드 메가MGC커피 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '메가MGC커피' and b.is_franchise;
+
+-- 메가MGC커피 / 아메리카노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아메리카노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '메가MGC커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '아메리카노');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '아메리카노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '아메리카노';
+
+-- 메가MGC커피 / 카페 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카페 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '메가MGC커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '카페 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '카페 라떼';
+
+-- 메가MGC커피 / 쿠키 프라페
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '쿠키 프라페', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '메가MGC커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '쿠키 프라페');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '쿠키 프라페';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '쿠키 프라페');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '쿠키 프라페';
+
+-- 메가MGC커피 / 딸기 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '딸기 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '메가MGC커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '딸기 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '딸기 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '딸기 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '딸기 라떼';
+
+-- 메가MGC커피 / 유자차
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '유자차', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '메가MGC커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '유자차');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '메가MGC커피' and b.is_franchise and m.name = '유자차');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '메가MGC커피' and b.is_franchise and m.name = '유자차';
+
+-- ===== 컴포즈커피 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '컴포즈커피' and b.is_franchise) then
+    raise exception '브랜드 컴포즈커피 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '컴포즈커피' and b.is_franchise;
+
+-- 컴포즈커피 / 아메리카노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아메리카노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '컴포즈커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '아메리카노');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '아메리카노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '컴포즈커피' and b.is_franchise and m.name = '아메리카노';
+
+-- 컴포즈커피 / 카페 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '카페 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '컴포즈커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '컴포즈커피' and b.is_franchise and m.name = '카페 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '카페 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '컴포즈커피' and b.is_franchise and m.name = '카페 라떼';
+
+-- 컴포즈커피 / 바닐라 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '바닐라 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '컴포즈커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '바닐라 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '컴포즈커피' and b.is_franchise and m.name = '바닐라 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '바닐라 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '컴포즈커피' and b.is_franchise and m.name = '바닐라 라떼';
+
+-- 컴포즈커피 / 유자차
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '유자차', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '컴포즈커피' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '유자차');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '컴포즈커피' and b.is_franchise and m.name = '유자차';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '컴포즈커피' and b.is_franchise and m.name = '유자차');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '컴포즈커피' and b.is_franchise and m.name = '유자차';
+
+-- ===== 빽다방 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '빽다방' and b.is_franchise) then
+    raise exception '브랜드 빽다방 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '빽다방' and b.is_franchise;
+
+-- 빽다방 / 아메리카노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아메리카노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '빽다방' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '아메리카노');
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '아메리카노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '빽다방' and b.is_franchise and m.name = '아메리카노';
+
+-- 빽다방 / 원조커피
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '원조커피', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '빽다방' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '원조커피');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '빽다방' and b.is_franchise and m.name = '원조커피';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '원조커피');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('쌉싸름함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '빽다방' and b.is_franchise and m.name = '원조커피';
+
+-- 빽다방 / 바닐라 라떼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '바닐라 라떼', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '빽다방' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '바닐라 라떼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '빽다방' and b.is_franchise and m.name = '바닐라 라떼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '바닐라 라떼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '빽다방' and b.is_franchise and m.name = '바닐라 라떼';
+
+-- 빽다방 / 사라다빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '사라다빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '빽다방' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '사라다빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '빽다방' and b.is_franchise and m.name = '사라다빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '빽다방' and b.is_franchise and m.name = '사라다빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '빽다방' and b.is_franchise and m.name = '사라다빵';
+
+-- ===== 파리바게뜨 (메뉴 6개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '파리바게뜨' and b.is_franchise) then
+    raise exception '브랜드 파리바게뜨 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '파리바게뜨' and b.is_franchise;
+
+-- 파리바게뜨 / 단팥빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '단팥빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '파리바게뜨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '단팥빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '단팥빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '단팥빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '단팥빵';
+
+-- 파리바게뜨 / 소보루빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '소보루빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '파리바게뜨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '소보루빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('땅콩', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '소보루빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '소보루빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '소보루빵';
+
+-- 파리바게뜨 / 크림빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '크림빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '파리바게뜨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '크림빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '크림빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '크림빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '크림빵';
+
+-- 파리바게뜨 / 우유식빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '우유식빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '파리바게뜨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '우유식빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '우유식빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '우유식빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '우유식빵';
+
+-- 파리바게뜨 / 생크림 케이크
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '생크림 케이크', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '파리바게뜨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '생크림 케이크');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '생크림 케이크';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '생크림 케이크');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '생크림 케이크';
+
+-- 파리바게뜨 / 샌드위치
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '샌드위치', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '파리바게뜨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '샌드위치');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('돼지고기', 'caution', 'AI 추정'), ('닭고기', 'caution', 'AI 추정'), ('쇠고기', 'caution', 'AI 추정'), ('토마토', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('새우', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '샌드위치';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파리바게뜨' and b.is_franchise and m.name = '샌드위치');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파리바게뜨' and b.is_franchise and m.name = '샌드위치';
+
+-- ===== 뚜레쥬르 (메뉴 5개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '뚜레쥬르' and b.is_franchise) then
+    raise exception '브랜드 뚜레쥬르 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '뚜레쥬르' and b.is_franchise;
+
+-- 뚜레쥬르 / 단팥빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '단팥빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '뚜레쥬르' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '단팥빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '단팥빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '단팥빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '단팥빵';
+
+-- 뚜레쥬르 / 소보로빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '소보로빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '뚜레쥬르' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '소보로빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '소보로빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '소보로빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '소보로빵';
+
+-- 뚜레쥬르 / 우유식빵
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '우유식빵', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '뚜레쥬르' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '우유식빵');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '우유식빵';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '우유식빵');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '우유식빵';
+
+-- 뚜레쥬르 / 크루아상
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '크루아상', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '뚜레쥬르' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '크루아상');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '크루아상';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '크루아상');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '크루아상';
+
+-- 뚜레쥬르 / 생크림 케이크
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '생크림 케이크', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '뚜레쥬르' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '생크림 케이크');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '생크림 케이크';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '뚜레쥬르' and b.is_franchise and m.name = '생크림 케이크');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '뚜레쥬르' and b.is_franchise and m.name = '생크림 케이크';
+
+-- ===== 배스킨라빈스 (메뉴 6개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '배스킨라빈스' and b.is_franchise) then
+    raise exception '브랜드 배스킨라빈스 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '배스킨라빈스' and b.is_franchise;
+
+-- 배스킨라빈스 / 엄마는 외계인
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '엄마는 외계인', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '배스킨라빈스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '엄마는 외계인');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '엄마는 외계인';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '엄마는 외계인');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '엄마는 외계인';
+
+-- 배스킨라빈스 / 아몬드 봉봉
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아몬드 봉봉', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '배스킨라빈스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '아몬드 봉봉');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '아몬드 봉봉';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '아몬드 봉봉');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '아몬드 봉봉';
+
+-- 배스킨라빈스 / 민트 초콜릿 칩
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '민트 초콜릿 칩', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '배스킨라빈스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '민트 초콜릿 칩');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '민트 초콜릿 칩';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '민트 초콜릿 칩');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '민트 초콜릿 칩';
+
+-- 배스킨라빈스 / 슈팅스타
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '슈팅스타', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '배스킨라빈스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '슈팅스타');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '슈팅스타';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '슈팅스타');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '슈팅스타';
+
+-- 배스킨라빈스 / 체리쥬빌레
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '체리쥬빌레', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '배스킨라빈스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '체리쥬빌레');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '체리쥬빌레';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '체리쥬빌레');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '체리쥬빌레';
+
+-- 배스킨라빈스 / 뉴욕 치즈케이크
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '뉴욕 치즈케이크', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '배스킨라빈스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '뉴욕 치즈케이크');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('밀', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '뉴욕 치즈케이크';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '배스킨라빈스' and b.is_franchise and m.name = '뉴욕 치즈케이크');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '배스킨라빈스' and b.is_franchise and m.name = '뉴욕 치즈케이크';
+
+-- ===== 던킨 (메뉴 5개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '던킨' and b.is_franchise) then
+    raise exception '브랜드 던킨 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '던킨' and b.is_franchise;
+
+-- 던킨 / 글레이즈드 도넛
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '글레이즈드 도넛', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '던킨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '글레이즈드 도넛');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('메밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '글레이즈드 도넛';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '글레이즈드 도넛');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '글레이즈드 도넛';
+
+-- 던킨 / 보스톤 크림 도넛
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '보스톤 크림 도넛', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '던킨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '보스톤 크림 도넛');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('메밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '보스톤 크림 도넛';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '보스톤 크림 도넛');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '보스톤 크림 도넛';
+
+-- 던킨 / 스트로베리 필드 도넛
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '스트로베리 필드 도넛', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '던킨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '스트로베리 필드 도넛');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('메밀', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '스트로베리 필드 도넛';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '스트로베리 필드 도넛');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '스트로베리 필드 도넛';
+
+-- 던킨 / 먼치킨
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '먼치킨', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '던킨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '먼치킨');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('메밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '먼치킨';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '먼치킨');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '먼치킨';
+
+-- 던킨 / 아메리카노
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아메리카노', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '던킨' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '아메리카노');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '아메리카노';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '던킨' and b.is_franchise and m.name = '아메리카노');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '던킨' and b.is_franchise and m.name = '아메리카노';
+
+-- ===== 설빙 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '설빙' and b.is_franchise) then
+    raise exception '브랜드 설빙 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '설빙' and b.is_franchise;
+
+-- 설빙 / 인절미 설빙
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '인절미 설빙', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '설빙' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '인절미 설빙');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '인절미 설빙';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '인절미 설빙');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '인절미 설빙';
+
+-- 설빙 / 애플망고치즈 설빙
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '애플망고치즈 설빙', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '설빙' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '애플망고치즈 설빙');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '애플망고치즈 설빙';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '애플망고치즈 설빙');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '애플망고치즈 설빙';
+
+-- 설빙 / 딸기 설빙
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '딸기 설빙', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '설빙' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '딸기 설빙');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '딸기 설빙';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '딸기 설빙');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '딸기 설빙';
+
+-- 설빙 / 인절미 토스트
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '인절미 토스트', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '설빙' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '인절미 토스트');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', 'AI 추정'), ('대두', 'danger', 'AI 추정'), ('우유', 'danger', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('땅콩', 'caution', 'AI 추정'), ('호두', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '인절미 토스트';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '설빙' and b.is_franchise and m.name = '인절미 토스트');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '설빙' and b.is_franchise and m.name = '인절미 토스트';
+
+-- ===== 공차 (메뉴 4개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '공차' and b.is_franchise) then
+    raise exception '브랜드 공차 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = null, allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '공차' and b.is_franchise;
+
+-- 공차 / 블랙 밀크티
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '블랙 밀크티', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '공차' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '블랙 밀크티');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '블랙 밀크티';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '블랙 밀크티');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '블랙 밀크티';
+
+-- 공차 / 타로 밀크티
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '타로 밀크티', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '공차' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '타로 밀크티');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('알류', 'caution', 'AI 추정'), ('밀', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '타로 밀크티';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '타로 밀크티');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '타로 밀크티';
+
+-- 공차 / 망고 스무디
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '망고 스무디', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '공차' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '망고 스무디');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'caution', 'AI 추정'), ('대두', 'caution', 'AI 추정'), ('복숭아', 'caution', 'AI 추정'), ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '망고 스무디';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '망고 스무디');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('새콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '망고 스무디';
+
+-- 공차 / 자몽 그린티 에이드
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '자몽 그린티 에이드', null, 'estimated'::allergen_status, null, '2026-11-24T16:32:20.833Z'::timestamptz, 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요', null, null
+from brands b where b.name = '공차' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '자몽 그린티 에이드');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('아황산류', 'caution', 'AI 추정')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '자몽 그린티 에이드';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '공차' and b.is_franchise and m.name = '자몽 그린티 에이드');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('새콤함'), ('달콤함'), ('쌉싸름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '공차' and b.is_franchise and m.name = '자몽 그린티 에이드';
+
 commit;
