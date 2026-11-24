@@ -42,5 +42,49 @@
     ],
     "allergen_table_is_set_based": false,
     "result_key": "버거킹"
+  },
+  {
+    "name": "BBQ",
+    "category": "양식",
+    "name_patterns": [
+      "비비큐",
+      "BBQ치킨",
+      "BBQ올리브"
+    ],
+    "exclude_patterns": [
+      "동원비비큐",
+      "로코스비비큐"
+    ],
+    "official_domains": [
+      "bbq.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "BBQ"
+  },
+  {
+    "name": "피자헛",
+    "category": "양식",
+    "name_patterns": [
+      "피자헛"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "pizzahut.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "피자헛"
+  },
+  {
+    "name": "파파존스",
+    "category": "양식",
+    "name_patterns": [
+      "파파존스"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "pji.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "파파존스"
   }
 ]

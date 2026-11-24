@@ -68,7 +68,7 @@
 
 ## DB 규칙
 
-- Supabase 조회(select)는 자유롭게 한다. 변경(테이블·함수·데이터)은 SQL 파일을 먼저 작성하고, 무엇을 왜 적용하는지 말해 승인받은 뒤에만 적용한다. `migrations/001_brand_structure.sql` 은 데이터를 지우므로 절대 실행하지 않는다. 직접 적용하지 못할 때는 "SQL Editor 에서 실행할 파일과 순서"를 보고한다
+- Supabase 조회(select)와 추가하는 변경(테이블·함수 추가, 가게·메뉴 같은 데이터 입력)은 묻지 않고 적용한다. 단 SQL 파일을 먼저 작성해 저장소에 남기고, 적용한 뒤 무엇을 넣었는지와 확인 결과를 보고한다. 기존 데이터를 지우거나 테이블·컬럼을 없애는 변경은 되돌릴 수 없으므로 승인받은 뒤에만 한다. `migrations/001_brand_structure.sql` 은 데이터를 지우므로 절대 실행하지 않는다. 직접 적용하지 못할 때는 "SQL Editor 에서 실행할 파일과 순서"를 보고한다 (.claude/settings.json 이 Supabase SQL 실행 도구의 승인 창을 생략하게 한다)
 - RPC 는 auth.uid() 로 사용자를 식별하고, 다른 사용자의 데이터를 반환할 때는 닉네임·유사도 같은 최소 정보만 반환한다. SECURITY DEFINER 함수는 set search_path = '' 를 쓴다
 - 새 테이블·뷰를 만들면 authenticated 에 필요한 GRANT 를 policies.sql 에 함께 쓴다 (권한이 없으면 RLS 정책 이전에 permission denied 가 난다).
 
