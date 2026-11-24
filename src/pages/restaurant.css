@@ -95,7 +95,10 @@
 }
 
 .restaurant__rating {
+  /* 좁은 화면·큰 글자 설정에서 줄어들어 글자가 겹치지 않게 한다. 자리가 모자라면 취향 일치도가 다음 줄로 내려간다 */
+  flex: 0 0 auto;
   font-size: var(--font-size-15);
+  white-space: nowrap;
 }
 
 .restaurant__rating .meter__bar {
@@ -114,8 +117,10 @@
 }
 
 .restaurant__match {
+  flex: 0 0 auto;
   font-size: var(--font-size-16);
   font-weight: var(--font-weight-semibold);
+  white-space: nowrap;
 }
 
 .restaurant .tabs {
