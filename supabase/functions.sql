@@ -2529,6 +2529,36 @@ grant execute on function public.create_match_photo_token(text)                 
 grant execute on function public.get_match_photo_token_info(uuid)                 to anon, authenticated;
 grant execute on function public.upload_match_photo_by_token(uuid, text, boolean) to anon, authenticated;
 
+-- 진행자: 오늘(최근 24시간) 현황 — 검사를 마친 팀 수, 사진을 올린 팀 중 인쇄 대기·인쇄한 수 (용지·줄을 가늠하는 용도)
+create or replace function public.get_match_print_stats(p_passcode text)
+returns table (teams int, waiting int, printed int)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.calc_match_print_staff(p_passcode);
+
+  return query
+  select
+    (
+      select count(*)::int from (
+        select m.room_id
+        from public.match_room_members m
+        where m.completed_at > now() - interval '24 hours'
+        group by m.room_id
+        having count(*) >= 2
+      ) t
+    ),
+    (select count(*)::int from public.match_print_requests q where q.created_at > now() - interval '24 hours' and q.printed_at is null),
+    (select count(*)::int from public.match_print_requests q where q.created_at > now() - interval '24 hours' and q.printed_at is not null);
+end;
+$$;
+
+revoke all on function public.get_match_print_stats(text)    from public, anon;
+grant execute on function public.get_match_print_stats(text) to authenticated;
+
 -- [검증 1] 내부 함수를 직접 호출하면 권한 오류가 나야 한다: ERROR: permission denied for function calc_menu_match
 /*
 begin;

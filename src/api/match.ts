@@ -264,3 +264,11 @@ export async function uploadMatchPhotoByToken(token: string, photo: string, show
   const { error } = await supabase.rpc('upload_match_photo_by_token', { p_token: token, p_photo: photo, p_show_on_rank: showOnRank });
   if (error) throw toError(error, '사진을 올리지 못했어요. 잠시 후 다시 시도해주세요');
 }
+
+/** 진행자: 오늘(최근 24시간) 현황 — 검사를 마친 팀, 인쇄 대기, 인쇄한 수 */
+export async function getMatchPrintStats(passcode: string): Promise<{ teams: number; waiting: number; printed: number }> {
+  const { data, error } = await supabase.rpc('get_match_print_stats', { p_passcode: passcode });
+  if (error) throw toError(error, '현황을 불러오지 못했어요');
+  const row = data?.[0];
+  return { teams: row?.teams ?? 0, waiting: row?.waiting ?? 0, printed: row?.printed ?? 0 };
+}

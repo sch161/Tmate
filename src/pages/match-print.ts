@@ -2,7 +2,7 @@
 //   프린터 연결(MXW01, Web Bluetooth) → 방 번호로 팀 선택 → 웹캠 사진 → 영수증 미리보기·인쇄 → 다음 팀
 //   ?demo=1 이면 서버 대신 예시 팀·음식(src/utils/match-print-demo.ts)을 쓴다.
 // 디자인 대기: 화면 나오면 교체 (Figma 에 이 화면이 없다)
-import { getMatchPairChoices, getMatchPairFoods, getMatchPrintPhoto, getMatchPrintQueue, getMatchRoomPairs, markMatchPrinted, type MatchFoodCompare, type MatchPrintRequest, type MatchRoomPair } from '../api/match';
+import { getMatchPairChoices, getMatchPairFoods, getMatchPrintPhoto, getMatchPrintQueue, getMatchPrintStats, getMatchRoomPairs, markMatchPrinted, type MatchFoodCompare, type MatchPrintRequest, type MatchRoomPair } from '../api/match';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
@@ -263,6 +263,15 @@ function createPhotoQueue(token: number): HTMLElement {
   }
   let lastKey = '';
   let opening = false;
+  // 오늘 현황 (곁들이는 정보라 못 불러와도 목록은 그대로 쓴다)
+  const stats = el('p', { class: 'print-queue__stats', role: 'status' });
+  const loadStats = (): void => {
+    getMatchPrintStats(passcode)
+      .then((value) => {
+        if (token === stageToken) stats.textContent = `오늘 검사 ${value.teams}팀 · 인쇄 대기 ${value.waiting} · 인쇄함 ${value.printed}`;
+      })
+      .catch(() => undefined);
+  };
 
   const open = async (request: MatchPrintRequest): Promise<void> => {
     if (opening) return;
@@ -309,6 +318,7 @@ function createPhotoQueue(token: number): HTMLElement {
       if (token !== stageToken) return;
       form.hidden = true;
       paint(requests);
+      loadStats();
     } catch (e) {
       if (token !== stageToken) return;
       // 주기적으로 다시 불러올 때의 일시적인 실패는 다음 주기에 다시 시도한다
@@ -341,7 +351,7 @@ function createPhotoQueue(token: number): HTMLElement {
   if (passcode) startPolling();
   else list.replaceChildren(el('p', { class: 'print-queue__empty text-wrap-ko' }, '진행자 번호를 넣으면 손님이 폰으로 올린 사진이 여기에 나와요'));
 
-  return el('section', { class: 'print-queue' }, el('h3', { class: 'print-queue__title' }, '폰으로 올라온 사진'), form, list);
+  return el('section', { class: 'print-queue' }, el('h3', { class: 'print-queue__title' }, '폰으로 올라온 사진'), stats, form, list);
 }
 
 function showRoom(): void {

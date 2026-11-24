@@ -1108,6 +1108,14 @@ export type Database = {
           score: number
         }[]
       }
+      get_match_print_stats: {
+        Args: { p_passcode: string }
+        Returns: {
+          printed: number
+          teams: number
+          waiting: number
+        }[]
+      }
       get_match_questions: {
         Args: { p_code: string }
         Returns: {

@@ -547,3 +547,12 @@
 .print-pair.is-printed {
   opacity: 0.55;
 }
+
+.print-queue__stats {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+}
+
+.print-queue__stats:empty {
+  display: none;
+}
