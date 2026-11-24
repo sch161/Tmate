@@ -1,5 +1,5 @@
 // 알레르기 이름 → 아이콘 매핑은 이 파일 한 곳에서만 관리한다.
-// 키는 DB 의 allergens.name(식약처 표준 이름). 매핑에 없는 카드(쇠고기·돼지고기·잣)는 이름만 표시된다.
+// 키는 DB 의 allergens.name(식약처 표준 이름). 매핑에 없는 카드는 이름만 표시된다.
 import eggIcon from '../assets/icons/allergens/egg.svg';
 import milkIcon from '../assets/icons/allergens/milk.svg';
 import beanIcon from '../assets/icons/allergens/bean.svg';
@@ -16,6 +16,9 @@ import buckwheatIcon from '../assets/icons/allergens/buckwheat.svg';
 import squidIcon from '../assets/icons/allergens/squid.svg';
 import walnutIcon from '../assets/icons/allergens/walnut.svg';
 import sulfiteIcon from '../assets/icons/allergens/sulfite.svg';
+import beefIcon from '../assets/icons/allergens/beef.png';
+import porkIcon from '../assets/icons/allergens/pork.png';
+import pineNutIcon from '../assets/icons/allergens/jat.png';
 
 const ALLERGEN_ICONS: Record<string, string> = {
   알류: eggIcon, // 화면 표기는 '계란'
@@ -34,6 +37,9 @@ const ALLERGEN_ICONS: Record<string, string> = {
   오징어: squidIcon,
   호두: walnutIcon,
   아황산류: sulfiteIcon,
+  쇠고기: beefIcon,
+  돼지고기: porkIcon,
+  잣: pineNutIcon,
 };
 
 export function getAllergenIcon(name: string): string | undefined {
