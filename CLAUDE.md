@@ -47,7 +47,7 @@
 - 다른 폰으로 사진 보내기: PC 로 검사한 손님은 결과 화면의 QR(src/utils/qr.ts 가 직접 만든다. node scripts/test-qr.mjs)을 폰으로 찍어 match-photo 화면에서 로그인 없이 사진을 올린다. QR 주소의 표(match_photo_tokens)는 30분만 쓸 수 있고, 이 화면용 RPC 2개만 anon 에게 열려 있다
 - 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
 - 알레르기·입맛(맛 선택+비율) 수정은 RPC(update_my_allergens, update_my_tastes)가 한 트랜잭션으로 교체 저장한다. 지역·닉네임은 profiles 의 해당 컬럼만 update 한다
-- 가게 추가: 목록에 없는 개인 식당을 사용자가 직접 넣는다(가게 1개 = 브랜드 1개, brands.created_by). 메뉴의 알레르기·맛은 Edge Function(supabase/functions/add-store)이 Claude API 로 메뉴 이름에서 추정하고, RPC(add_user_store)가 언제나 estimated 또는 unknown 으로 저장한다. API 키는 Supabase 의 Edge Function 비밀값 ANTHROPIC_API_KEY 에만 둔다(저장소·브라우저 금지). 가게를 추가한 사람은 가게 상세의 "메뉴 추가하기"로 메뉴를 더 넣을 수 있다(add_user_store_menus, 한 가게 30개까지). 하루 한도는 functions.sql 의 calc_setting 에 있다
+- 가게 추가: 목록에 없는 개인 식당을 사용자가 직접 넣는다(가게 1개 = 브랜드 1개, brands.created_by). 메뉴의 알레르기·맛은 Edge Function(supabase/functions/add-store)이 Claude API 로 메뉴 이름에서 추정하고, RPC(add_user_store)가 언제나 estimated 또는 unknown 으로 저장한다. API 키는 Supabase 의 Edge Function 비밀값 ANTHROPIC_API_KEY 에만 둔다(저장소·브라우저 금지). 가게를 추가한 사람은 가게 상세의 "메뉴 추가하기"로 메뉴를 더 넣을 수 있다(add_user_store_menus, 한 가게 30개까지). 같은 자리의 "가게 사진 넣기"로 사진도 넣는다: src/utils/store-photo.ts 가 긴 변 960px 로 줄여 Storage 공개 버킷 store-photos 의 내 폴더에 올리고, set_my_store_photo 가 내 가게인지 확인해 restaurants.image_url 에 적는다(migrations/020_store_photo.sql). 하루 한도는 functions.sql 의 calc_setting 에 있다
 - 평가로 입맛 자동 보정: 취향 일치도·입맛 유형·마이페이지 맛 비율은 고른 비율(user_taste_preferences)에 평가로 본 입맛을 섞은 "지금 입맛"(calc_taste_profile)으로 계산한다. 평가 1개마다 7%, 최대 70% 섞는다. 저장하지 않고 조회할 때 계산하며, 입맛 수정 화면은 고른 비율만 다룬다
 
 ## 디자인 규칙
@@ -65,7 +65,7 @@
 - 구현된 화면(src/pages): 스플래시(index.html), login, signup, onboarding-location / flavor / ratio / allergy, home, restaurant, review, save, mypage, my-reviews, taste-detail, taste-edit, taste-mates, allergy-edit, profile-edit, store-add(가게 추가), match(친구랑 궁합 검사), match-rank(맛궁합 랭킹, 부스 큰 화면용이라 402px 프레임을 쓰지 않는다), match-photo(다른 폰으로 사진 보내기, 로그인 없이 쓴다), match-print(맛궁합 영수증 인쇄, 부스 진행자 노트북용이라 402px 프레임을 쓰지 않는다. ?demo=1 은 데모 데이터) (ui-preview 는 개발용 임시 페이지)
 - 아직 없는 것: 알림 설정, 프로필 사진 (마이페이지 Figma 의 "알림 설정" 줄은 만들지 않았다)
 - Figma 에 있어 읽고 구현한 화면: Splash, User-Login, User-Signup, Location, Flavor Info, Allergy Info_g, Allergy Info, Home, Details_s, Details_m, Save, User
-- Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, store-add, match, match-rank, match-photo, match-print(영수증 배치 src/utils/match-receipt.ts 포함), 지역 선택 시트(src/utils/region-picker.ts)
+- Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, store-add, 가게 상세의 가게 사진 넣기 버튼, match, match-rank, match-photo, match-print(영수증 배치 src/utils/match-receipt.ts 포함), 지역 선택 시트(src/utils/region-picker.ts)
 - 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 가까운 순 버튼(home.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 내 입맛 화면의 평가 반영 안내(taste-detail.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 노란 띠 위로 검은 고딕 글자가 흘러가는 임시 배너), 홈의 오늘의 추천 메뉴 캐러셀(home.*, 한 줄로 옆으로 넘기고 3.5초마다 한 장씩 넘어간다. Figma 는 2열 격자), 맛 선택 카드의 예시 음식 문구와 2열 배치·비율 슬라이더의 예시 문구(src/utils/taste-examples.ts, Figma 의 Flavor Info 는 3열에 이름만 있음)
 
 ## 코드 규칙
