@@ -376,7 +376,7 @@ create table if not exists match_print_requests (
   id            bigint generated always as identity primary key,
   room_id       bigint not null unique references match_rooms (id) on delete cascade,
   requested_by  uuid not null references profiles (id) on delete cascade,
-  photo         text not null check (photo like 'data:image/jpeg;base64,%' and char_length(photo) <= 200000),
+  photo         text not null constraint match_print_requests_photo_check check (photo ~ '^data:image/(jpeg|png|webp);base64,' and char_length(photo) <= 400000),
   show_on_rank  boolean not null default false,   -- 손님이 랭킹 화면에 사진을 띄워도 된다고 한 경우만 true
   created_at    timestamptz not null default now(),
   printed_at    timestamptz

@@ -240,8 +240,8 @@ export interface MatchRankPhoto {
 export async function getMatchRankPhotos(limit = 6): Promise<MatchRankPhoto[]> {
   const { data, error } = await supabase.rpc('get_match_rank_photos', { p_limit: limit });
   if (error) throw toError(error, '사진을 불러오지 못했어요');
-  // DB 가 JPEG data URL 만 받지만, 화면에 그대로 넣는 값이라 한 번 더 확인한다
-  return (data ?? []).filter((row) => row.photo.startsWith('data:image/jpeg;base64,')).map((row) => ({ requestId: row.request_id, nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score, photo: row.photo }));
+  // DB 가 사진 data URL 만 받지만, 화면에 그대로 넣는 값이라 한 번 더 확인한다
+  return (data ?? []).filter((row) => /^data:image\/(jpeg|png|webp);base64,/.test(row.photo)).map((row) => ({ requestId: row.request_id, nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score, photo: row.photo }));
 }
 
 /** 다른 폰으로 사진 보내기: 그 방의 사진을 올릴 수 있는 표(token)를 만든다. 30분 동안 쓸 수 있다 */

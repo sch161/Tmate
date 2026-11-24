@@ -5,8 +5,10 @@ import { RECEIPT_PHOTO_ASPECT } from './match-receipt';
 const PHOTO_WIDTH = 480;
 const JPEG_QUALITY = 0.8;
 
-/** 올릴 수 있는 data URL 최대 길이 (DB 는 200,000자까지 받는다. 여유를 둔다) */
-const MAX_DATA_URL_LENGTH = 180000;
+/** 올릴 수 있는 data URL 최대 길이 (DB 는 400,000자까지 받는다. 여유를 둔다) */
+const MAX_DATA_URL_LENGTH = 380000;
+/** 서버가 받는 사진 형식 (JPEG 가 기본, JPEG 로 못 내보내는 브라우저는 PNG) */
+const PHOTO_DATA_URL = /^data:image\/(jpeg|png|webp);base64,/;
 
 interface Drawable {
   source: CanvasImageSource;
@@ -65,13 +67,59 @@ export async function fileToReceiptPhoto(file: File): Promise<string> {
   const width = image.width * scale;
   const height = image.height * scale;
   context.drawImage(image.source, (canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
-  // 너무 크면 화질을 낮춰 다시 만든다
+  // JPEG 로 만든다. 너무 크면 화질을 낮춰 다시 만든다
+  let lastFormat = '';
   for (const quality of [JPEG_QUALITY, 0.6, 0.4]) {
-    const dataUrl = canvas.toDataURL('image/jpeg', quality);
-    if (!dataUrl.startsWith('data:image/jpeg;base64,')) throw new Error('이 브라우저에서는 사진을 만들지 못했어요. 다른 브라우저로 열어주세요');
-    if (dataUrl.length <= MAX_DATA_URL_LENGTH) return dataUrl;
+    const dataUrl = await canvasToDataUrl(canvas, 'image/jpeg', quality);
+    lastFormat = dataUrl.slice(0, 24);
+    if (PHOTO_DATA_URL.test(dataUrl) && dataUrl.length <= MAX_DATA_URL_LENGTH) return dataUrl;
   }
-  throw new Error('사진이 너무 커요. 다시 찍어주세요');
+  // 일부 브라우저(인앱 브라우저·보호 모드 등)는 JPEG 로 내보내지 못하고 PNG 만 준다. 그때는 크기를 줄여 PNG 로 보낸다
+  for (const width of [360, 240, 160]) {
+    const small = document.createElement('canvas');
+    small.width = width;
+    small.height = Math.round(width / RECEIPT_PHOTO_ASPECT);
+    small.getContext('2d')?.drawImage(canvas, 0, 0, small.width, small.height);
+    const dataUrl = await canvasToDataUrl(small, 'image/png', 1);
+    lastFormat = dataUrl.slice(0, 24);
+    if (PHOTO_DATA_URL.test(dataUrl) && dataUrl.length <= MAX_DATA_URL_LENGTH) return dataUrl;
+  }
+  throw new Error(`이 브라우저에서는 사진을 만들지 못했어요. 다른 브라우저(사파리·크롬)로 열어주세요 (${lastFormat || '빈 값'})`);
+}
+
+/** 캔버스를 data URL 로 바꾼다. toBlob 을 먼저 쓰고(메모리를 덜 쓴다), 안 되면 toDataURL 을 쓴다 */
+function canvasToDataUrl(canvas: HTMLCanvasElement, type: string, quality: number): Promise<string> {
+  return new Promise((resolve) => {
+    const fallback = (): void => {
+      try {
+        resolve(canvas.toDataURL(type, quality));
+      } catch {
+        resolve('');
+      }
+    };
+    if (typeof canvas.toBlob !== 'function' || typeof FileReader === 'undefined') {
+      fallback();
+      return;
+    }
+    try {
+      canvas.toBlob(
+        (blob) => {
+          if (!blob || blob.size === 0) {
+            fallback();
+            return;
+          }
+          const reader = new FileReader();
+          reader.onload = () => (typeof reader.result === 'string' ? resolve(reader.result) : fallback());
+          reader.onerror = fallback;
+          reader.readAsDataURL(blob);
+        },
+        type,
+        quality,
+      );
+    } catch {
+      fallback();
+    }
+  });
 }
 
 /** JPEG data URL → 캔버스 (인쇄 화면에서 영수증에 넣을 때 쓴다) */
