@@ -46,7 +46,7 @@
 - 다른 폰으로 사진 보내기: PC 로 검사한 손님은 결과 화면의 QR(src/utils/qr.ts 가 직접 만든다. node scripts/test-qr.mjs)을 폰으로 찍어 match-photo 화면에서 로그인 없이 사진을 올린다. QR 주소의 표(match_photo_tokens)는 30분만 쓸 수 있고, 이 화면용 RPC 2개만 anon 에게 열려 있다
 - 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
 - 알레르기·입맛(맛 선택+비율) 수정은 RPC(update_my_allergens, update_my_tastes)가 한 트랜잭션으로 교체 저장한다. 지역·닉네임은 profiles 의 해당 컬럼만 update 한다
-- 가게 추가: 목록에 없는 개인 식당을 사용자가 직접 넣는다(가게 1개 = 브랜드 1개, brands.created_by). 메뉴의 알레르기·맛은 Edge Function(supabase/functions/add-store)이 Claude API 로 메뉴 이름에서 추정하고, RPC(add_user_store)가 언제나 estimated 또는 unknown 으로 저장한다. API 키는 Supabase 의 Edge Function 비밀값 ANTHROPIC_API_KEY 에만 둔다(저장소·브라우저 금지). 하루 한도는 functions.sql 의 calc_setting 에 있다
+- 가게 추가: 목록에 없는 개인 식당을 사용자가 직접 넣는다(가게 1개 = 브랜드 1개, brands.created_by). 메뉴의 알레르기·맛은 Edge Function(supabase/functions/add-store)이 Claude API 로 메뉴 이름에서 추정하고, RPC(add_user_store)가 언제나 estimated 또는 unknown 으로 저장한다. API 키는 Supabase 의 Edge Function 비밀값 ANTHROPIC_API_KEY 에만 둔다(저장소·브라우저 금지). 가게를 추가한 사람은 가게 상세의 "메뉴 추가하기"로 메뉴를 더 넣을 수 있다(add_user_store_menus, 한 가게 30개까지). 하루 한도는 functions.sql 의 calc_setting 에 있다
 - 평가로 입맛 자동 보정: 취향 일치도·입맛 유형·마이페이지 맛 비율은 고른 비율(user_taste_preferences)에 평가로 본 입맛을 섞은 "지금 입맛"(calc_taste_profile)으로 계산한다. 평가 1개마다 7%, 최대 70% 섞는다. 저장하지 않고 조회할 때 계산하며, 입맛 수정 화면은 고른 비율만 다룬다
 
 ## 디자인 규칙
