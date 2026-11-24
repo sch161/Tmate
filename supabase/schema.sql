@@ -97,6 +97,7 @@ create table brands (
                        check (research_status in ('pending', 'running', 'done', 'failed')),
   researched_at        timestamptz,
   research_error       text,
+  created_by           uuid references profiles (id) on delete set null,  -- 사용자가 추가한 가게면 추가한 사람 (공공데이터·조사 브랜드는 null)
   created_at           timestamptz not null default now()
 );
 -- 프랜차이즈 이름은 중복 불가 (개인 식당은 같은 이름이 여러 곳일 수 있다)
@@ -351,3 +352,17 @@ alter table match_room_foods     enable row level security;
 alter table match_room_members   enable row level security;
 alter table match_answers        enable row level security;
 alter table match_food_answers   enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 11. 가게 추가 (사용자가 직접 추가하는 개인 식당)
+--   가게·메뉴는 brands(created_by)·restaurants·menus 에 들어간다. 이 표는 AI 추정 요청 횟수를 세는 용도다(하루 한도).
+--   클라이언트에 직접 열지 않는다. functions.sql 의 RPC(begin_store_add)로만 쓴다.
+-- ---------------------------------------------------------------------
+create table if not exists store_add_attempts (
+  id          bigint generated always as identity primary key,
+  user_id     uuid not null references profiles (id) on delete cascade,
+  created_at  timestamptz not null default now()
+);
+create index if not exists store_add_attempts_user_idx on store_add_attempts (user_id, created_at);
+
+alter table store_add_attempts enable row level security;
