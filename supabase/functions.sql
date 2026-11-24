@@ -2365,10 +2365,10 @@ begin
   if (select count(*) from public.match_room_members m where m.room_id = v_room and m.completed_at is not null) < 2 then
     raise exception '두 사람 모두 검사를 마쳐야 영수증을 뽑을 수 있어요.';
   end if;
-  if p_photo is null or left(p_photo, 23) <> 'data:image/jpeg;base64,' then
+  if p_photo is null or p_photo !~ '^data:image/(jpeg|png|webp);base64,' then
     raise exception '사진 형식을 읽지 못했어요. 다시 찍어주세요. (형식: %)', left(coalesce(p_photo, '없음'), 30);
   end if;
-  if char_length(p_photo) > 200000 then
+  if char_length(p_photo) > 400000 then
     raise exception '사진이 너무 커요. 다시 찍어주세요. (%자)', char_length(p_photo);
   end if;
 
@@ -2637,10 +2637,10 @@ declare
   v_room bigint := public.calc_match_photo_token_room(p_token);
   v_by uuid;
 begin
-  if p_photo is null or left(p_photo, 23) <> 'data:image/jpeg;base64,' then
+  if p_photo is null or p_photo !~ '^data:image/(jpeg|png|webp);base64,' then
     raise exception '사진 형식을 읽지 못했어요. 다시 찍어주세요. (형식: %)', left(coalesce(p_photo, '없음'), 30);
   end if;
-  if char_length(p_photo) > 200000 then
+  if char_length(p_photo) > 400000 then
     raise exception '사진이 너무 커요. 다시 찍어주세요. (%자)', char_length(p_photo);
   end if;
   select t.created_by into v_by from public.match_photo_tokens t where t.token = p_token;
