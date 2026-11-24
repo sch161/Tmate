@@ -255,3 +255,9 @@ revoke all on match_questions, match_foods, match_rooms, match_room_foods, match
 --    클라이언트에 직접 열지 않는다. functions.sql 의 RPC(begin_store_add)로만 쓴다.
 -- ---------------------------------------------------------------------
 revoke all on store_add_attempts from anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 궁합 영수증 사진·진행자 번호 (match_print_requests, match_print_settings)
+--    클라이언트에 직접 열지 않는다. functions.sql 의 RPC 로만 읽고 쓴다.
+-- ---------------------------------------------------------------------
+revoke all on match_print_requests, match_print_settings from anon, authenticated;
