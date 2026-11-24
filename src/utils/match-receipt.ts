@@ -2,6 +2,7 @@
 // 맛궁합 영수증: 미니 감열 프린터(가로 384점)에 찍을 그림을 캔버스에 그리고, 인쇄될 1비트 점으로 바꾼다.
 // 감열 프린터는 검정 점만 찍으므로 흰 바탕에 검정으로만 그린다. 사진 영역만 디더링하고 글자는 또렷하게 둔다.
 import { MXW01_WIDTH, rgbaToMono } from './mxw01-protocol';
+import { getMascotUrl, type MascotName } from './mascots';
 import { getMatchTier, type MatchResultCard } from './match-results';
 
 export const RECEIPT_FOOTER = '디지털미식연구반';
@@ -130,6 +131,18 @@ function tonePhoto(image: ImageData, gamma: number): void {
   }
 }
 
+const MASCOT_SIZE = 220; // 캐릭터 그림이 들어갈 정사각형 한 변 (점)
+
+/** 캐릭터 그림을 불러온다. 못 불러오면 null (캐릭터 없이 그린다) */
+function loadMascot(name: MascotName): Promise<HTMLImageElement | null> {
+  return new Promise((resolve) => {
+    const image = new Image();
+    image.onload = () => resolve(image.naturalWidth > 0 ? image : null);
+    image.onerror = () => resolve(null);
+    image.src = getMascotUrl(name);
+  });
+}
+
 /** 영수증을 그리고 인쇄될 점으로 바꾼다 */
 export async function renderMatchReceipt(input: ReceiptInput): Promise<ReceiptImage> {
   const family = fontFamily();
@@ -161,7 +174,7 @@ export async function renderMatchReceipt(input: ReceiptInput): Promise<ReceiptIm
     }
   };
   const rule = (): void => {
-    y += 10;
+    y += 20;
     ctx.save();
     ctx.lineWidth = 2;
     ctx.setLineDash([8, 6]);
@@ -170,30 +183,26 @@ export async function renderMatchReceipt(input: ReceiptInput): Promise<ReceiptIm
     ctx.lineTo(WIDTH - MARGIN, y + 1);
     ctx.stroke();
     ctx.restore();
-    y += 16;
+    y += 26;
   };
 
   // 제목
-  paragraph('T:MATE', 700, 52, 4);
+  paragraph('T:MATE', 700, 52, 10);
   paragraph('친구랑 맛궁합 검사', 500, 22);
   rule();
 
-  // 사진 (가운데를 4:3 으로 잘라 넣는다)
-  let photoRows: { from: number; to: number } | undefined;
-  if (input.photo && input.photo.width > 0 && input.photo.height > 0) {
-    const source = input.photo;
-    const sourceAspect = source.width / source.height;
-    const cropWidth = sourceAspect > RECEIPT_PHOTO_ASPECT ? source.height * RECEIPT_PHOTO_ASPECT : source.width;
-    const cropHeight = sourceAspect > RECEIPT_PHOTO_ASPECT ? source.height : source.width / RECEIPT_PHOTO_ASPECT;
+  // 결과에 맞는 캐릭터 (흰 바탕에 전체가 보이게)
+  const tier = getMatchTier(input.score);
+  const ditherRows: { from: number; to: number }[] = [];
+  const mascot = await loadMascot(tier.mascot);
+  if (mascot) {
+    const scale = Math.min(MASCOT_SIZE / mascot.naturalWidth, MASCOT_SIZE / mascot.naturalHeight);
+    const width = mascot.naturalWidth * scale;
+    const height = mascot.naturalHeight * scale;
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(source, (source.width - cropWidth) / 2, (source.height - cropHeight) / 2, cropWidth, cropHeight, MARGIN, y, INNER, PHOTO_HEIGHT);
-    const image = ctx.getImageData(MARGIN, y, INNER, PHOTO_HEIGHT);
-    tonePhoto(image, input.photoGamma ?? 1);
-    ctx.putImageData(image, MARGIN, y);
-    photoRows = { from: y, to: y + PHOTO_HEIGHT };
-    y += PHOTO_HEIGHT;
-    // 사진에는 테두리를 그리지 않는다 (흰 바탕에 줄여 넣은 사진이 네모 칸에 갇혀 보이지 않게)
-    y += 18;
+    ctx.drawImage(mascot, center - width / 2, y, width, height);
+    ditherRows.push({ from: y, to: Math.ceil(y + height) });
+    y = Math.ceil(y + height) + 28;
   }
 
   // 닉네임 ♥ 닉네임: 한 줄에 들어가면 한 줄, 길면 세 줄(이름 / ♥ / 이름)
@@ -210,42 +219,58 @@ export async function renderMatchReceipt(input: ReceiptInput): Promise<ReceiptIm
     drawHeart(ctx, left + widthA + heartSpace / 2, y + 4, HEART);
     ctx.fillText(input.nicknameB, left + widthA + heartSpace, y);
     ctx.textAlign = 'center';
-    y += NAME_SIZE + 10;
+    y += NAME_SIZE + 22;
   } else {
     ctx.fillText(ellipsize(ctx, input.nicknameA, INNER), center, y);
-    y += NAME_SIZE + 8;
+    y += NAME_SIZE + 12;
     drawHeart(ctx, center, y, HEART);
-    y += HEART + 8;
+    y += HEART + 12;
     ctx.fillText(ellipsize(ctx, input.nicknameB, INNER), center, y);
-    y += NAME_SIZE + 10;
+    y += NAME_SIZE + 22;
   }
 
   // 점수와 결과 문구
-  const tier = getMatchTier(input.score);
-  paragraph(`${input.score}%`, 700, 112, 8);
-  paragraph(tier.title, 700, 28, 8);
-  paragraph(tier.desc, 400, 22, 6);
+  paragraph(`${input.score}%`, 700, 112, 22);
+  paragraph(tier.title, 700, 28, 14);
+  paragraph(tier.desc, 400, 22, 10);
 
   // 음식 카드
   const cards = input.cards.slice(0, RECEIPT_MAX_CARDS);
   for (const card of cards) {
     rule();
-    paragraph(card.label, 500, 20, 6);
-    paragraph(card.foodName, 700, 30, 8);
+    paragraph(card.label, 500, 20, 12);
+    paragraph(card.foodName, 700, 30, 14);
     // "A 5점 · B 4점" 이 한 줄에 안 들어가면 사람별로 줄을 나눈다
     setFont(400, 20);
     const details = ctx.measureText(card.detail).width <= INNER ? [card.detail] : card.detail.split(' · ');
-    for (const detail of details) paragraph(detail, 400, 20, 4);
+    for (const detail of details) paragraph(detail, 400, 20, 8);
   }
   rule();
 
-  // 날짜와 사이트 주소
-  paragraph(new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(input.date), 400, 20, 8);
+  // 사진 (맨 아래. 흰 바탕에 줄여 넣은 4:3 사진이 온다)
+  if (input.photo && input.photo.width > 0 && input.photo.height > 0) {
+    const source = input.photo;
+    const sourceAspect = source.width / source.height;
+    const cropWidth = sourceAspect > RECEIPT_PHOTO_ASPECT ? source.height * RECEIPT_PHOTO_ASPECT : source.width;
+    const cropHeight = sourceAspect > RECEIPT_PHOTO_ASPECT ? source.height : source.width / RECEIPT_PHOTO_ASPECT;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(source, (source.width - cropWidth) / 2, (source.height - cropHeight) / 2, cropWidth, cropHeight, MARGIN, y, INNER, PHOTO_HEIGHT);
+    const image = ctx.getImageData(MARGIN, y, INNER, PHOTO_HEIGHT);
+    tonePhoto(image, input.photoGamma ?? 1);
+    ctx.putImageData(image, MARGIN, y);
+    ditherRows.push({ from: y, to: y + PHOTO_HEIGHT });
+    y += PHOTO_HEIGHT;
+    // 사진에는 테두리를 그리지 않는다 (흰 바탕에 줄여 넣은 사진이 네모 칸에 갇혀 보이지 않게)
+    y += 32;
+  }
+
+  // 날짜와 맨 아래 문구
+  paragraph(new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(input.date), 400, 20, 14);
   paragraph(RECEIPT_FOOTER, 700, 24, 0);
   const height = Math.min(MAX_HEIGHT, y + BOTTOM_FEED);
 
   const rgba = ctx.getImageData(0, 0, WIDTH, height).data;
-  // 사진이 없으면 디더링할 곳이 없다 → 전부 threshold
-  const mono = photoRows ? rgbaToMono(rgba, WIDTH, height, { dither: 'floyd-steinberg', ditherRows: photoRows }) : rgbaToMono(rgba, WIDTH, height, { dither: 'threshold' });
+  // 캐릭터·사진 줄만 디더링하고 글자·선은 threshold 로 또렷하게 둔다
+  const mono = ditherRows.length > 0 ? rgbaToMono(rgba, WIDTH, height, { dither: 'floyd-steinberg', ditherRows }) : rgbaToMono(rgba, WIDTH, height, { dither: 'threshold' });
   return { width: WIDTH, height, mono };
 }
