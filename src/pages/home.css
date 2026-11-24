@@ -90,6 +90,11 @@
   display: none;
 }
 
+/* 입맛 변경하기 링크가 숨겨진 검색 중에는 칩 줄과 첫 카드 사이에 섹션 간격만큼 여백을 둔다 */
+.home--searching .home__categories {
+  margin-bottom: var(--space-5);
+}
+
 .home__title {
   margin-bottom: var(--space-3);
   font-size: var(--font-size-18);
