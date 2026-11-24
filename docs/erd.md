@@ -78,6 +78,8 @@ erDiagram
         text region "구 단위 필터"
         text phone
         text image_url
+        float lat "위도, 공공데이터 지점만"
+        float lng "경도"
     }
     menus {
         bigint id PK
@@ -150,6 +152,7 @@ erDiagram
 
 ## RPC로 계산하는 값 (functions.sql)
 
+- `restaurants.lat`·`lng`(WGS84)는 공공데이터 지점에만 있다. `get_restaurants` 에 내 위치(`p_lat`·`p_lng`)를 주면 가까운 순으로 정렬하고 `distance_m` 을 돌려준다 (내 위치는 저장하지 않는다)
 - 주변 맛집 목록(`get_restaurants`)은 브랜드마다 한 곳씩 먼저(일치도 높은 브랜드부터) 보여주고 그다음 두 번째 지점들을 잇는다 (같은 브랜드 지점이 줄지어 나오지 않게)
 - 메뉴·가게 취향 일치도(브랜드 메뉴 기준), 추천 이유 문장, 오늘의 추천 메뉴(브랜드당 한 번, 링크용 대표 지점 반환)
 - 입맛 유형 이름 (지금 입맛의 비율 상위 2개 조합, 예: 매콤달콤)

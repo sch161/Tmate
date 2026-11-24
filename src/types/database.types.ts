@@ -590,6 +590,8 @@ export type Database = {
           external_id: string | null
           id: number
           image_url: string | null
+          lat: number | null
+          lng: number | null
           name: string
           phone: string | null
           region: string
@@ -603,6 +605,8 @@ export type Database = {
           external_id?: string | null
           id?: never
           image_url?: string | null
+          lat?: number | null
+          lng?: number | null
           name: string
           phone?: string | null
           region: string
@@ -616,6 +620,8 @@ export type Database = {
           external_id?: string | null
           id?: never
           image_url?: string | null
+          lat?: number | null
+          lng?: number | null
           name?: string
           phone?: string | null
           region?: string
@@ -1306,7 +1312,9 @@ export type Database = {
       get_restaurants: {
         Args: {
           p_category_id?: number
+          p_lat?: number
           p_limit?: number
+          p_lng?: number
           p_query?: string
           p_region: string
         }
@@ -1315,6 +1323,7 @@ export type Database = {
           brand_id: number
           brand_name: string
           category_name: string
+          distance_m: number
           has_official_allergen: boolean
           image_url: string
           is_franchise: boolean

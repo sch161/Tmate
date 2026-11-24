@@ -26,6 +26,8 @@ export interface RestaurantSummary {
   hasOfficialAllergen: boolean;
   /** 음식 카테고리 이름(한식·중식·일식·양식). 기본 이미지 선택에 쓴다. 없으면 null */
   categoryName: string | null;
+  /** 내 위치에서의 직선 거리(m). 위치를 보내지 않았거나 가게 좌표가 없으면 null */
+  distanceM: number | null;
 }
 
 /** 오늘의 추천 메뉴 한 건. */
@@ -49,6 +51,8 @@ export interface GetRestaurantsParams {
   region: string;
   categoryId?: number;
   query?: string;
+  /** 내 위치(위도·경도). 주면 가까운 순으로 정렬한다. 서버에 저장하지 않는다 */
+  location?: { lat: number; lng: number };
 }
 
 // 생성 타입은 null 을 표현하지 않으므로 실제 응답에 맞춰 느슨하게 읽는다
@@ -77,6 +81,7 @@ function toRestaurant(row: RestaurantRow): RestaurantSummary {
     isFranchise: Boolean(row.is_franchise),
     hasOfficialAllergen: Boolean(row.has_official_allergen),
     categoryName: categoryOrNull(row.category_name),
+    distanceM: numOrNull(row.distance_m),
   };
 }
 
@@ -102,6 +107,7 @@ export async function getRestaurants(params: GetRestaurantsParams): Promise<Rest
       p_region: params.region,
       ...(params.categoryId !== undefined ? { p_category_id: params.categoryId } : {}),
       ...(params.query ? { p_query: params.query } : {}),
+      ...(params.location ? { p_lat: params.location.lat, p_lng: params.location.lng } : {}),
     });
     if (error) throw error;
     return (data ?? []).map(toRestaurant);

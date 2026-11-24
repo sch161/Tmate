@@ -115,6 +115,8 @@ create table restaurants (
   region       text not null,                      -- 구 단위 필터용. 예: '서울시 구로구'
   phone        text,
   image_url    text,
+  lat          double precision,                   -- 위도(WGS84). 공공데이터 지점만 있다. 가까운 순 정렬용
+  lng          double precision,                   -- 경도(WGS84)
   created_at   timestamptz not null default now()
 );
 create index restaurants_region_idx on restaurants (region);

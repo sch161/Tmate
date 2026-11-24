@@ -550,6 +550,7 @@ revoke all on function public.calc_taste_type(uuid)                 from public,
 -- 반환 컬럼이 바뀐 함수 정리 (브랜드 구조 전환). 재실행해도 안전하다 — 아래에서 모두 다시 만들고 권한도 다시 준다.
 -- =====================================================================
 drop function if exists public.get_restaurants(text, int, text, int);
+drop function if exists public.get_restaurants(text, int, text, int, double precision, double precision);
 drop function if exists public.get_recommended_menus(text, int);
 drop function if exists public.get_restaurant_detail(bigint);
 drop function if exists public.get_restaurant_menus(bigint);
@@ -743,11 +744,15 @@ $$;
 -- 가게 목록: 지역(필수)·카테고리·검색어(지점명·브랜드명·메뉴명) 필터, 취향 일치도 내림차순
 --   평점·일치도·맛 태그는 소속 브랜드 기준이다 (같은 브랜드의 지점은 같은 값). 계산은 지점이 아니라 브랜드 단위로 한 번만 한다.
 --   카테고리 필터는 brands.category_id. has_official_allergen: 브랜드에 verified/official_extract 메뉴가 있는지
+--   p_lat·p_lng(내 위치, WGS84)를 주면 가까운 순으로 정렬하고 distance_m(직선 거리, m)을 돌려준다. 좌표가 없는 가게(사용자가 추가한 가게)는 뒤에 온다.
+--   내 위치는 정렬에만 쓰고 저장하지 않는다.
 create or replace function public.get_restaurants(
   p_region text,
   p_category_id int default null,
   p_query text default null,
-  p_limit int default 20
+  p_limit int default 20,
+  p_lat double precision default null,
+  p_lng double precision default null
 )
 returns table (
   restaurant_id bigint,
@@ -763,7 +768,8 @@ returns table (
   brand_name text,
   is_franchise boolean,
   has_official_allergen boolean,
-  category_name text
+  category_name text,
+  distance_m int
 )
 language plpgsql
 stable
@@ -775,6 +781,7 @@ declare
   v_uid uuid := auth.uid();
   v_pattern text;
   v_limit int;
+  v_near boolean := p_lat is not null and p_lng is not null and p_lat between -90 and 90 and p_lng between -180 and 180;
 begin
   if v_uid is null then
     raise exception '로그인이 필요합니다.';
@@ -797,7 +804,14 @@ begin
            b.name as brand_name,
            b.is_franchise as is_franchise,
            b.image_url as brand_image_url,
-           fc.name as category_name
+           fc.name as category_name,
+           -- 하버사인 공식으로 구한 직선 거리(m)
+           case when v_near and r.lat is not null and r.lng is not null then
+             round(6371000 * 2 * asin(least(1, sqrt(
+               power(sin(radians(r.lat - p_lat) / 2), 2)
+               + cos(radians(p_lat)) * cos(radians(r.lat)) * power(sin(radians(r.lng - p_lng) / 2), 2)
+             ))))::int
+           end as distance_m
     from public.restaurants r
     join public.brands b on b.id = r.brand_id
     left join public.food_categories fc on fc.id = b.category_id
@@ -846,7 +860,7 @@ begin
   )
   select x.restaurant_id, x.name, x.region, x.image_url, x.avg_rating, x.review_count,
          x.taste_tags, x.is_saved, x.match_percent,
-         x.brand_id, x.brand_name, x.is_franchise, x.has_official_allergen, x.category_name
+         x.brand_id, x.brand_name, x.is_franchise, x.has_official_allergen, x.category_name, x.distance_m
   from (
     select bb.restaurant_id as restaurant_id,
            bb.name as name,
@@ -865,6 +879,7 @@ begin
            bb.is_franchise as is_franchise,
            bi.has_official_allergen as has_official_allergen,
            bb.category_name as category_name,
+           bb.distance_m as distance_m,
            -- 같은 브랜드 지점이 줄지어 나오지 않게, 브랜드 안에서의 순번을 매긴다
            row_number() over (partition by bb.brand_id order by bb.restaurant_id) as brand_rank
     from base bb
@@ -872,7 +887,8 @@ begin
     left join brand_match bm on bm.brand_id = bb.brand_id
   ) x
   -- 브랜드마다 한 곳씩 먼저(일치도 높은 브랜드부터), 그다음 두 번째 지점들 … 순서로 섞어 다양하게 보여준다
-  order by x.brand_rank, x.match_percent desc, x.avg_rating desc nulls last, x.restaurant_id
+  -- 내 위치를 받았으면 가까운 순이 먼저다 (위치가 없으면 distance_m 이 모두 null 이라 아래 순서만 남는다)
+  order by x.distance_m nulls last, x.brand_rank, x.match_percent desc, x.avg_rating desc nulls last, x.restaurant_id
   limit v_limit;
 end;
 $$;
@@ -1485,7 +1501,7 @@ $$;
 
 -- 화면용 RPC: 로그인 사용자만 실행
 revoke all on function public.save_onboarding(text, jsonb, int[])              from public, anon;
-revoke all on function public.get_restaurants(text, int, text, int)            from public, anon;
+revoke all on function public.get_restaurants(text, int, text, int, double precision, double precision) from public, anon;
 revoke all on function public.get_recommended_menus(text, int)                 from public, anon;
 revoke all on function public.get_restaurant_detail(bigint)                    from public, anon;
 revoke all on function public.get_restaurant_menus(bigint)                     from public, anon;
@@ -1501,7 +1517,7 @@ revoke all on function public.update_my_allergens(int[])                       f
 revoke all on function public.update_my_tastes(int[], int[])                      from public, anon;
 
 grant execute on function public.save_onboarding(text, jsonb, int[])           to authenticated;
-grant execute on function public.get_restaurants(text, int, text, int)         to authenticated;
+grant execute on function public.get_restaurants(text, int, text, int, double precision, double precision) to authenticated;
 grant execute on function public.get_recommended_menus(text, int)              to authenticated;
 grant execute on function public.get_restaurant_detail(bigint)                 to authenticated;
 grant execute on function public.get_restaurant_menus(bigint)                  to authenticated;
