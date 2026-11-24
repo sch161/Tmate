@@ -86,5 +86,343 @@
     ],
     "allergen_table_is_set_based": false,
     "result_key": "파파존스"
+  },
+  {
+    "name": "본죽",
+    "category": "한식",
+    "name_patterns": [
+      "본죽"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "bonif.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "본죽"
+  },
+  {
+    "name": "김가네",
+    "category": "한식",
+    "name_patterns": [
+      "김가네김밥"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "gimgane.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "김가네"
+  },
+  {
+    "name": "한솥도시락",
+    "category": "한식",
+    "name_patterns": [
+      "한솥도시락"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "hsd.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "한솥도시락"
+  },
+  {
+    "name": "동대문엽기떡볶이",
+    "category": "한식",
+    "name_patterns": [
+      "엽기떡볶이"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "yupdduk.com"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "동대문엽기떡볶이"
+  },
+  {
+    "name": "원할머니보쌈족발",
+    "category": "한식",
+    "name_patterns": [
+      "원할머니보쌈"
+    ],
+    "exclude_patterns": [
+      "박가부대"
+    ],
+    "official_domains": [
+      "bossam.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "원할머니보쌈족발"
+  },
+  {
+    "name": "명륜진사갈비",
+    "category": "한식",
+    "name_patterns": [
+      "명륜진사갈비"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "mrjinsa.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "명륜진사갈비"
+  },
+  {
+    "name": "신전떡볶이",
+    "category": "한식",
+    "name_patterns": [
+      "신전떡볶이"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "sinjeon.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "신전떡볶이"
+  },
+  {
+    "name": "유가네닭갈비",
+    "category": "한식",
+    "name_patterns": [
+      "유가네닭갈비"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "yoogane.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "유가네닭갈비"
+  },
+  {
+    "name": "홍콩반점0410",
+    "category": "중식",
+    "name_patterns": [
+      "홍콩반점"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "theborn.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "홍콩반점0410"
+  },
+  {
+    "name": "역전우동0410",
+    "category": "일식",
+    "name_patterns": [
+      "역전우동"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "theborn.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "역전우동0410"
+  },
+  {
+    "name": "아비꼬",
+    "category": "일식",
+    "name_patterns": [
+      "아비꼬"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "abiko.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "아비꼬"
+  },
+  {
+    "name": "코코이찌방야",
+    "category": "일식",
+    "name_patterns": [
+      "코코이찌방야"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "cocoichibanya.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "코코이찌방야"
+  },
+  {
+    "name": "미소야",
+    "category": "일식",
+    "name_patterns": [
+      "미소야"
+    ],
+    "exclude_patterns": [
+      "회정식"
+    ],
+    "official_domains": [
+      "misoya.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "미소야"
+  },
+  {
+    "name": "스타벅스",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "스타벅스"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "starbucks.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "스타벅스"
+  },
+  {
+    "name": "투썸플레이스",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "투썸플레이스"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "twosome.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "투썸플레이스"
+  },
+  {
+    "name": "이디야커피",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "이디야"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "ediya.com"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "이디야커피"
+  },
+  {
+    "name": "메가MGC커피",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "메가엠지씨",
+      "메가커피",
+      "메가MGC"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "mega-mgccoffee.com"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "메가MGC커피"
+  },
+  {
+    "name": "컴포즈커피",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "컴포즈커피"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "composecoffee.com"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "컴포즈커피"
+  },
+  {
+    "name": "빽다방",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "빽다방"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "paikdabang.com"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "빽다방"
+  },
+  {
+    "name": "파리바게뜨",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "파리바게뜨",
+      "파리바게트"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "paris.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "파리바게뜨"
+  },
+  {
+    "name": "뚜레쥬르",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "뚜레쥬르"
+    ],
+    "exclude_patterns": [
+      "시카고"
+    ],
+    "official_domains": [
+      "tlj.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "뚜레쥬르"
+  },
+  {
+    "name": "배스킨라빈스",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "배스킨라빈스"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "baskinrobbins.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "배스킨라빈스"
+  },
+  {
+    "name": "던킨",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "던킨"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "dunkindonuts.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "던킨"
+  },
+  {
+    "name": "설빙",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "설빙"
+    ],
+    "exclude_patterns": [
+      "설빙고"
+    ],
+    "official_domains": [
+      "sulbing.com"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "설빙"
+  },
+  {
+    "name": "공차",
+    "category": "카페·디저트",
+    "name_patterns": [
+      "공차"
+    ],
+    "exclude_patterns": [
+      "공차코리아"
+    ],
+    "official_domains": [
+      "gong-cha.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "공차"
   }
 ]
