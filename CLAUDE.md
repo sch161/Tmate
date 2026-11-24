@@ -42,7 +42,7 @@
 - 하단 네비게이션은 홈 / 저장 / 마이페이지 3개다
 - 친구랑 궁합 검사(행사 체험용): 방 번호(4자리)로 친구와 묶고(한 방에 2명까지), 둘 중 하나 문항 10개 + 방마다 무작위 음식 5개에 답한다. 궁합(%)은 같은 답을 고른 문항 비율이고 음식 답은 결과 카드에만 쓴다. 문항·음식은 supabase/seed_match.sql, 결과 문구는 src/utils/match-results.ts 에 있다
 - 맛궁합 영수증 인쇄(부스 진행자용): 맥북 Chrome 에서 MXW01 미니 감열 프린터(가로 384점, BLE)로 사진과 궁합 결과를 뽑는다. 바이트를 만드는 순수 함수는 src/utils/mxw01-protocol.ts(node scripts/test-mxw01.mjs 로 테스트), Web Bluetooth 전송은 src/utils/mxw01-printer.ts, 영수증 그림은 src/utils/match-receipt.ts 에 있다. 진행자는 방 멤버가 아니므로 get_match_room_pairs · get_match_pair_foods(migrations/004_match_print.sql)로 읽는다. 실제 프린터 통신은 여기서 확인할 수 없으므로 프로토콜을 바꾸면 docs/match-print.md 의 절차로 실제 기기에서 다시 확인한다
-- 궁합 영수증 사진 올리기: 손님이 결과 화면에서 폰으로 찍은 사진(src/utils/match-photo.ts 가 480×360 JPEG 로 줄인다)을 request_match_print 로 올리면 인쇄 화면의 "폰으로 올라온 사진" 대기 목록에 뜬다. 진행자용 RPC(get_match_print_queue 등)는 진행자 번호(match_print_settings.passcode, DB 에만 둔다)가 맞아야 하고, 사진은 하루 뒤 지운다
+- 궁합 영수증 사진 올리기: 손님이 결과 화면에서 폰으로 찍은 사진(src/utils/match-photo.ts 가 자르지 않고 흰 바탕의 480×360 JPEG 안에 줄여 넣는다)을 request_match_print 로 올리면 인쇄 화면의 "폰으로 올라온 사진" 대기 목록에 뜬다. 진행자용 RPC(get_match_print_queue 등)는 진행자 번호(match_print_settings.passcode, DB 에만 둔다)가 맞아야 하고, 사진은 하루 뒤 지운다
 - 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
 - 알레르기·입맛(맛 선택+비율) 수정은 RPC(update_my_allergens, update_my_tastes)가 한 트랜잭션으로 교체 저장한다. 지역·닉네임은 profiles 의 해당 컬럼만 update 한다
 - 가게 추가: 목록에 없는 개인 식당을 사용자가 직접 넣는다(가게 1개 = 브랜드 1개, brands.created_by). 메뉴의 알레르기·맛은 Edge Function(supabase/functions/add-store)이 Claude API 로 메뉴 이름에서 추정하고, RPC(add_user_store)가 언제나 estimated 또는 unknown 으로 저장한다. API 키는 Supabase 의 Edge Function 비밀값 ANTHROPIC_API_KEY 에만 둔다(저장소·브라우저 금지). 하루 한도는 functions.sql 의 calc_setting 에 있다
