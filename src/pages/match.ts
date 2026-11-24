@@ -15,6 +15,7 @@ import {
   type MatchMember,
   type MatchQuestion,
   requestMatchPrint,
+  getMatchPairChoices,
 } from '../api/match';
 import starIcon from '../assets/icons/star.svg';
 import { PATHS } from '../lib/constants';
@@ -23,7 +24,7 @@ import { el, qs, showToast } from '../utils/dom';
 import { createMascot, type MascotName } from '../utils/mascots';
 import { getMatchFoodImage } from '../utils/match-food-images';
 import { fileToReceiptPhoto } from '../utils/match-photo';
-import { buildResultCards, getMatchTier } from '../utils/match-results';
+import { buildChoiceSummary, buildResultCards, getMatchTier } from '../utils/match-results';
 import { renderError, renderLoading } from '../utils/state-views';
 
 const ROOM_PARAM = 'room';
@@ -405,7 +406,21 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
   backToRoom.addEventListener('click', () => void showRoom(code));
 
   try {
-    const cards = buildResultCards(await getMatchCompare(code, friend.memberNo));
+    const [compare, members] = await Promise.all([getMatchCompare(code, friend.memberNo), getMatchRoom(code)]);
+    // 통한 취향·갈린 취향 (PART 1 문항). 못 불러와도 음식 카드는 보여준다
+    const me = members.find((m) => m.isMe);
+    if (me) {
+      const summary = await getMatchPairChoices(code, me.memberNo, friend.memberNo)
+        .then(buildChoiceSummary)
+        .catch(() => null);
+      if (summary && summary.same.length > 0) {
+        cardList.append(el('article', { class: 'match-result__card' }, el('p', { class: 'match-result__label' }, `둘이 통한 취향 ${summary.same.length}개`), el('p', { class: 'match-result__food text-wrap-ko' }, summary.same.join(' · '))));
+      }
+      if (summary && summary.diff.length > 0) {
+        cardList.append(el('article', { class: 'match-result__card' }, el('p', { class: 'match-result__label' }, '여기서 갈렸어요'), ...summary.diff.map((pair) => el('p', { class: 'match-result__detail text-wrap-ko' }, `나 ${pair.a} · ${friend.nickname} ${pair.b}`))));
+      }
+    }
+    const cards = buildResultCards(compare);
     if (cards.length === 0) cardList.append(el('p', { class: 'match__hint text-wrap-ko' }, '이번 음식에서는 눈에 띄는 공통점이 없었어요. 새 방에서 다시 검사하면 다른 음식이 나와요'));
     for (const card of cards) {
       cardList.append(el('article', { class: 'match-result__card' }, el('p', { class: 'match-result__label' }, card.label), el('p', { class: 'match-result__food' }, card.foodName), el('p', { class: 'match-result__detail' }, card.detail)));
