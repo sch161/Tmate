@@ -1,3 +1,4 @@
+import { validateNickname } from '../api/me';
 import { PASSWORD_MIN_LENGTH, USERNAME_PATTERN } from '../lib/constants';
 import { qs } from './dom';
 
@@ -25,9 +26,10 @@ function setFieldError(input: HTMLInputElement, errorEl: HTMLElement, message: s
 /**
  * 로그인/회원가입 폼 공통 동작: 검증 → 제출 중 버튼 비활성 → 서버 에러 표시.
  * submit 이 성공하면 이동은 호출한 쪽(onSubmit)에서 한다.
+ * 폼에 닉네임 칸(#nickname)이 있으면(회원가입) 그것도 검증해 onSubmit 에 넘긴다. 없으면(로그인) 빈 문자열이다.
  */
 export function bindAuthForm(
-  onSubmit: (username: string, password: string) => Promise<void>,
+  onSubmit: (username: string, password: string, nickname: string) => Promise<void>,
   idleLabel: string,
   busyLabel: string,
 ): void {
@@ -47,6 +49,9 @@ export function bindAuthForm(
 
   username.addEventListener('input', () => setFieldError(username, usernameError, null));
   password.addEventListener('input', () => setFieldError(password, passwordError, null));
+  const nickname = qs<HTMLInputElement>('#nickname');
+  const nicknameError = qs<HTMLElement>('#nickname-error');
+  if (nickname && nicknameError) nickname.addEventListener('input', () => setFieldError(nickname, nicknameError, null));
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -58,12 +63,14 @@ export function bindAuthForm(
     const pwMsg = validatePassword(password.value);
     setFieldError(username, usernameError, nameMsg);
     setFieldError(password, passwordError, pwMsg);
-    if (nameMsg || pwMsg) return;
+    const nickMsg = nickname && nicknameError ? validateNickname(nickname.value) : null;
+    if (nickname && nicknameError) setFieldError(nickname, nicknameError, nickMsg);
+    if (nameMsg || pwMsg || nickMsg) return;
 
     submit.disabled = true;
     submit.textContent = busyLabel;
     try {
-      await onSubmit(name, password.value);
+      await onSubmit(name, password.value, nickname?.value.trim() ?? '');
     } catch (e) {
       showFormError(e instanceof Error ? e.message : '문제가 발생했어요. 잠시 후 다시 시도해주세요');
       submit.disabled = false;
