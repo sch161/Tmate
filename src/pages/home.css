@@ -84,6 +84,12 @@
   margin-top: var(--space-5);
 }
 
+/* 검색 중에는 검색과 무관한 섹션(오늘의 추천 메뉴, 입맛 변경하기)을 숨겨 결과를 검색창 바로 아래에 보여준다 */
+.home--searching .home__recommend,
+.home--searching .home__taste-edit {
+  display: none;
+}
+
 .home__title {
   margin-bottom: var(--space-3);
   font-size: var(--font-size-18);
