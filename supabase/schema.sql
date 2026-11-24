@@ -366,3 +366,26 @@ create table if not exists store_add_attempts (
 create index if not exists store_add_attempts_user_idx on store_add_attempts (user_id, created_at);
 
 alter table store_add_attempts enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 12. 궁합 영수증 사진 올리기 (손님 폰 → 진행자 인쇄 화면)
+--   손님이 결과 화면에서 찍은 사진(가로 480 JPEG 를 data URL 로)과 인쇄 요청을 방마다 1건 둔다. 하루가 지난 요청은 새 요청이 올 때 지운다.
+--   클라이언트에 직접 열지 않는다. functions.sql 의 RPC 로만 읽고 쓴다. 진행자용 RPC 는 진행자 번호가 맞아야 한다.
+-- ---------------------------------------------------------------------
+create table if not exists match_print_requests (
+  id            bigint generated always as identity primary key,
+  room_id       bigint not null unique references match_rooms (id) on delete cascade,
+  requested_by  uuid not null references profiles (id) on delete cascade,
+  photo         text not null check (photo like 'data:image/jpeg;base64,%' and char_length(photo) <= 200000),
+  created_at    timestamptz not null default now(),
+  printed_at    timestamptz
+);
+
+-- 진행자 번호(인쇄 화면에서 한 번 입력). 값은 저장소에 두지 않고 DB 에만 넣는다: insert into match_print_settings (passcode) values ('...');
+create table if not exists match_print_settings (
+  id        boolean primary key default true check (id),
+  passcode  text not null check (char_length(passcode) >= 6)
+);
+
+alter table match_print_requests enable row level security;
+alter table match_print_settings enable row level security;

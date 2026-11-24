@@ -512,3 +512,38 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* 폰으로 올라온 사진 대기 목록 */
+.print-queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.print-queue__title {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-semibold);
+}
+
+.print-queue__form {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.print-queue__input {
+  flex: 1;
+  min-width: 0;
+}
+
+.print-queue__empty {
+  font-size: var(--font-size-14);
+}
+
+.print-queue__empty.is-error {
+  color: var(--color-error);
+}
+
+.print-pair.is-printed {
+  opacity: 0.55;
+}

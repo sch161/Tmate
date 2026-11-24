@@ -113,6 +113,10 @@ npm run dev
 delete from auth.users where email like 'seed%@tmate-app.com';
 ```
 
+### 궁합 영수증 사진 올리기
+
+손님이 결과 화면에서 "사진 찍고 영수증 뽑기"로 폰 사진을 올리면, 진행자의 인쇄 화면(`match-print.html`) "폰으로 올라온 사진" 목록에 뜨고 누르면 바로 미리보기·인쇄로 갑니다. 기존 DB 에는 `supabase/migrations/008_match_photo_upload.sql` 을 실행한 뒤 진행자 번호를 한 번 넣습니다: `insert into match_print_settings (passcode) values ('6자 이상');` 진행자는 인쇄 화면에서 이 번호를 입력합니다.
+
 ### 가게 추가 (AI 알레르기 추정)
 
 목록에 없는 가게와 메뉴를 사용자가 직접 넣는 기능입니다. 기존 DB 에는 `supabase/migrations/007_store_add.sql` 하나를 실행합니다(컬럼·표·함수 추가만). 그다음 Edge Function 을 배포하고 비밀값을 넣습니다.

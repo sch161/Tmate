@@ -212,6 +212,63 @@ export type Database = {
         }
         Relationships: []
       }
+      match_print_requests: {
+        Row: {
+          created_at: string
+          id: number
+          photo: string
+          printed_at: string | null
+          requested_by: string
+          room_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          photo: string
+          printed_at?: string | null
+          requested_by: string
+          room_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          photo?: string
+          printed_at?: string | null
+          requested_by?: string
+          room_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_print_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_print_requests_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: true
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_print_settings: {
+        Row: {
+          id: boolean
+          passcode: string
+        }
+        Insert: {
+          id?: boolean
+          passcode: string
+        }
+        Update: {
+          id?: boolean
+          passcode?: string
+        }
+        Relationships: []
+      }
       match_questions: {
         Row: {
           body: string
@@ -872,6 +929,10 @@ export type Database = {
         Args: { p_menu: number; p_user: string }
         Returns: number
       }
+      calc_match_print_staff: {
+        Args: { p_passcode: string }
+        Returns: undefined
+      }
       calc_match_room_id: { Args: { p_code: string }; Returns: number }
       calc_match_score: {
         Args: { p_a: string; p_b: string; p_room: number }
@@ -964,6 +1025,24 @@ export type Database = {
           b_rating: number
           b_want_try: boolean
           food_name: string
+        }[]
+      }
+      get_match_print_photo: {
+        Args: { p_passcode: string; p_request_id: number }
+        Returns: string
+      }
+      get_match_print_queue: {
+        Args: { p_passcode: string }
+        Returns: {
+          code: string
+          member_no_a: number
+          member_no_b: number
+          nickname_a: string
+          nickname_b: string
+          printed_at: string
+          request_id: number
+          requested_at: string
+          score: number
         }[]
       }
       get_match_questions: {
@@ -1150,6 +1229,14 @@ export type Database = {
       has_batchim: { Args: { p_text: string }; Returns: boolean }
       join_match_room: { Args: { p_code: string }; Returns: undefined }
       josa: { Args: { p_pair: string; p_text: string }; Returns: string }
+      mark_match_printed: {
+        Args: { p_passcode: string; p_request_id: number }
+        Returns: undefined
+      }
+      request_match_print: {
+        Args: { p_code: string; p_photo: string }
+        Returns: undefined
+      }
       save_match_test: {
         Args: { p_choices: Json; p_code: string; p_foods: Json }
         Returns: undefined

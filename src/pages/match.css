@@ -383,3 +383,15 @@
 .match-result__detail {
   font-size: var(--font-size-13);
 }
+
+/* 디자인 대기: 결과 화면의 사진 찍고 영수증 뽑기 (Figma 에 없는 임시 UI) */
+.match-photo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.match-photo__input {
+  display: none;
+}
