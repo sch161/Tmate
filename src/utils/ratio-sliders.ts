@@ -1,10 +1,13 @@
 // 입맛 비율 슬라이더 목록. 합계는 항상 100 이다. 온보딩 비율 화면과 마이페이지 입맛 수정이 같이 쓴다.
 import { el } from './dom';
 import { adjustRatios } from './ratio';
+import { getTasteExample } from './taste-examples';
 
 export interface RatioItem {
   id: number;
   name: string;
+  /** taste_tags.code. 있으면 이름 아래에 예시 음식 한 줄을 보여준다 */
+  code?: string;
 }
 
 /**
@@ -36,9 +39,11 @@ export function createRatioSliders(items: RatioItem[], initial: number[], onChan
     });
     sliders.push(slider);
     outputs.push(output);
-    list.append(
-      el('div', { class: 'ratio-item' }, el('div', { class: 'ratio-item__head' }, el('label', { class: 'ratio-item__name', for: slider.id }, item.name), output), slider),
-    );
+    const row = el('div', { class: 'ratio-item' }, el('div', { class: 'ratio-item__head' }, el('label', { class: 'ratio-item__name', for: slider.id }, item.name), output));
+    const example = getTasteExample(item.code);
+    if (example) row.append(el('p', { class: 'ratio-item__example' }, example));
+    row.append(slider);
+    list.append(row);
   });
   paint();
   onChange(values.slice());
