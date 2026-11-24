@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff7ee" />
+    <link rel="icon" type="image/png" href="/src/assets/images/search-mascot.png" />
+    <title>맛궁합 랭킹 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/match-rank.css" />
+  </head>
+  <body>
+    <!-- 부스의 큰 화면(컴퓨터·TV)용이라 402px 모바일 프레임(.app)을 쓰지 않는다 -->
+    <main class="rank" id="app">
+      <header class="rank__head">
+        <h1 class="rank__title">오늘의 맛궁합 랭킹</h1>
+        <p class="rank__desc">T:MATE 홈의 배너를 누르고 친구와 같은 방에서 검사해 보세요</p>
+      </header>
+      <div class="rank__body" id="body"></div>
+      <p class="rank__updated" id="updated"></p>
+    </main>
+    <script type="module" src="/src/pages/match-rank.ts"></script>
+  </body>
+</html>
