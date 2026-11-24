@@ -14,6 +14,7 @@ import {
   type MatchFoodAnswer,
   type MatchMember,
   type MatchQuestion,
+  requestMatchPrint,
 } from '../api/match';
 import starIcon from '../assets/icons/star.svg';
 import { PATHS } from '../lib/constants';
@@ -21,6 +22,7 @@ import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { createMascot, type MascotName } from '../utils/mascots';
 import { getMatchFoodImage } from '../utils/match-food-images';
+import { fileToReceiptPhoto } from '../utils/match-photo';
 import { buildResultCards, getMatchTier } from '../utils/match-results';
 import { renderError, renderLoading } from '../utils/state-views';
 
@@ -359,6 +361,38 @@ async function showTest(code: string): Promise<void> {
 
 // ---------- 4. 친구와의 자세한 결과 ----------
 
+// 디자인 대기: 사진을 찍어 부스 프린터로 보내는 영역은 Figma 에 없는 임시 UI
+/** 결과 화면의 "사진 찍고 영수증 뽑기": 폰 카메라로 찍은 사진을 올리면 부스의 인쇄 화면 대기 목록에 뜬다 */
+function createPhotoPrint(code: string): HTMLElement {
+  const input = el('input', { class: 'match-photo__input', type: 'file', accept: 'image/*', capture: 'user', 'aria-label': '사진 찍기' });
+  const button = el('button', { class: 'btn-primary', type: 'button' }, '사진 찍고 영수증 뽑기');
+  const status = el('p', { class: 'match__hint text-wrap-ko', role: 'status' }, '둘이 같이 사진을 찍어 올리면 부스에서 영수증으로 뽑아드려요');
+  let busy = false;
+
+  button.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file || busy) return;
+    busy = true;
+    button.disabled = true;
+    button.textContent = '사진 올리는 중...';
+    void (async () => {
+      try {
+        await requestMatchPrint(code, await fileToReceiptPhoto(file));
+        status.textContent = '사진을 보냈어요! 부스에서 영수증을 받아가세요';
+        button.textContent = '사진 다시 찍기';
+      } catch (e) {
+        status.textContent = message(e, '사진을 올리지 못했어요. 다시 시도해주세요');
+        button.textContent = '사진 찍고 영수증 뽑기';
+      }
+      busy = false;
+      button.disabled = false;
+    })();
+  });
+  return el('section', { class: 'match-photo' }, button, input, status);
+}
+
 async function showDetail(code: string, friend: MatchMember): Promise<void> {
   if (!body || friend.score === null) return;
   stopPolling();
@@ -367,7 +401,7 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
 
   const tier = getMatchTier(friend.score);
   const cardList = el('div', { class: 'match-result__cards' });
-  const backToRoom = el('button', { class: 'btn-primary', type: 'button' }, '방으로 돌아가기');
+  const backToRoom = el('button', { class: 'match__link', type: 'button' }, '방으로 돌아가기');
   backToRoom.addEventListener('click', () => void showRoom(code));
 
   try {
@@ -392,6 +426,7 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
       el('p', { class: 'match-result__desc text-wrap-ko' }, tier.desc),
     ),
     cardList,
+    createPhotoPrint(code),
     el('div', { class: 'match__actions' }, backToRoom),
   );
 }
