@@ -23,6 +23,11 @@
           <input class="input" id="username" name="username" type="text" placeholder="아이디를 입력해주세요" autocomplete="username" autocapitalize="none" maxlength="20" />
           <p class="error-message" id="username-error" role="alert" hidden></p>
         </div>
+        <!-- 디자인 대기: 닉네임 입력칸은 Figma 에 없는 임시 UI (랭킹·영수증에 아이디 대신 닉네임이 나온다) -->
+        <div class="auth__field">
+          <input class="input" id="nickname" name="nickname" type="text" placeholder="닉네임을 입력해주세요 (랭킹에 보여요)" autocomplete="nickname" maxlength="12" />
+          <p class="error-message" id="nickname-error" role="alert" hidden></p>
+        </div>
         <div class="auth__field">
           <input class="input" id="password" name="password" type="password" placeholder="비밀번호를 입력해주세요" autocomplete="new-password" />
           <p class="error-message" id="password-error" role="alert" hidden></p>
