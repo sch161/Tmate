@@ -2216,8 +2216,9 @@ begin
 end;
 $$;
 
--- 손님: 사진과 함께 영수증 인쇄를 요청한다
-create or replace function public.request_match_print(p_code text, p_photo text)
+-- 손님: 사진과 함께 영수증 인쇄를 요청한다. p_show_on_rank 가 true 이면 랭킹 화면에도 사진을 띄운다 (손님이 동의한 경우만)
+drop function if exists public.request_match_print(text, text);
+create or replace function public.request_match_print(p_code text, p_photo text, p_show_on_rank boolean default false)
 returns void
 language plpgsql
 security definer
@@ -2238,10 +2239,10 @@ begin
   -- 하루 지난 요청(사진)은 지운다
   delete from public.match_print_requests r where r.created_at < now() - interval '24 hours';
 
-  insert into public.match_print_requests (room_id, requested_by, photo)
-  values (v_room, v_uid, p_photo)
+  insert into public.match_print_requests (room_id, requested_by, photo, show_on_rank)
+  values (v_room, v_uid, p_photo, coalesce(p_show_on_rank, false))
   on conflict (room_id)
-  do update set requested_by = excluded.requested_by, photo = excluded.photo, created_at = now(), printed_at = null;
+  do update set requested_by = excluded.requested_by, photo = excluded.photo, show_on_rank = excluded.show_on_rank, created_at = now(), printed_at = null;
 end;
 $$;
 
@@ -2309,11 +2310,11 @@ end;
 $$;
 
 revoke all on function public.calc_match_print_staff(text)             from public, anon, authenticated;
-revoke all on function public.request_match_print(text, text)          from public, anon;
+revoke all on function public.request_match_print(text, text, boolean) from public, anon;
 revoke all on function public.get_match_print_queue(text)              from public, anon;
 revoke all on function public.get_match_print_photo(text, bigint)      from public, anon;
 revoke all on function public.mark_match_printed(text, bigint)         from public, anon;
-grant execute on function public.request_match_print(text, text)       to authenticated;
+grant execute on function public.request_match_print(text, text, boolean) to authenticated;
 grant execute on function public.get_match_print_queue(text)           to authenticated;
 grant execute on function public.get_match_print_photo(text, bigint)   to authenticated;
 grant execute on function public.mark_match_printed(text, bigint)      to authenticated;
@@ -2373,6 +2374,43 @@ $$;
 
 revoke all on function public.get_match_pair_choices(text, int, int)    from public, anon;
 grant execute on function public.get_match_pair_choices(text, int, int) to authenticated;
+
+-- 랭킹 화면: 손님이 띄워도 된다고 한 사진만, 최근 것부터 (닉네임·궁합 점수·사진). 하루가 지난 것은 빼고 준다
+create or replace function public.get_match_rank_photos(p_limit int default 6)
+returns table (
+  request_id bigint,
+  nickname_a text,
+  nickname_b text,
+  score int,
+  photo text
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  return query
+  select q.id, pa.nickname, pb.nickname, public.calc_match_score(q.room_id, a.user_id, b.user_id), q.photo
+  from public.match_print_requests q
+  join public.match_room_members a on a.room_id = q.room_id and a.completed_at is not null
+  join public.match_room_members b on b.room_id = q.room_id and b.completed_at is not null and b.member_no > a.member_no
+  join public.profiles pa on pa.id = a.user_id
+  join public.profiles pb on pb.id = b.user_id
+  where q.show_on_rank
+    and q.created_at > now() - interval '24 hours'
+  order by q.created_at desc
+  limit least(greatest(coalesce(p_limit, 6), 1), 12);
+end;
+$$;
+
+revoke all on function public.get_match_rank_photos(int)    from public, anon;
+grant execute on function public.get_match_rank_photos(int) to authenticated;
 
 -- [검증 1] 내부 함수를 직접 호출하면 권한 오류가 나야 한다: ERROR: permission denied for function calc_menu_match
 /*
