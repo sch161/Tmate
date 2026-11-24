@@ -29,3 +29,23 @@
 | 두바이 초콜릿 | dubai-chocolate.jpg | WiseWoman | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) | [Dubai-Schokolade-Riegel-Angeschnitten.jpg](https://commons.wikimedia.org/wiki/File:Dubai-Schokolade-Riegel-Angeschnitten.jpg) |
 
 CC BY-SA 사진을 고쳐 다시 배포할 때는 같은 라이선스를 붙여야 한다. 이 폴더의 잘라낸 사진도 각 원본과 같은 라이선스를 따른다.
+
+## 브랜드 로고 (src/assets/images/brands/)
+
+위키미디어 공용에 퍼블릭 도메인(저작권 보호 대상이 아닌 단순한 글자·도형 로고)으로 올라온 파일의 축소본이다. 상표권은 각 회사에 있으며, 목록에서 가게를 알아보게 하는 용도로만 쓴다. 매핑은 `src/utils/brand-logos.ts`.
+
+| 브랜드 | 파일 | 원본 | 라이선스 |
+|---|---|---|---|
+| 맥도날드 | `mcdonalds.png` | [McDonald's Golden Arches.svg](https://commons.wikimedia.org/wiki/File:McDonald%27s_Golden_Arches.svg) | Public domain |
+| 롯데리아 | `lotteria.png` | [Lotteria logo (2024).svg](https://commons.wikimedia.org/wiki/File:Lotteria_logo_(2024).svg) | Public domain |
+| 피자헛 | `pizzahut.png` | [Pizza Hut 2025.svg](https://commons.wikimedia.org/wiki/File:Pizza_Hut_2025.svg) | Public domain |
+| 투썸플레이스 | `twosome.png` | [A Twosome Place square logo.png](https://commons.wikimedia.org/wiki/File:A_Twosome_Place_square_logo.png) | Public domain |
+| 메가MGC커피 | `megacoffee.png` | [Mega MGC Coffee logo.png](https://commons.wikimedia.org/wiki/File:Mega_MGC_Coffee_logo.png) | Public domain |
+| 컴포즈커피 | `compose.png` | [Compose Coffee logo.svg](https://commons.wikimedia.org/wiki/File:Compose_Coffee_logo.svg) | Public domain |
+| 파리바게뜨 | `parisbaguette.png` | [Paris Baguette logo.svg](https://commons.wikimedia.org/wiki/File:Paris_Baguette_logo.svg) | Public domain |
+| 배스킨라빈스 | `baskinrobbins.png` | [Baskin-Robbins logo 2022.svg](https://commons.wikimedia.org/wiki/File:Baskin-Robbins_logo_2022.svg) | Public domain |
+| 맘스터치 | `momstouch.png` | [Mom's Touch logo (2020).svg](https://commons.wikimedia.org/wiki/File:Mom%27s_Touch_logo_(2020).svg) | Public domain |
+| 도미노피자 | `dominos.png` | [Domino's pizza logo.svg](https://commons.wikimedia.org/wiki/File:Domino%27s_pizza_logo.svg) | Public domain |
+| 코코이찌방야 | `cocoichibanya.png` | [ICHIBANYA Logo.svg](https://commons.wikimedia.org/wiki/File:ICHIBANYA_Logo.svg) | Public domain |
+| 스시로 | `sushiro.png` | [Sushiro logo 2026.svg](https://commons.wikimedia.org/wiki/File:Sushiro_logo_2026.svg) | Public domain |
+| 노브랜드버거 | `nobrandburger.png` | [No Brand Burger logo.png](https://commons.wikimedia.org/wiki/File:No_Brand_Burger_logo.png) | Public domain |
