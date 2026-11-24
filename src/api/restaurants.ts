@@ -110,9 +110,9 @@ export async function getRestaurants(params: GetRestaurantsParams): Promise<Rest
   }
 }
 
-export async function getRecommendedMenus(region: string): Promise<RecommendedMenu[]> {
+export async function getRecommendedMenus(region: string, limit = 10): Promise<RecommendedMenu[]> {
   try {
-    const { data, error } = await supabase.rpc('get_recommended_menus', { p_region: region });
+    const { data, error } = await supabase.rpc('get_recommended_menus', { p_region: region, p_limit: limit });
     if (error) throw error;
     return (data ?? []).map(toMenu);
   } catch {

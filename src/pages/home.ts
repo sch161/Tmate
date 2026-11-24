@@ -172,6 +172,45 @@ async function renderNoRecommendation(target: HTMLElement, seq: number): Promise
   renderEmpty(target, '추천할 메뉴가 아직 없어요', '평가가 쌓이면 취향에 맞는 메뉴를 추천해 드려요');
 }
 
+// ---------- 추천 메뉴 캐러셀 ----------
+
+const CAROUSEL_INTERVAL_MS = 3500;
+let carouselTimer: number | undefined;
+
+/** 추천 메뉴를 몇 초마다 한 장씩 옆으로 넘긴다. 끝에 닿으면 처음으로 돌아간다. 손으로 넘기는 동안과 "움직임 줄이기" 설정에서는 멈춘다 */
+function startCarousel(track: HTMLElement): void {
+  window.clearInterval(carouselTimer);
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  let paused = false;
+  let resumeTimer: number | undefined;
+  const pause = (): void => {
+    paused = true;
+    window.clearTimeout(resumeTimer);
+  };
+  const resumeSoon = (): void => {
+    window.clearTimeout(resumeTimer);
+    resumeTimer = window.setTimeout(() => {
+      paused = false;
+    }, CAROUSEL_INTERVAL_MS);
+  };
+  track.addEventListener('pointerdown', pause);
+  track.addEventListener('pointerup', resumeSoon);
+  track.addEventListener('pointercancel', resumeSoon);
+  track.addEventListener('mouseenter', pause);
+  track.addEventListener('mouseleave', resumeSoon);
+  track.addEventListener('focusin', pause);
+  track.addEventListener('focusout', resumeSoon);
+
+  carouselTimer = window.setInterval(() => {
+    if (paused || document.hidden || !track.isConnected) return;
+    const card = track.querySelector<HTMLElement>('.menu-card');
+    if (!card) return;
+    const step = card.offsetWidth + parseFloat(getComputedStyle(track).columnGap || '0');
+    const atEnd = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+    track.scrollTo({ left: atEnd ? 0 : track.scrollLeft + step, behavior: 'smooth' });
+  }, CAROUSEL_INTERVAL_MS);
+}
+
 async function loadMenus(): Promise<void> {
   if (!recommendArea) return;
   const seq = ++menuSeq;
@@ -186,7 +225,9 @@ async function loadMenus(): Promise<void> {
     // 추정 메뉴가 섞여 있으면 알레르기를 등록한 사용자에게만 표시를 붙인다
     const allergy = menus.some((menu) => menu.allergenStatus === 'estimated') ? (await hasAllergy()) === true : false;
     if (seq !== menuSeq) return;
-    recommendArea.replaceChildren(el('div', { class: 'menu-grid' }, ...menus.map((menu) => createMenuCard(menu, allergy))));
+    const carousel = el('div', { class: 'menu-grid' }, ...menus.map((menu) => createMenuCard(menu, allergy)));
+    recommendArea.replaceChildren(carousel);
+    startCarousel(carousel);
   } catch (e) {
     if (seq !== menuSeq) return;
     renderError(recommendArea, e instanceof Error ? e.message : '추천 메뉴를 불러오지 못했어요', () => void loadMenus());
