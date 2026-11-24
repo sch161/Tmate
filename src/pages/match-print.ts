@@ -2,10 +2,11 @@
 //   프린터 연결(MXW01, Web Bluetooth) → 방 번호로 팀 선택 → 웹캠 사진 → 영수증 미리보기·인쇄 → 다음 팀
 //   ?demo=1 이면 서버 대신 예시 팀·음식(src/utils/match-print-demo.ts)을 쓴다.
 // 디자인 대기: 화면 나오면 교체 (Figma 에 이 화면이 없다)
-import { getMatchPairFoods, getMatchRoomPairs, type MatchFoodCompare, type MatchRoomPair } from '../api/match';
+import { getMatchPairFoods, getMatchPrintPhoto, getMatchPrintQueue, getMatchRoomPairs, markMatchPrinted, type MatchFoodCompare, type MatchPrintRequest, type MatchRoomPair } from '../api/match';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
+import { dataUrlToCanvas } from '../utils/match-photo';
 import { DEMO_PAIRS, getDemoPairFoods } from '../utils/match-print-demo';
 import { RECEIPT_MAX_CARDS, RECEIPT_PHOTO_ASPECT, renderMatchReceipt, type ReceiptImage } from '../utils/match-receipt';
 import { buildResultCards, getMatchTier } from '../utils/match-results';
@@ -32,7 +33,14 @@ type Step = 'room' | 'camera' | 'preview';
 interface Job {
   code: string;
   pair: MatchRoomPair;
+  /** 손님이 폰으로 사진을 올린 요청이면 그 id (인쇄 뒤 완료로 표시한다) */
+  requestId?: number;
 }
+
+// 손님이 폰으로 올린 사진 대기 목록: 진행자 번호(이 탭에서만 기억)와 새로고침 주기
+const PASSCODE_KEY = 'tmate-print-passcode';
+const QUEUE_POLL_MS = 5000;
+let queueTimer: number | undefined;
 
 const stage = qs<HTMLElement>('#stage');
 const statusBox = qs<HTMLElement>('#printer-status');
@@ -214,6 +222,7 @@ function stopCamera(): void {
 function enterStep(step: Step): number {
   stageToken += 1;
   stopCamera();
+  window.clearInterval(queueTimer);
   onPrinterChange = null;
   for (const item of document.querySelectorAll<HTMLElement>('.print-steps__item')) {
     const current = item.dataset.step === step;
@@ -239,6 +248,101 @@ function secondaryButton(label: string, onClick: () => void): HTMLButtonElement 
 }
 
 // ---------- 2. 팀 선택 ----------
+
+/** 손님이 폰으로 올린 사진 대기 목록. 진행자 번호를 넣으면 5초마다 새로 불러오고, 팀을 누르면 그 사진으로 바로 미리보기로 간다 */
+function createPhotoQueue(token: number): HTMLElement {
+  const list = el('div', { class: 'print-queue__list' });
+  const input = el('input', { class: 'input print-queue__input', type: 'password', inputmode: 'numeric', maxlength: '20', placeholder: '진행자 번호', 'aria-label': '진행자 번호', autocomplete: 'off' });
+  const submit = el('button', { class: 'print-button', type: 'submit' }, '확인');
+  const form = el('form', { class: 'print-queue__form' }, input, submit);
+  let passcode = '';
+  try {
+    passcode = window.sessionStorage.getItem(PASSCODE_KEY) ?? '';
+  } catch {
+    // 저장소를 못 쓰면 매번 입력한다
+  }
+  let lastKey = '';
+  let opening = false;
+
+  const open = async (request: MatchPrintRequest): Promise<void> => {
+    if (opening) return;
+    opening = true;
+    try {
+      const photo = await getMatchPrintPhoto(passcode, request.requestId);
+      if (token !== stageToken) return;
+      await showPreview({ code: request.code, pair: request.pair, requestId: request.requestId }, photo ? await dataUrlToCanvas(photo) : null);
+    } catch (e) {
+      opening = false;
+      showToast(message(e, '사진을 불러오지 못했어요'));
+    }
+  };
+
+  const paint = (requests: MatchPrintRequest[]): void => {
+    const key = JSON.stringify(requests);
+    if (key === lastKey) return;
+    lastKey = key;
+    if (requests.length === 0) {
+      list.replaceChildren(el('p', { class: 'print-queue__empty text-wrap-ko' }, '아직 올라온 사진이 없어요. 손님이 결과 화면에서 사진을 올리면 여기에 나와요'));
+      return;
+    }
+    list.replaceChildren(
+      el(
+        'ul',
+        { class: 'print-pairs' },
+        ...requests.map((request) => {
+          const button = el(
+            'button',
+            { class: request.printed ? 'print-pair is-printed' : 'print-pair', type: 'button' },
+            el('span', { class: 'print-pair__text' }, pairTitle(request.pair), el('span', { class: 'print-pair__tier' }, `${request.code}번 방 · ${request.printed ? '인쇄함' : '대기 중'}`)),
+            el('span', { class: 'print-pair__score' }, `${request.pair.score}%`),
+          );
+          button.addEventListener('click', () => void open(request));
+          return el('li', {}, button);
+        }),
+      ),
+    );
+  };
+
+  const load = async (showErrors: boolean): Promise<void> => {
+    try {
+      const requests = await getMatchPrintQueue(passcode);
+      if (token !== stageToken) return;
+      form.hidden = true;
+      paint(requests);
+    } catch (e) {
+      if (token !== stageToken) return;
+      // 주기적으로 다시 불러올 때의 일시적인 실패는 다음 주기에 다시 시도한다
+      if (!showErrors) return;
+      window.clearInterval(queueTimer);
+      form.hidden = false;
+      lastKey = '';
+      list.replaceChildren(el('p', { class: 'print-queue__empty is-error text-wrap-ko', role: 'alert' }, message(e, '대기 목록을 불러오지 못했어요')));
+    }
+  };
+
+  const startPolling = (): void => {
+    window.clearInterval(queueTimer);
+    void load(true);
+    queueTimer = window.setInterval(() => void load(false), QUEUE_POLL_MS);
+  };
+
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    passcode = input.value.trim();
+    if (!passcode) return;
+    try {
+      window.sessionStorage.setItem(PASSCODE_KEY, passcode);
+    } catch {
+      // 저장소를 못 쓰면 매번 입력한다
+    }
+    startPolling();
+  });
+
+  if (passcode) startPolling();
+  else list.replaceChildren(el('p', { class: 'print-queue__empty text-wrap-ko' }, '진행자 번호를 넣으면 손님이 폰으로 올린 사진이 여기에 나와요'));
+
+  return el('section', { class: 'print-queue' }, el('h3', { class: 'print-queue__title' }, '폰으로 올라온 사진'), form, list);
+}
 
 function showRoom(): void {
   if (!stage) return;
@@ -290,10 +394,12 @@ function showRoom(): void {
 
   stage.replaceChildren(
     stageHead('방 번호로 팀 찾기', DEMO ? '데모 데이터예요. 아무 번호 4자리나 넣으면 예시 팀이 나와요' : '손님의 궁합 검사 화면에 보이는 방 번호 4자리를 넣어주세요'),
+    ...(DEMO ? [] : [createPhotoQueue(token)]),
+    el('h3', { class: 'print-queue__title' }, '방 번호로 직접 찾기'),
     form,
     results,
   );
-  input.focus();
+  if (DEMO) input.focus();
 }
 
 // ---------- 3. 사진 ----------
@@ -494,6 +600,8 @@ async function showPreview(job: Job, photo: HTMLCanvasElement | null): Promise<v
           },
         });
         printedOnce = true;
+        // 폰으로 올라온 요청이면 대기 목록에서 인쇄함으로 바꾼다 (실패해도 인쇄 결과에는 영향이 없다)
+        if (job.requestId !== undefined) void markMatchPrinted(window.sessionStorage.getItem(PASSCODE_KEY) ?? '', job.requestId).catch(() => undefined);
         setResult(outcome.completed ? '인쇄를 마쳤어요. 영수증을 뜯어 전해주세요' : '데이터는 모두 보냈지만 프린터의 완료 신호를 받지 못했어요. 종이가 다 나왔다면 정상이에요', !outcome.completed);
       } catch (e) {
         setResult(message(e, '인쇄하지 못했어요'), true);
