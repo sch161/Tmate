@@ -167,6 +167,13 @@ erDiagram
 - `store_add_attempts`(id, user_id, created_at): AI 추정 요청 기록. 클라이언트에 열지 않는다
 - 한도(`calc_setting`): 하루 가게 3곳(`store_add_daily_max`), 하루 요청 10회(`store_add_attempt_max`), 한 번에 메뉴 8개(`store_menu_max`). 같은 지역에 같은 이름(띄어쓰기·대소문자 무시)은 추가할 수 없다
 
+## 궁합 영수증 사진 올리기 (migrations/008_match_photo_upload.sql)
+
+- `match_print_requests`(id, room_id unique, requested_by, photo, created_at, printed_at): 손님이 폰으로 올린 사진(JPEG data URL, 200,000자 이하)과 인쇄 요청. 방마다 1건, 다시 올리면 바뀐다. 하루가 지나면 새 요청이 올 때 지운다
+- `match_print_settings`(id, passcode): 진행자 번호 1행. 값은 저장소에 두지 않는다
+- 손님 RPC `request_match_print(p_code, p_photo)`: 그 방에서 검사를 마친 두 사람만 가능
+- 진행자 RPC `get_match_print_queue(p_passcode)` · `get_match_print_photo(p_passcode, p_request_id)` · `mark_match_printed(p_passcode, p_request_id)`: 진행자 번호가 맞아야 한다
+
 ## 친구랑 궁합 검사 (행사 체험용, migrations/003_match_test.sql)
 
 클라이언트에 직접 열지 않는 테이블이다. RLS 를 켜고 권한·정책을 주지 않으며 RPC 로만 읽고 쓴다.
