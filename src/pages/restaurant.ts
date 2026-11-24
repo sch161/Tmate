@@ -308,10 +308,6 @@ function createAllergyCard(menu: AllergyMenu): HTMLElement {
       chips.append(el('span', { class: item.level === 'danger' ? 'chip is-active' : 'chip' }, `${LEVEL_LABEL[item.level]} ${item.name}`));
     }
     info.append(chips);
-    const originals = menu.allergens.filter((item) => item.originalText && item.originalText !== item.name);
-    if (originals.length > 0) {
-      info.append(el('p', { class: 'menu-card__desc text-wrap-ko' }, `공식 표기: ${originals.map((item) => item.originalText).join(', ')}`));
-    }
   } else {
     // 디자인 대기: "정보 없음" 칩은 위험 칩과 구분되는 중립 색
     info.append(el('span', { class: 'chip chip--neutral' }, '정보 없음'), el('p', { class: 'menu-card__desc text-wrap-ko' }, '알레르기 정보가 없어요. 가게에 확인하세요'));
