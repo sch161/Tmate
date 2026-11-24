@@ -16,6 +16,7 @@ import {
   type MatchQuestion,
   requestMatchPrint,
   getMatchPairChoices,
+  createMatchPhotoToken,
 } from '../api/match';
 import starIcon from '../assets/icons/star.svg';
 import { PATHS } from '../lib/constants';
@@ -26,6 +27,7 @@ import { getMatchFoodImage } from '../utils/match-food-images';
 import { dataUrlToCanvas, fileToReceiptPhoto } from '../utils/match-photo';
 import { RECEIPT_MAX_CARDS, renderMatchReceipt, type ReceiptInput } from '../utils/match-receipt';
 import { monoToRgba } from '../utils/mxw01-protocol';
+import { createQrSvg } from '../utils/qr';
 import { buildChoiceSummary, buildResultCards, getMatchTier, type ChoiceSummary } from '../utils/match-results';
 import { renderError, renderLoading } from '../utils/state-views';
 
@@ -398,7 +400,29 @@ function createPhotoPrint(code: string, onPhoto: (photo: string) => void): HTMLE
       button.disabled = false;
     })();
   });
-  return el('section', { class: 'match-photo' }, consentLabel, button, input, status);
+  // PC 로 검사한 손님: QR 을 띄워 폰으로 사진을 찍어 보내게 한다 (QR 주소의 표는 30분 동안 쓸 수 있다)
+  const qrBox = el('div', { class: 'match-photo__qr' });
+  qrBox.hidden = true;
+  const qrButton = el('button', { class: 'match__link', type: 'button' }, '다른 폰으로 찍어 보내기 (QR)');
+  const showQr = (): void => {
+    qrButton.disabled = true;
+    createMatchPhotoToken(code)
+      .then((token) => {
+        const url = `${window.location.origin}${PATHS.matchPhoto}?t=${token}`;
+        const image = el('img', { class: 'match-photo__qr-image', src: `data:image/svg+xml;utf8,${encodeURIComponent(createQrSvg(url))}`, alt: '사진 보내기 화면으로 가는 QR 코드', width: '220', height: '220' });
+        qrBox.replaceChildren(image, el('p', { class: 'match__hint text-wrap-ko' }, '폰 카메라로 이 QR 을 찍으면 사진 보내는 화면이 열려요 (30분 동안 쓸 수 있어요)'));
+        qrBox.hidden = false;
+        qrButton.textContent = 'QR 다시 만들기';
+      })
+      .catch((e: unknown) => showToast(message(e, 'QR 코드를 만들지 못했어요')))
+      .finally(() => {
+        qrButton.disabled = false;
+      });
+  };
+  qrButton.addEventListener('click', showQr);
+  // 마우스를 쓰는 화면(PC)에서는 QR 을 바로 띄운다. 폰에서는 눌렀을 때만 만든다
+  if (window.matchMedia('(pointer: fine)').matches) showQr();
+  return el('section', { class: 'match-photo' }, consentLabel, button, input, status, qrButton, qrBox);
 }
 
 /** 결과를 영수증 모양 이미지(PNG)로 만든다. 부스에서 뽑는 영수증과 같은 그림이다 */
