@@ -243,3 +243,24 @@ export async function getMatchRankPhotos(limit = 6): Promise<MatchRankPhoto[]> {
   // DB 가 JPEG data URL 만 받지만, 화면에 그대로 넣는 값이라 한 번 더 확인한다
   return (data ?? []).filter((row) => row.photo.startsWith('data:image/jpeg;base64,')).map((row) => ({ requestId: row.request_id, nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score, photo: row.photo }));
 }
+
+/** 다른 폰으로 사진 보내기: 그 방의 사진을 올릴 수 있는 표(token)를 만든다. 30분 동안 쓸 수 있다 */
+export async function createMatchPhotoToken(code: string): Promise<string> {
+  const { data, error } = await supabase.rpc('create_match_photo_token', { p_code: code });
+  if (error || !data) throw toError(error, 'QR 코드를 만들지 못했어요. 잠시 후 다시 시도해주세요');
+  return data;
+}
+
+/** 표(token)가 가리키는 두 사람의 닉네임과 궁합 (사진 보내는 화면용. 로그인 없이 부른다) */
+export async function getMatchPhotoTokenInfo(token: string): Promise<{ nicknameA: string; nicknameB: string; score: number } | null> {
+  const { data, error } = await supabase.rpc('get_match_photo_token_info', { p_token: token });
+  if (error) throw toError(error, 'QR 코드를 확인하지 못했어요. 다시 찍어주세요');
+  const row = data?.[0];
+  return row ? { nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score } : null;
+}
+
+/** 표(token)로 사진을 올린다 (로그인 없이 부른다) */
+export async function uploadMatchPhotoByToken(token: string, photo: string, showOnRank: boolean): Promise<void> {
+  const { error } = await supabase.rpc('upload_match_photo_by_token', { p_token: token, p_photo: photo, p_show_on_rank: showOnRank });
+  if (error) throw toError(error, '사진을 올리지 못했어요. 잠시 후 다시 시도해주세요');
+}

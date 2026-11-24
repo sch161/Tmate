@@ -32,6 +32,7 @@ export const PATHS = {
   match: '/src/pages/match.html', // 친구랑 궁합 검사 (?room=방번호)
   matchRank: '/src/pages/match-rank.html', // 맛궁합 랭킹 (부스 큰 화면용)
   storeAdd: '/src/pages/store-add.html', // 가게 추가 (?region=지역, 없으면 내 지역)
+  matchPhoto: '/src/pages/match-photo.html', // 다른 폰으로 사진 보내기 (?t=표. 결과 화면의 QR 로 들어온다. 로그인 없이 쓴다)
   matchPrint: '/src/pages/match-print.html', // 맛궁합 영수증 인쇄 (부스 진행자 노트북용, ?demo=1 이면 데모 데이터)
 } as const;
 
