@@ -178,6 +178,21 @@
   font-weight: var(--font-weight-bold);
 }
 
+/* 데스크톱: 제목을 아래로 내리고, 랭킹 목록은 오른쪽 위 QR(약 11.5em 높이) 아래에서 시작하게 한다 */
+@media (min-width: 721px) {
+  .rank__head {
+    margin-top: 3.8em;
+  }
+
+  .rank__body {
+    margin-top: calc(var(--space-6) + 0.2em);
+  }
+
+  .rank__photos {
+    margin-top: calc(var(--space-5) + 2.5em);
+  }
+}
+
 @media (max-width: 720px) {
   .rank__head {
     min-height: 0;
