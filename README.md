@@ -106,6 +106,10 @@ npm run dev
 delete from auth.users where email like 'seed%@tmate-app.com';
 ```
 
+### 친구랑 궁합 검사 (행사 체험용)
+
+방 번호로 묶인 친구와 둘 중 하나 문항 10개·음식 경험 5개에 답하고 궁합(%)을 보는 기능의 DB 부분입니다. `supabase/migrations/003_match_test.sql` → `supabase/functions.sql` → `supabase/seed_match.sql` 순서로 실행합니다. 구조는 `docs/erd.md` 에 있습니다.
+
 ## 데이터 출처와 한계
 
 - **지점**: 소상공인시장진흥공단 상가(상권)정보 서울 CSV(공공데이터포털). `scripts/import/` 의 스크립트가 지정 브랜드의 지점만 뽑아 `seed_branches.sql` 을 만들며, 같은 (브랜드, 도로명주소)는 1개 지점으로 합칩니다.
