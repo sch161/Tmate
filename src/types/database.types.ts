@@ -950,6 +950,10 @@ export type Database = {
       }
     }
     Functions: {
+      add_user_store_menus: {
+        Args: { p_menus: Json; p_restaurant_id: number }
+        Returns: undefined
+      }
       add_user_store: {
         Args: {
           p_address: string
@@ -960,6 +964,10 @@ export type Database = {
         }
         Returns: number
       }
+      begin_store_menu_add: {
+        Args: { p_restaurant_id: number }
+        Returns: undefined
+      }
       begin_store_add: {
         Args: { p_name: string; p_region: string }
         Returns: undefined
@@ -967,6 +975,10 @@ export type Database = {
       calc_content_match: {
         Args: { p_menu: number; p_user: string }
         Returns: number
+      }
+      calc_insert_user_menus: {
+        Args: { p_brand: number; p_menus: Json }
+        Returns: undefined
       }
       calc_match_photo_token_room: {
         Args: { p_token: string }
@@ -996,6 +1008,10 @@ export type Database = {
       calc_menu_reason: {
         Args: { p_menu: number; p_user: string }
         Returns: string
+      }
+      calc_my_store_brand: {
+        Args: { p_restaurant_id: number }
+        Returns: number
       }
       calc_setting: { Args: { p_key: string }; Returns: number }
       calc_store_add_check: {
@@ -1308,6 +1324,7 @@ export type Database = {
         }[]
       }
       has_batchim: { Args: { p_text: string }; Returns: boolean }
+      is_my_store: { Args: { p_restaurant_id: number }; Returns: boolean }
       join_match_room: { Args: { p_code: string }; Returns: undefined }
       josa: { Args: { p_pair: string; p_text: string }; Returns: string }
       mark_match_printed: {
