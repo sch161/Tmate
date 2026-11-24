@@ -41,6 +41,7 @@ export type Database = {
           allergen_source_url: string | null
           category_id: number | null
           created_at: string
+          created_by: string | null
           id: number
           image_url: string | null
           is_franchise: boolean
@@ -56,6 +57,7 @@ export type Database = {
           allergen_source_url?: string | null
           category_id?: number | null
           created_at?: string
+          created_by?: string | null
           id?: never
           image_url?: string | null
           is_franchise?: boolean
@@ -71,6 +73,7 @@ export type Database = {
           allergen_source_url?: string | null
           category_id?: number | null
           created_at?: string
+          created_by?: string | null
           id?: never
           image_url?: string | null
           is_franchise?: boolean
@@ -87,6 +90,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "food_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "brands_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -678,6 +688,32 @@ export type Database = {
           },
         ]
       }
+      store_add_attempts: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: never
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: never
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_add_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taste_tags: {
         Row: {
           code: string
@@ -818,6 +854,20 @@ export type Database = {
       }
     }
     Functions: {
+      add_user_store: {
+        Args: {
+          p_address: string
+          p_category_id: number
+          p_menus: Json
+          p_name: string
+          p_region: string
+        }
+        Returns: number
+      }
+      begin_store_add: {
+        Args: { p_name: string; p_region: string }
+        Returns: undefined
+      }
       calc_content_match: {
         Args: { p_menu: number; p_user: string }
         Returns: number
@@ -844,6 +894,10 @@ export type Database = {
         Returns: string
       }
       calc_setting: { Args: { p_key: string }; Returns: number }
+      calc_store_add_check: {
+        Args: { p_name: string; p_region: string }
+        Returns: undefined
+      }
       calc_taste_profile: {
         Args: { p_user: string }
         Returns: {
