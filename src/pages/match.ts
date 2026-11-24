@@ -23,8 +23,10 @@ import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { createMascot, type MascotName } from '../utils/mascots';
 import { getMatchFoodImage } from '../utils/match-food-images';
-import { fileToReceiptPhoto } from '../utils/match-photo';
-import { buildChoiceSummary, buildResultCards, getMatchTier } from '../utils/match-results';
+import { dataUrlToCanvas, fileToReceiptPhoto } from '../utils/match-photo';
+import { RECEIPT_MAX_CARDS, renderMatchReceipt, type ReceiptInput } from '../utils/match-receipt';
+import { monoToRgba } from '../utils/mxw01-protocol';
+import { buildChoiceSummary, buildResultCards, getMatchTier, type ChoiceSummary } from '../utils/match-results';
 import { renderError, renderLoading } from '../utils/state-views';
 
 const ROOM_PARAM = 'room';
@@ -364,10 +366,13 @@ async function showTest(code: string): Promise<void> {
 
 // 디자인 대기: 사진을 찍어 부스 프린터로 보내는 영역은 Figma 에 없는 임시 UI
 /** 결과 화면의 "사진 찍고 영수증 뽑기": 폰 카메라로 찍은 사진을 올리면 부스의 인쇄 화면 대기 목록에 뜬다 */
-function createPhotoPrint(code: string): HTMLElement {
+function createPhotoPrint(code: string, onPhoto: (photo: string) => void): HTMLElement {
   const input = el('input', { class: 'match-photo__input', type: 'file', accept: 'image/*', capture: 'user', 'aria-label': '사진 찍기' });
   const button = el('button', { class: 'btn-primary', type: 'button' }, '사진 찍고 영수증 뽑기');
   const status = el('p', { class: 'match__hint text-wrap-ko', role: 'status' }, '둘이 같이 사진을 찍어 올리면 부스에서 영수증으로 뽑아드려요');
+  // 얼굴이 나오는 사진이라 랭킹 화면에 띄우는 것은 손님이 고른 경우에만 한다 (기본은 꺼짐)
+  const consent = el('input', { type: 'checkbox', id: 'match-photo-consent' });
+  const consentLabel = el('label', { class: 'match-photo__consent text-wrap-ko', for: 'match-photo-consent' }, consent, '부스 랭킹 화면에 우리 사진 띄우기');
   let busy = false;
 
   button.addEventListener('click', () => input.click());
@@ -380,7 +385,9 @@ function createPhotoPrint(code: string): HTMLElement {
     button.textContent = '사진 올리는 중...';
     void (async () => {
       try {
-        await requestMatchPrint(code, await fileToReceiptPhoto(file));
+        const photo = await fileToReceiptPhoto(file);
+        await requestMatchPrint(code, photo, consent.checked);
+        onPhoto(photo);
         status.textContent = '사진을 보냈어요! 부스에서 영수증을 받아가세요';
         button.textContent = '사진 다시 찍기';
       } catch (e) {
@@ -391,7 +398,50 @@ function createPhotoPrint(code: string): HTMLElement {
       button.disabled = false;
     })();
   });
-  return el('section', { class: 'match-photo' }, button, input, status);
+  return el('section', { class: 'match-photo' }, consentLabel, button, input, status);
+}
+
+/** 결과를 영수증 모양 이미지(PNG)로 만든다. 부스에서 뽑는 영수증과 같은 그림이다 */
+async function buildResultImage(input: Omit<ReceiptInput, 'photo'>, photo: string | null): Promise<Blob> {
+  const receipt = await renderMatchReceipt({ ...input, photo: photo ? await dataUrlToCanvas(photo) : null });
+  const canvas = document.createElement('canvas');
+  canvas.width = receipt.width;
+  canvas.height = receipt.height;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('이미지를 만들지 못했어요');
+  context.putImageData(new ImageData(new Uint8ClampedArray(monoToRgba(receipt.mono)), receipt.width, receipt.height), 0, 0);
+  return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('이미지를 만들지 못했어요'))), 'image/png'));
+}
+
+// 디자인 대기: 결과 이미지 저장 버튼은 Figma 에 없는 임시 UI
+/** "결과 이미지 저장": 공유 시트를 쓸 수 있으면(폰) 공유·저장, 아니면 파일로 내려받는다 */
+function createImageSave(getInput: () => Omit<ReceiptInput, 'photo'>, getPhoto: () => string | null): HTMLElement {
+  const button = el('button', { class: 'match__link', type: 'button' }, '결과 이미지 저장');
+  button.addEventListener('click', () => {
+    button.disabled = true;
+    void (async () => {
+      try {
+        const blob = await buildResultImage(getInput(), getPhoto());
+        const file = new File([blob], 'tmate-match.png', { type: 'image/png' });
+        if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title: 'T:MATE 맛궁합 결과' });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const link = el('a', { href: url, download: 'tmate-match.png' });
+          document.body.append(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+          showToast('이미지를 저장했어요');
+        }
+      } catch (e) {
+        // 공유 시트를 닫은 것(AbortError)은 오류로 보지 않는다
+        if (!(e instanceof DOMException && e.name === 'AbortError')) showToast(message(e, '이미지를 만들지 못했어요'));
+      }
+      button.disabled = false;
+    })();
+  });
+  return button;
 }
 
 async function showDetail(code: string, friend: MatchMember): Promise<void> {
@@ -405,14 +455,22 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
   const backToRoom = el('button', { class: 'match__link', type: 'button' }, '방으로 돌아가기');
   backToRoom.addEventListener('click', () => void showRoom(code));
 
+  // 결과 이미지 저장에 쓰는 값 (아래에서 채운다)
+  let myNickname = '나';
+  let choiceSummary: ChoiceSummary | undefined;
+  let imageCards: ReturnType<typeof buildResultCards> = [];
+  let lastPhoto: string | null = null;
+
   try {
     const [compare, members] = await Promise.all([getMatchCompare(code, friend.memberNo), getMatchRoom(code)]);
     // 통한 취향·갈린 취향 (PART 1 문항). 못 불러와도 음식 카드는 보여준다
     const me = members.find((m) => m.isMe);
     if (me) {
+      myNickname = me.nickname;
       const summary = await getMatchPairChoices(code, me.memberNo, friend.memberNo)
         .then(buildChoiceSummary)
         .catch(() => null);
+      choiceSummary = summary ?? undefined;
       if (summary && summary.same.length > 0) {
         cardList.append(el('article', { class: 'match-result__card' }, el('p', { class: 'match-result__label' }, `둘이 통한 취향 ${summary.same.length}개`), el('p', { class: 'match-result__food text-wrap-ko' }, summary.same.join(' · '))));
       }
@@ -421,6 +479,7 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
       }
     }
     const cards = buildResultCards(compare);
+    imageCards = buildResultCards(compare, { me: myNickname, friend: friend.nickname }).slice(0, RECEIPT_MAX_CARDS);
     if (cards.length === 0) cardList.append(el('p', { class: 'match__hint text-wrap-ko' }, '이번 음식에서는 눈에 띄는 공통점이 없었어요. 새 방에서 다시 검사하면 다른 음식이 나와요'));
     for (const card of cards) {
       cardList.append(el('article', { class: 'match-result__card' }, el('p', { class: 'match-result__label' }, card.label), el('p', { class: 'match-result__food' }, card.foodName), el('p', { class: 'match-result__detail' }, card.detail)));
@@ -441,8 +500,18 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
       el('p', { class: 'match-result__desc text-wrap-ko' }, tier.desc),
     ),
     cardList,
-    createPhotoPrint(code),
-    el('div', { class: 'match__actions' }, backToRoom),
+    createPhotoPrint(code, (photo) => {
+      lastPhoto = photo;
+    }),
+    el(
+      'div',
+      { class: 'match__actions' },
+      createImageSave(
+        () => ({ nicknameA: myNickname, nicknameB: friend.nickname, score: friend.score ?? 0, cards: imageCards, choices: choiceSummary, date: new Date() }),
+        () => lastPhoto,
+      ),
+      backToRoom,
+    ),
   );
 }
 
