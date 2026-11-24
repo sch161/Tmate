@@ -158,7 +158,7 @@ erDiagram
 - 지역 목록(`get_regions`: 지점이 있는 지역별 지점 수)
 - 내 알레르기 교체 저장(`update_my_allergens(p_allergen_ids int[])`): 빈 배열이면 모두 해제, null·중복은 무시, 없는 알레르기 id 는 예외. 한 트랜잭션으로 삭제 후 삽입
 - 내 입맛 교체 저장(`update_my_tastes(p_taste_ids int[], p_ratios int[])`): 두 배열은 같은 순서의 짝. 맛 1~3개, 비율 1~100, 합계 100, 중복·없는 맛 불가(`save_onboarding` 의 맛 검증과 같다). `user_taste_preferences` 의 내 행만 바꾸고 지역·온보딩 완료·알레르기는 건드리지 않는다
-- 일치도 계산: 평가 수가 적은 사용자는 지금 입맛 비율 × 메뉴 태그, 평가가 쌓이면 유사 사용자 기반
+- 일치도 계산: 평가 수가 적은 사용자는 지금 입맛 비율 × 메뉴 태그, 평가가 쌓이면 유사 사용자 기반. 목록·추천처럼 메뉴가 많은 곳은 `calc_menu_matches`(모든 메뉴를 한 번에, 이웃을 한 번만 구한다)를 쓰고, 추천 이유 문장만 메뉴 하나짜리 `calc_menu_match_detail` 을 쓴다. 두 함수의 값은 같아야 한다
 
 ## 가게 추가 (사용자가 직접 추가하는 개인 식당, migrations/007_store_add.sql)
 
