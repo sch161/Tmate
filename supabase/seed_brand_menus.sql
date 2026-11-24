@@ -734,4 +734,733 @@ cross join (values ('짭조름함'), ('고소함')) as v(name)
 join taste_tags t on t.name = v.name
 where b.name = '버거킹' and b.is_franchise and m.name = '치즈버거';
 
+-- ===== BBQ (메뉴 10개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = 'BBQ' and b.is_franchise) then
+    raise exception '브랜드 BBQ 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = 'https://bbq.co.kr/categories/19', allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = 'BBQ' and b.is_franchise;
+
+-- BBQ / 황금올리브치킨
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '황금올리브치킨', '올리브유로 튀긴 후라이드', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '알류'), ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('새우', 'danger', '새우'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨';
+
+-- BBQ / 황금올리브치킨양념
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '황금올리브치킨양념', '달콤한 양념 버무림 치킨', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨양념');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '알류'), ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('새우', 'danger', '새우'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨양념';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨양념');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨양념';
+
+-- BBQ / 황금올리브치킨매운양념
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '황금올리브치킨매운양념', '더 맵게 버무린 양념치킨', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨매운양념');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '알류'), ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('새우', 'danger', '새우'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨매운양념';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨매운양념');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('달콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨매운양념';
+
+-- BBQ / 황금올리브치킨핫크리스피
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '황금올리브치킨핫크리스피', '매콤 바삭한 후라이드', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨핫크리스피');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('새우', 'danger', '새우'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨핫크리스피';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨핫크리스피');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨핫크리스피';
+
+-- BBQ / 황금올리브치킨블랙페퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '황금올리브치킨블랙페퍼', '후추 풍미 후라이드', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨블랙페퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '알류'), ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('새우', 'danger', '새우'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨블랙페퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨블랙페퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨블랙페퍼';
+
+-- BBQ / 황금올리브치킨속안심
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '황금올리브치킨속안심', '안심살 순살 치킨', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨속안심');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '알류'), ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('새우', 'danger', '새우'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨속안심';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨속안심');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('담백함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '황금올리브치킨속안심';
+
+-- BBQ / 자메이카 통다리구이
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '자메이카 통다리구이', '향신료 양념 통다리 구이', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 원문 표기: ''대두, 밀, 토마토, 닭고기, 쇠고기,, 조개류'' (쇠고기 뒤 쉼표 중복은 원문 그대로이며 누락 항목 여부는 확인 불가)', 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '자메이카 통다리구이');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '자메이카 통다리구이';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '자메이카 통다리구이');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '자메이카 통다리구이';
+
+-- BBQ / 뿜치킹
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '뿜치킹', '시즈닝 뿌린 후라이드', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '뿜치킹');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '뿜치킹';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '뿜치킹');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '뿜치킹';
+
+-- BBQ / 크런치버터치킨
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '크런치버터치킨', '버터 풍미 바삭 치킨', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '크런치버터치킨');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '알류'), ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('새우', 'danger', '새우'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '크런치버터치킨';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '크런치버터치킨');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '크런치버터치킨';
+
+-- BBQ / 맵소디
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '맵소디', '매운 소스 치킨', 'verified'::allergen_status, 'https://bbq.co.kr/categories/19', '2026-11-24T03:13:01.479Z'::timestamptz, null, 'https://bbq.co.kr/categories/19', '공식 사이트'
+from brands b where b.name = 'BBQ' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '맵소디');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '알류'), ('우유', 'danger', '우유'), ('땅콩', 'danger', '땅콩'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '맵소디';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = 'BBQ' and b.is_franchise and m.name = '맵소디');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = 'BBQ' and b.is_franchise and m.name = '맵소디';
+
+-- ===== 피자헛 (메뉴 10개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '피자헛' and b.is_franchise) then
+    raise exception '브랜드 피자헛 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = 'https://www.pizzahut.co.kr/menu/pizza', allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '피자헛' and b.is_franchise;
+
+-- 피자헛 / 안창 스테이크 슈프림 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '안창 스테이크 슈프림 (오리지널 도우 L)', '안창살 스테이크를 올린 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 리치골드(M/L) 행은 ''계란''이 추가로 표기됨. 치즈크러스트 골드, 치즈크러스트, 씬 도우 라지 행과 M 사이즈 행은 오리지널 행과 같음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '안창 스테이크 슈프림 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('돼지고기', 'danger', '돼지고기'), ('쇠고기', 'danger', '소고기'), ('닭고기', 'danger', '닭고기'), ('게', 'danger', '게'), ('조개류', 'danger', '조개류(굴, 홍합)'), ('아황산류', 'danger', '아황산류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '안창 스테이크 슈프림 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '안창 스테이크 슈프림 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '안창 스테이크 슈프림 (오리지널 도우 L)';
+
+-- 피자헛 / 수퍼슈프림 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '수퍼슈프림 (오리지널 도우 L)', '고기와 채소를 듬뿍 올린 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 리치골드(M/L) 행은 ''계란''이 추가로 표기됨. 나머지 도우 행과 M 사이즈 행은 오리지널 행과 같음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '수퍼슈프림 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('돼지고기', 'danger', '돼지고기'), ('쇠고기', 'danger', '소고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '수퍼슈프림 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '수퍼슈프림 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '수퍼슈프림 (오리지널 도우 L)';
+
+-- 피자헛 / 트러플 스테이크 뇨끼 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '트러플 스테이크 뇨끼 (오리지널 도우 L)', '트러플 향 스테이크 뇨끼 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 표에 나온 모든 사이즈·도우 행의 표기가 같음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '트러플 스테이크 뇨끼 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '계란'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('돼지고기', 'danger', '돼지고기'), ('쇠고기', 'danger', '소고기'), ('게', 'danger', '게'), ('조개류', 'danger', '조개류'), ('아황산류', 'danger', '아황산류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '트러플 스테이크 뇨끼 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '트러플 스테이크 뇨끼 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '트러플 스테이크 뇨끼 (오리지널 도우 L)';
+
+-- 피자헛 / 오리지널 콤비네이션 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '오리지널 콤비네이션 (오리지널 도우 L)', '여러 토핑을 올린 기본 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 리치골드(M/L) 행은 ''계란''이 추가로 표기됨. 나머지 도우 행(팬·씬 도우 라지 포함)은 같음. M 사이즈 오리지널 도우 행은 표에 없음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '오리지널 콤비네이션 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('돼지고기', 'danger', '돼지고기'), ('쇠고기', 'danger', '소고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '오리지널 콤비네이션 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '오리지널 콤비네이션 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '오리지널 콤비네이션 (오리지널 도우 L)';
+
+-- 피자헛 / 클래식 페페로니 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '클래식 페페로니 (오리지널 도우 L)', '페페로니를 올린 클래식 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 리치골드(M/L) 행은 ''계란''이 추가로 표기됨. 씬 도우 라지 행은 ''대두''가 빠진 ''우유, 밀, 토마토, 돼지고기''로 표기됨.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '클래식 페페로니 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('돼지고기', 'danger', '돼지고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '클래식 페페로니 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '클래식 페페로니 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '클래식 페페로니 (오리지널 도우 L)';
+
+-- 피자헛 / 직화불고기 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '직화불고기 (오리지널 도우 L)', '불맛 불고기를 올린 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 표에 나온 모든 사이즈·도우 행의 표기가 같음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '직화불고기 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '계란'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '소고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '직화불고기 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '직화불고기 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '직화불고기 (오리지널 도우 L)';
+
+-- 피자헛 / 더블 메가 쉬림프 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '더블 메가 쉬림프 (오리지널 도우 L)', '큼직한 새우를 두 배로 올린 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 표에 나온 모든 사이즈·도우 행의 표기가 같음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '더블 메가 쉬림프 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '계란'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('새우', 'danger', '새우'), ('아황산류', 'danger', '아황산류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '더블 메가 쉬림프 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '더블 메가 쉬림프 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '더블 메가 쉬림프 (오리지널 도우 L)';
+
+-- 피자헛 / 씨푸드 디럭스 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '씨푸드 디럭스 (오리지널 도우 L)', '해산물과 고기를 함께 올린 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 리치골드(M/L) 행은 ''계란''이 추가로 표기됨. 나머지 도우 행과 M 사이즈 행은 오리지널 행과 같음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '씨푸드 디럭스 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('돼지고기', 'danger', '돼지고기'), ('쇠고기', 'danger', '소고기'), ('게', 'danger', '게'), ('새우', 'danger', '새우'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '씨푸드 디럭스 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '씨푸드 디럭스 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '씨푸드 디럭스 (오리지널 도우 L)';
+
+-- 피자헛 / 치즈 러버 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치즈 러버 (오리지널 도우 L)', '치즈 맛에 집중한 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 리치골드(M/L) 행은 ''계란''이 추가로 표기됨. 씬 도우 라지 행은 ''대두''가 빠진 ''우유, 밀, 토마토''로 표기됨.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '치즈 러버 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '치즈 러버 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '치즈 러버 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '치즈 러버 (오리지널 도우 L)';
+
+-- 피자헛 / 멜팅치즈 포테이토 (오리지널 도우 L)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '멜팅치즈 포테이토 (오리지널 도우 L)', '녹은 치즈와 감자를 올린 피자', 'verified'::allergen_status, 'https://www.pizzahut.co.kr/menu/pizza', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자명·사이즈·도우/엣지 조합별 행으로 구성됨. 대표로 L 오리지널 도우 행을 사용함. 표에 나온 모든 사이즈·도우 행의 표기가 같음.', 'https://www.pizzahut.co.kr/menu/pizza', '공식 사이트'
+from brands b where b.name = '피자헛' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '멜팅치즈 포테이토 (오리지널 도우 L)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '계란'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('돼지고기', 'danger', '돼지고기'), ('쇠고기', 'danger', '소고기'), ('조개류', 'danger', '조개류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '멜팅치즈 포테이토 (오리지널 도우 L)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '피자헛' and b.is_franchise and m.name = '멜팅치즈 포테이토 (오리지널 도우 L)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '피자헛' and b.is_franchise and m.name = '멜팅치즈 포테이토 (오리지널 도우 L)';
+
+-- ===== 파파존스 (메뉴 10개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '파파존스' and b.is_franchise) then
+    raise exception '브랜드 파파존스 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = 'https://www.pji.co.kr/menu/pizza/1000', allergen_data_date = null::date,
+  shared_notice = '매장에서는 난류, 우유, 대두, 밀, 게, 새우, 돼지고기, 토마토, 닭고기, 쇠고기, 조개류 등이 포함된 제품을 사용하고 있으며, 모든 피자는 동일한 공간에서 제조됩니다. 이로 인해 알레르기 유발 성분이 혼입될 수 있으니, 섭취 시 주의해 주시기 바랍니다. / 지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '파파존스' and b.is_franchise;
+
+-- 파파존스 / 수퍼 파파스 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '수퍼 파파스 (오리지널 크러스트)', '여러 고기와 채소 콤비네이션', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준이며 씬도 동일함. 치즈롤·골드링·스파이시 갈릭 치즈롤·골드링씬·하트씬·크루아상·체다치즈롤은 난류가 추가됨.', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '수퍼 파파스 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '수퍼 파파스 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '수퍼 파파스 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '수퍼 파파스 (오리지널 크러스트)';
+
+-- 파파존스 / 아이리쉬 포테이토 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '아이리쉬 포테이토 (오리지널 크러스트)', '감자 토핑의 고소한 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준임. 표에 있는 모든 크러스트(치즈롤·골드링·스파이시 갈릭 치즈롤·씬·골드링씬·크루아상·체다치즈롤)가 같은 값임.', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '아이리쉬 포테이토 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '난류'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '아이리쉬 포테이토 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '아이리쉬 포테이토 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '아이리쉬 포테이토 (오리지널 크러스트)';
+
+-- 파파존스 / 스파이시 치킨 랜치 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '스파이시 치킨 랜치 (오리지널 크러스트)', '매콤한 치킨과 랜치 소스', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준임. 표에 있는 모든 크러스트가 같은 값임.', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '스파이시 치킨 랜치 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '난류'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '스파이시 치킨 랜치 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '스파이시 치킨 랜치 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '스파이시 치킨 랜치 (오리지널 크러스트)';
+
+-- 파파존스 / 존스 페이버릿 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '존스 페이버릿 (오리지널 크러스트)', '고기 토핑 클래식 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준이며 씬도 동일함. 치즈롤·골드링·스파이시 갈릭 치즈롤·골드링씬·체다치즈롤은 난류가 추가됨. 크루아상은 난류가 추가되고 대두는 표기되지 않음(난류, 우유, 밀, 돼지고기, 토마토, 쇠고기).', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '존스 페이버릿 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '존스 페이버릿 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '존스 페이버릿 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '존스 페이버릿 (오리지널 크러스트)';
+
+-- 파파존스 / 올미트 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '올미트 (오리지널 크러스트)', '고기 토핑을 가득 올린 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준이며 씬도 동일함. 치즈롤·골드링·스파이시 갈릭 치즈롤·골드링씬·크루아상·체다치즈롤은 난류가 추가됨.', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '올미트 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '올미트 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '올미트 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('감칠맛'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '올미트 (오리지널 크러스트)';
+
+-- 파파존스 / 페퍼로니 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '페퍼로니 (오리지널 크러스트)', '페퍼로니 올린 기본 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준이며 씬도 동일함. 치즈롤·골드링·스파이시 갈릭 치즈롤·골드링씬·하트씬·체다치즈롤은 난류가 추가됨. 크루아상은 난류가 추가되고 대두는 표기되지 않음(난류, 우유, 밀, 돼지고기, 토마토, 쇠고기).', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '페퍼로니 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '페퍼로니 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '페퍼로니 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('매콤함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '페퍼로니 (오리지널 크러스트)';
+
+-- 파파존스 / 치킨 바베큐 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치킨 바베큐 (오리지널 크러스트)', '바베큐 소스 치킨 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준이며 씬도 동일함. 치즈롤·골드링·스파이시 갈릭 치즈롤·골드링씬·크루아상·체다치즈롤은 난류가 추가됨.', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '치킨 바베큐 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토'), ('닭고기', 'danger', '닭고기'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류(굴 포함)')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '치킨 바베큐 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '치킨 바베큐 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '치킨 바베큐 (오리지널 크러스트)';
+
+-- 파파존스 / 더블 치즈버거 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '더블 치즈버거 (오리지널 크러스트)', '치즈버거 맛을 담은 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준임. 표에 있는 모든 크러스트가 같은 값임.', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '더블 치즈버거 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '난류'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기'), ('조개류', 'danger', '조개류(굴)')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '더블 치즈버거 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '더블 치즈버거 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('느끼함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '더블 치즈버거 (오리지널 크러스트)';
+
+-- 파파존스 / 마가리타 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '마가리타 (오리지널 크러스트)', '치즈와 토마토 소스 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준이며 씬도 동일함. 치즈롤·골드링·스파이시 갈릭 치즈롤·골드링씬·체다치즈롤은 난류가 추가됨. 크루아상은 난류가 추가되고 대두는 표기되지 않음(난류, 우유, 밀, 토마토).', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '마가리타 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '마가리타 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '마가리타 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('담백함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '마가리타 (오리지널 크러스트)';
+
+-- 파파존스 / 하와이안 (오리지널 크러스트)
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '하와이안 (오리지널 크러스트)', '햄과 파인애플 피자', 'verified'::allergen_status, 'https://www.pji.co.kr/menu/pizza/1000', '2026-11-24T03:13:01.479Z'::timestamptz, '공식 표는 피자×크러스트 단위로 표기되어 있음. 위 값은 오리지널 크러스트 행 기준이며 씬도 동일함. 치즈롤·골드링·스파이시 갈릭 치즈롤·골드링씬·크루아상·체다치즈롤은 난류가 추가됨.', 'https://www.pji.co.kr/menu/pizza/1000', '공식 사이트'
+from brands b where b.name = '파파존스' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '하와이안 (오리지널 크러스트)');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('돼지고기', 'danger', '돼지고기'), ('토마토', 'danger', '토마토')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '하와이안 (오리지널 크러스트)';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '파파존스' and b.is_franchise and m.name = '하와이안 (오리지널 크러스트)');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '파파존스' and b.is_franchise and m.name = '하와이안 (오리지널 크러스트)';
+
 commit;
