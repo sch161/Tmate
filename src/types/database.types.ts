@@ -106,6 +106,230 @@ export type Database = {
         }
         Relationships: []
       }
+      match_answers: {
+        Row: {
+          choice: number
+          question_id: number
+          room_id: number
+          user_id: string
+        }
+        Insert: {
+          choice: number
+          question_id: number
+          room_id: number
+          user_id: string
+        }
+        Update: {
+          choice?: number
+          question_id?: number
+          room_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "match_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_answers_room_id_user_id_fkey"
+            columns: ["room_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "match_room_members"
+            referencedColumns: ["room_id", "user_id"]
+          },
+        ]
+      }
+      match_food_answers: {
+        Row: {
+          eaten: boolean
+          food_id: number
+          rating: number | null
+          room_id: number
+          user_id: string
+          want_try: boolean | null
+        }
+        Insert: {
+          eaten: boolean
+          food_id: number
+          rating?: number | null
+          room_id: number
+          user_id: string
+          want_try?: boolean | null
+        }
+        Update: {
+          eaten?: boolean
+          food_id?: number
+          rating?: number | null
+          room_id?: number
+          user_id?: string
+          want_try?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_food_answers_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "match_foods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_food_answers_room_id_user_id_fkey"
+            columns: ["room_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "match_room_members"
+            referencedColumns: ["room_id", "user_id"]
+          },
+        ]
+      }
+      match_foods: {
+        Row: {
+          id: number
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          id?: never
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          id?: never
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
+      match_questions: {
+        Row: {
+          body: string
+          id: number
+          is_active: boolean
+          option_a: string
+          option_b: string
+          sort_order: number
+        }
+        Insert: {
+          body: string
+          id?: never
+          is_active?: boolean
+          option_a: string
+          option_b: string
+          sort_order: number
+        }
+        Update: {
+          body?: string
+          id?: never
+          is_active?: boolean
+          option_a?: string
+          option_b?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      match_room_foods: {
+        Row: {
+          food_id: number
+          room_id: number
+          sort_order: number
+        }
+        Insert: {
+          food_id: number
+          room_id: number
+          sort_order: number
+        }
+        Update: {
+          food_id?: number
+          room_id?: number
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_room_foods_food_id_fkey"
+            columns: ["food_id"]
+            isOneToOne: false
+            referencedRelation: "match_foods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_room_foods_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_room_members: {
+        Row: {
+          completed_at: string | null
+          joined_at: string
+          member_no: number
+          room_id: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          joined_at?: string
+          member_no: number
+          room_id: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          joined_at?: string
+          member_no?: number
+          room_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_room_members_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_room_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_rooms: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          id: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          id?: never
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_rooms_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       menu_allergens: {
         Row: {
           allergen_id: number
@@ -598,6 +822,11 @@ export type Database = {
         Args: { p_menu: number; p_user: string }
         Returns: number
       }
+      calc_match_room_id: { Args: { p_code: string }; Returns: number }
+      calc_match_score: {
+        Args: { p_a: string; p_b: string; p_room: number }
+        Returns: number
+      }
       calc_menu_match: {
         Args: { p_menu: number; p_user: string }
         Returns: number
@@ -626,6 +855,7 @@ export type Database = {
         Args: { p_a: string; p_b: string }
         Returns: number
       }
+      create_match_room: { Args: never; Returns: string }
       delete_review: { Args: { p_menu_id: number }; Returns: undefined }
       get_allergy_menus: {
         Args: { p_restaurant_id: number }
@@ -638,6 +868,58 @@ export type Database = {
           name: string
         }[]
       }
+      get_match_compare: {
+        Args: { p_code: string; p_member_no: number }
+        Returns: {
+          food_name: string
+          friend_eaten: boolean
+          friend_rating: number
+          friend_want_try: boolean
+          my_eaten: boolean
+          my_rating: number
+          my_want_try: boolean
+        }[]
+      }
+      get_match_foods: {
+        Args: { p_code: string }
+        Returns: {
+          food_id: number
+          my_eaten: boolean
+          my_rating: number
+          my_want_try: boolean
+          name: string
+        }[]
+      }
+      get_match_questions: {
+        Args: { p_code: string }
+        Returns: {
+          body: string
+          my_choice: number
+          option_a: string
+          option_b: string
+          question_id: number
+        }[]
+      }
+      get_match_ranking: {
+        Args: { p_hours?: number; p_limit?: number }
+        Returns: {
+          nickname_a: string
+          nickname_b: string
+          rank: number
+          score: number
+        }[]
+      }
+      get_match_room: {
+        Args: { p_code: string }
+        Returns: {
+          completed: boolean
+          is_me: boolean
+          member_no: number
+          nickname: string
+          score: number
+        }[]
+      }
+      get_my_match_room: { Args: never; Returns: string }
       get_my_reviews: {
         Args: never
         Returns: {
@@ -769,7 +1051,12 @@ export type Database = {
         }[]
       }
       has_batchim: { Args: { p_text: string }; Returns: boolean }
+      join_match_room: { Args: { p_code: string }; Returns: undefined }
       josa: { Args: { p_pair: string; p_text: string }; Returns: string }
+      save_match_test: {
+        Args: { p_choices: Json; p_code: string; p_foods: Json }
+        Returns: undefined
+      }
       save_onboarding: {
         Args: { p_allergens: number[]; p_region: string; p_tastes: Json }
         Returns: undefined
