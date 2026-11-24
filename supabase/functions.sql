@@ -15,7 +15,7 @@
 --   content_weight     5    협업:콘텐츠 = 5:5
 --   taste_learn_per_review 0.07  평가 1개마다 "평가로 본 입맛"을 섞는 비중 (7%)
 --   taste_learn_max        0.7   평가로 본 입맛을 섞는 비중의 상한 (평가 10개부터 70%)
---   match_room_max       6  궁합 검사: 한 방에 들어갈 수 있는 최대 인원
+--   match_room_max       2  궁합 검사: 한 방에 들어갈 수 있는 최대 인원 (둘만의 궁합)
 --   match_food_count     5  궁합 검사: 방마다 무작위로 뽑는 음식 수 (PART 2)
 --   match_room_keep_days 7  궁합 검사: 이 일수가 지난 방은 새 방을 만들 때 지운다 (4자리 방 번호 재사용)
 --
@@ -61,7 +61,7 @@ begin
     when 'content_weight'     then 5
     when 'taste_learn_per_review' then 0.07
     when 'taste_learn_max'        then 0.7
-    when 'match_room_max'       then 6
+    when 'match_room_max'       then 2
     when 'match_food_count'     then 5
     when 'match_room_keep_days' then 7
   end;
@@ -1597,7 +1597,7 @@ begin
   from public.match_room_members m
   where m.room_id = v_room;
   if v_members >= public.calc_setting('match_room_max') then
-    raise exception '방이 가득 찼어요.';
+    raise exception '이미 두 명이 들어온 방이에요. 새 방을 만들어주세요.';
   end if;
 
   insert into public.match_room_members (room_id, user_id, member_no) values (v_room, v_uid, v_next);
