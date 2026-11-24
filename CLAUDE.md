@@ -39,7 +39,7 @@
 - 알레르기는 식약처 공식 19종 표준(allergens.name)으로 통일한다 (화면 표기는 display_name, 조사 결과 매핑은 aliases). 정보가 없으면 "정보 없음(unknown)"으로 저장하고, 모르는 메뉴를 안전하다고 표시하지 않는다. 메뉴의 allergen_status 는 verified(공식 본문 확인) / official_extract(공식 도메인 발췌) / estimated(추정) / unknown(정보 없음)이다
 - 알레르기 추천 규칙: 사용자가 알레르기를 1개 이상 등록했으면 추천에서 겹치는 메뉴와 unknown/estimated 메뉴를 제외한다(안전 우선). 등록한 알레르기가 없으면 상태와 무관하게 포함한다. 가게 상세의 알레르기 탭에서는 겹치는 메뉴를 경고(위험/주의)로, 등록자의 unknown/estimated 메뉴를 "정보 없음"으로 보여준다
 - 하단 네비게이션은 홈 / 저장 / 마이페이지 3개다
-- 친구랑 궁합 검사(행사 체험용): 방 번호(4자리)로 친구와 묶고, 둘 중 하나 문항 10개 + 방마다 무작위 음식 5개에 답한다. 궁합(%)은 같은 답을 고른 문항 비율이고 음식 답은 결과 카드에만 쓴다. 문항·음식은 supabase/seed_match.sql, 결과 문구는 src/utils/match-results.ts 에 있다
+- 친구랑 궁합 검사(행사 체험용): 방 번호(4자리)로 친구와 묶고(한 방에 2명까지), 둘 중 하나 문항 10개 + 방마다 무작위 음식 5개에 답한다. 궁합(%)은 같은 답을 고른 문항 비율이고 음식 답은 결과 카드에만 쓴다. 문항·음식은 supabase/seed_match.sql, 결과 문구는 src/utils/match-results.ts 에 있다
 - 맛궁합 영수증 인쇄(부스 진행자용): 맥북 Chrome 에서 MXW01 미니 감열 프린터(가로 384점, BLE)로 사진과 궁합 결과를 뽑는다. 바이트를 만드는 순수 함수는 src/utils/mxw01-protocol.ts(node scripts/test-mxw01.mjs 로 테스트), Web Bluetooth 전송은 src/utils/mxw01-printer.ts, 영수증 그림은 src/utils/match-receipt.ts 에 있다. 진행자는 방 멤버가 아니므로 get_match_room_pairs · get_match_pair_foods(migrations/004_match_print.sql)로 읽는다. 실제 프린터 통신은 여기서 확인할 수 없으므로 프로토콜을 바꾸면 docs/match-print.md 의 절차로 실제 기기에서 다시 확인한다
 - 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
 - 알레르기·입맛(맛 선택+비율) 수정은 RPC(update_my_allergens, update_my_tastes)가 한 트랜잭션으로 교체 저장한다. 지역·닉네임은 profiles 의 해당 컬럼만 update 한다
