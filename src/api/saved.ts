@@ -2,7 +2,7 @@ import { supabase } from '../lib/supabase';
 import { getConflictingMenuIds } from './allergy-conflicts';
 import { getSession } from './auth';
 import { getTasteTags } from './lookups';
-import type { AllergenStatus } from './restaurants';
+import { categoryOrNull, type AllergenStatus } from './restaurants';
 
 // 저장 목록: saved_restaurants 는 지점 단위, saved_menus 는 브랜드 메뉴 단위다.
 // 테이블 직접 조회는 RLS 가 허용한 범위만 쓰고, user_id = 내 id 필터를 항상 건다.
@@ -15,6 +15,8 @@ export interface SavedRestaurant {
   region: string;
   imageUrl: string | null;
   brandName: string;
+  /** 음식 카테고리 이름. 없으면 null */
+  categoryName: string | null;
   /** 평가가 없으면 null */
   avgRating: number | null;
   tasteTags: string[];
@@ -28,6 +30,8 @@ export interface SavedMenu {
   imageUrl: string | null;
   brandId: number;
   brandName: string;
+  /** 음식 카테고리 이름. 없으면 null */
+  categoryName: string | null;
   /** 평가가 없으면 null */
   avgRating: number | null;
   tasteTags: string[];
@@ -62,7 +66,7 @@ export async function getSavedRestaurants(): Promise<SavedRestaurant[]> {
     if (ids.length === 0) return [];
 
     const [restaurants, stats, tagLinks, tags] = await Promise.all([
-      supabase.from('restaurants').select('id, name, address, region, image_url, brands(name)').in('id', ids),
+      supabase.from('restaurants').select('id, name, address, region, image_url, brands(name, food_categories(name))').in('id', ids),
       supabase.from('restaurant_stats').select('restaurant_id, avg_rating').in('restaurant_id', ids),
       supabase.from('restaurant_taste_tags').select('restaurant_id, taste_tag_id').in('restaurant_id', ids),
       getTasteTags(),
@@ -93,6 +97,7 @@ export async function getSavedRestaurants(): Promise<SavedRestaurant[]> {
         region: row.region,
         imageUrl: str(row.image_url),
         brandName: row.brands?.name ?? '',
+        categoryName: categoryOrNull(row.brands?.food_categories?.name),
         avgRating: ratings.get(id) ?? null,
         tasteTags: tagsByRestaurant.get(id) ?? [],
       });
@@ -117,7 +122,7 @@ export async function getSavedMenus(): Promise<SavedMenu[]> {
     if (ids.length === 0) return [];
 
     const [menus, stats, tagLinks, conflicting, tags] = await Promise.all([
-      supabase.from('menus').select('id, name, description, image_url, brand_id, allergen_status, brands(name)').in('id', ids),
+      supabase.from('menus').select('id, name, description, image_url, brand_id, allergen_status, brands(name, food_categories(name))').in('id', ids),
       supabase.from('menu_stats').select('menu_id, avg_rating').in('menu_id', ids),
       supabase.from('menu_taste_tags').select('menu_id, taste_tag_id').in('menu_id', ids),
       getConflictingMenuIds(userId, ids),
@@ -148,6 +153,7 @@ export async function getSavedMenus(): Promise<SavedMenu[]> {
         imageUrl: str(row.image_url),
         brandId: row.brand_id,
         brandName: row.brands?.name ?? '',
+        categoryName: categoryOrNull(row.brands?.food_categories?.name),
         avgRating: ratings.get(id) ?? null,
         tasteTags: tagsByMenu.get(id) ?? [],
         allergenStatus: row.allergen_status,

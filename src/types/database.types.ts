@@ -643,6 +643,7 @@ export type Database = {
         Returns: {
           brand_id: number
           brand_name: string
+          category_name: string
           created_at: string
           image_url: string
           menu_id: number
@@ -672,6 +673,7 @@ export type Database = {
           allergen_status: Database["public"]["Enums"]["allergen_status"]
           avg_rating: number
           brand_name: string
+          category_name: string
           image_url: string
           match_percent: number
           menu_id: number
@@ -700,6 +702,7 @@ export type Database = {
           avg_rating: number
           brand_id: number
           brand_name: string
+          category_name: string
           image_url: string
           is_franchise: boolean
           is_saved: boolean
@@ -743,6 +746,7 @@ export type Database = {
           avg_rating: number
           brand_id: number
           brand_name: string
+          category_name: string
           has_official_allergen: boolean
           image_url: string
           is_franchise: boolean

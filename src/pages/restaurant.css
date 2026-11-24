@@ -375,3 +375,8 @@
   font-size: var(--font-size-14);
   font-weight: var(--font-weight-medium);
 }
+
+/* 카테고리 기본 이미지를 가게 상세 상단(가로로 긴 영역)에 쓸 때: 가운데에 정사각형으로 두고 양옆은 기존 배경색 */
+img.restaurant__hero.image--category {
+  background: var(--color-surface);
+}

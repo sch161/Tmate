@@ -110,7 +110,7 @@ function createRestaurantCard(item: SavedRestaurant): HTMLElement {
   const link = el(
     'a',
     { class: 'saved-card__main', href: `${PATHS.restaurant}?id=${encodeURIComponent(String(item.restaurantId))}` },
-    createImage(item.imageUrl, 'saved-card__image'),
+    createImage(item.imageUrl, 'saved-card__image', item.categoryName),
     info,
   );
   const remove = createRemoveButton(item.name, () => void removeItem(`r${item.restaurantId}`, restaurants, item, () => toggleSaveRestaurant(item.restaurantId, false), renderRestaurants));
@@ -152,7 +152,7 @@ function createMenuCard(item: SavedMenu): HTMLElement {
   safety.append(el('span', { class: status.unverified ? 'saved-card__status saved-card__status--unverified text-wrap-ko' : 'saved-card__status text-wrap-ko' }, status.label));
   info.append(safety);
 
-  const main = el('button', { class: 'saved-card__main', type: 'button' }, createImage(item.imageUrl, 'saved-card__image'), info);
+  const main = el('button', { class: 'saved-card__main', type: 'button' }, createImage(item.imageUrl, 'saved-card__image', item.categoryName), info);
   main.addEventListener('click', () => void openMenu(item));
   const remove = createRemoveButton(item.name, () => void removeItem(`m${item.menuId}`, menus, item, () => toggleSaveMenu(item.menuId, false), renderMenus));
   return el('article', { class: 'saved-card' }, main, remove);
