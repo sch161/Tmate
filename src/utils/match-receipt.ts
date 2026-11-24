@@ -4,7 +4,7 @@
 import { MXW01_WIDTH, rgbaToMono } from './mxw01-protocol';
 import { getMatchTier, type MatchResultCard } from './match-results';
 
-export const RECEIPT_SITE = 't-mate.vercel.app';
+export const RECEIPT_FOOTER = '디지털미식연구반';
 export const RECEIPT_MAX_CARDS = 4;
 /** 사진 비율 (가로:세로 = 4:3). 촬영 화면의 틀도 같은 비율을 쓴다 */
 export const RECEIPT_PHOTO_ASPECT = 4 / 3;
@@ -243,7 +243,7 @@ export async function renderMatchReceipt(input: ReceiptInput): Promise<ReceiptIm
 
   // 날짜와 사이트 주소
   paragraph(new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }).format(input.date), 400, 20, 8);
-  paragraph(RECEIPT_SITE, 700, 24, 0);
+  paragraph(RECEIPT_FOOTER, 700, 24, 0);
   const height = Math.min(MAX_HEIGHT, y + BOTTOM_FEED);
 
   const rgba = ctx.getImageData(0, 0, WIDTH, height).data;
