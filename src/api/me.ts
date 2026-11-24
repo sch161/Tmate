@@ -81,6 +81,39 @@ export async function getMySummary(): Promise<MySummary | null> {
   }
 }
 
+/** 맛 한 건의 입맛 비율. declared 는 고른 비율, learned 는 평가로 본 비율, ratio 는 둘을 섞은 지금 비율(합계 100) */
+export interface TasteProfileItem {
+  name: string;
+  declared: number;
+  learned: number;
+  ratio: number;
+}
+
+/** 평가로 보정한 내 입맛(get_my_taste_profile). 고른 입맛이 없으면 items 가 비어 있다. */
+export interface TasteProfile {
+  /** 지금 비율 내림차순 */
+  items: TasteProfileItem[];
+  /** 평가로 본 입맛을 섞은 비중(%). 0 이면 고른 비율 그대로다. */
+  learnPercent: number;
+  reviewCount: number;
+}
+
+/** 평가로 보정한 내 입맛. */
+export async function getMyTasteProfile(): Promise<TasteProfile> {
+  try {
+    const { data, error } = await supabase.rpc('get_my_taste_profile');
+    if (error) throw error;
+    const rows = data ?? [];
+    return {
+      items: rows.map((row) => ({ name: row.name, declared: count(row.declared), learned: count(row.learned), ratio: count(row.ratio) })),
+      learnPercent: count(rows[0]?.learn_percent),
+      reviewCount: count(rows[0]?.review_count),
+    };
+  } catch {
+    throw new Error('입맛 정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  }
+}
+
 /** 내가 등록한 알레르기 id 목록. user_id = 내 id 로 거른다. */
 export async function getMyAllergenIds(): Promise<number[]> {
   try {

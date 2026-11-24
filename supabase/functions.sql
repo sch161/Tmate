@@ -13,12 +13,17 @@
 --   collab_min_reviews 5    내 평가 수가 이 값 이상일 때부터 협업 점수를 섞는다 (미만이면 입맛 비율 × 메뉴 태그만 사용)
 --   collab_weight      5    일치도 = (협업 점수 × collab_weight + 콘텐츠 점수 × content_weight) / (두 가중치 합)
 --   content_weight     5    협업:콘텐츠 = 5:5
+--   taste_learn_per_review 0.07  평가 1개마다 "평가로 본 입맛"을 섞는 비중 (7%)
+--   taste_learn_max        0.7   평가로 본 입맛을 섞는 비중의 상한 (평가 10개부터 70%)
 --   match_room_max       6  궁합 검사: 한 방에 들어갈 수 있는 최대 인원
 --   match_food_count     5  궁합 검사: 방마다 무작위로 뽑는 음식 수 (PART 2)
 --   match_room_keep_days 7  궁합 검사: 이 일수가 지난 방은 새 방을 만들 때 지운다 (4자리 방 번호 재사용)
 --
 -- 계산식 요약
---   콘텐츠 점수  = 내 입맛 비율(ratio) 중 메뉴의 맛 태그에 포함된 것의 합 (0~100)
+--   지금 입맛    = 고른 입맛 비율 × (1 - w) + 평가로 본 입맛 × w,  w = min(평가 수 × taste_learn_per_review, taste_learn_max)
+--                  평가로 본 입맛 = 평가한 메뉴의 맛마다 (별점 - 3)을 더한 값(5점 +2, 4점 +1, 3점 0, 2점 -1, 1점 -2). 음수는 0 으로 보고 합계 100 으로 맞춘다
+--                  (평가에 고른 맛을 쓰고, 고른 맛이 없는 평가는 그 메뉴의 맛을 쓴다. 양수인 맛이 하나도 없으면 w = 0)
+--   콘텐츠 점수  = 지금 입맛 비율 중 메뉴의 맛 태그에 포함된 것의 합 (0~100)
 --   유사도       = 1 - (공통 평가 메뉴의 평균 |별점 차이| / 4)
 --   협업 점수    = 유사도 기준 이상인 이웃들의 별점을 유사도로 가중평균한 값 → (예측 별점 - 1) / 4 × 100
 --
@@ -54,6 +59,8 @@ begin
     when 'collab_min_reviews' then 5
     when 'collab_weight'      then 5
     when 'content_weight'     then 5
+    when 'taste_learn_per_review' then 0.07
+    when 'taste_learn_max'        then 0.7
     when 'match_room_max'       then 6
     when 'match_food_count'     then 5
     when 'match_room_keep_days' then 7
@@ -149,7 +156,92 @@ begin
 end;
 $$;
 
--- 콘텐츠 점수: 사용자의 맛 비율 중 메뉴 맛 태그에 포함된 것의 합 (메뉴 태그가 없으면 0)
+-- 지금 입맛(평가로 보정한 입맛 비율). 맛마다 한 행: 고른 비율(declared), 평가로 본 비율(learned), 둘을 섞은 지금 비율(ratio, 합계 100)
+--   learn_percent 는 평가로 본 입맛을 섞은 비중(%)으로 모든 행이 같다. 계산식은 파일 머리말의 "지금 입맛" 참고.
+--   고른 입맛이 없으면(온보딩 전) 행이 없다 → 화면은 입맛 등록 안내를 그대로 보여준다.
+create or replace function public.calc_taste_profile(p_user uuid)
+returns table (taste_tag_id int, declared int, learned int, ratio int, learn_percent int)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_reviews int;
+  v_weight numeric;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  if not exists (select 1 from public.user_taste_preferences utp where utp.user_id = p_user) then
+    return;
+  end if;
+
+  select count(*) into v_reviews
+  from public.reviews r
+  where r.user_id = p_user;
+  v_weight := least(v_reviews * public.calc_setting('taste_learn_per_review'), public.calc_setting('taste_learn_max'));
+
+  return query
+  with tagged as (
+    -- 평가에 고른 맛
+    select r.rating as rating, rt.taste_tag_id as taste_tag_id
+    from public.reviews r
+    join public.review_taste_tags rt on rt.review_id = r.id
+    where r.user_id = p_user
+    union all
+    -- 고른 맛이 없는 평가는 그 메뉴의 맛
+    select r.rating, mt.taste_tag_id
+    from public.reviews r
+    join public.menu_taste_tags mt on mt.menu_id = r.menu_id
+    where r.user_id = p_user
+      and not exists (select 1 from public.review_taste_tags rt where rt.review_id = r.id)
+  ),
+  scores as (
+    select t.taste_tag_id as taste_tag_id, greatest(sum(t.rating - 3), 0)::numeric as score
+    from tagged t
+    group by t.taste_tag_id
+  ),
+  total as (
+    select coalesce(sum(sc.score), 0) as total from scores sc
+  ),
+  merged as (
+    select tt.id as taste_tag_id,
+           coalesce(utp.ratio, 0)::numeric as declared,
+           case when tot.total > 0 then coalesce(sc.score, 0) * 100 / tot.total else 0 end as learned,
+           case when tot.total > 0 then v_weight else 0 end as weight
+    from public.taste_tags tt
+    cross join total tot
+    left join public.user_taste_preferences utp on utp.user_id = p_user and utp.taste_tag_id = tt.id
+    left join scores sc on sc.taste_tag_id = tt.id
+    where utp.taste_tag_id is not null
+       or coalesce(sc.score, 0) > 0
+  ),
+  mixed as (
+    select m.taste_tag_id as taste_tag_id, m.declared as declared, m.learned as learned, m.weight as weight,
+           (1 - m.weight) * m.declared + m.weight * m.learned as value
+    from merged m
+  ),
+  rounded as (
+    select x.taste_tag_id as taste_tag_id, x.declared as declared, x.learned as learned, x.weight as weight,
+           round(x.value)::int as ratio,
+           row_number() over (order by x.value desc, x.taste_tag_id) as rn,
+           -- 반올림 때문에 합계가 어긋난 만큼(보통 ±1)을 가장 큰 맛에 더해 합계를 맞춘다
+           (round(sum(x.value) over ()) - sum(round(x.value)) over ())::int as gap
+    from mixed x
+  )
+  select z.taste_tag_id::int,
+         round(z.declared)::int,
+         round(z.learned)::int,
+         z.ratio + case when z.rn = 1 then z.gap else 0 end,
+         round(z.weight * 100)::int
+  from rounded z;
+end;
+$$;
+
+-- 콘텐츠 점수: 사용자의 지금 입맛 비율 중 메뉴 맛 태그에 포함된 것의 합 (메뉴 태그가 없으면 0)
 create or replace function public.calc_content_match(p_user uuid, p_menu bigint)
 returns int
 language plpgsql
@@ -163,11 +255,10 @@ begin
   end if;
 
   return coalesce((
-    select sum(utp.ratio)
-    from public.user_taste_preferences utp
-    join public.menu_taste_tags mtt on mtt.taste_tag_id = utp.taste_tag_id
-    where utp.user_id = p_user
-      and mtt.menu_id = p_menu
+    select sum(tp.ratio)
+    from public.calc_taste_profile(p_user) tp
+    join public.menu_taste_tags mtt on mtt.taste_tag_id = tp.taste_tag_id
+    where mtt.menu_id = p_menu
   ), 0)::int;
 end;
 $$;
@@ -282,7 +373,7 @@ end;
 $$;
 
 -- 추천 이유 문장
---   이웃이 있으면 "입맛이 비슷한 n명이 평균 x점을 줬어요", 없으면 "{가장 높은 비율의 맛}을/를 좋아하는 입맛과 잘 맞아요"
+--   이웃이 있으면 "입맛이 비슷한 n명이 평균 x점을 줬어요", 없으면 "{지금 입맛에서 가장 높은 비율의 맛}을/를 좋아하는 입맛과 잘 맞아요"
 create or replace function public.calc_menu_reason(p_user uuid, p_menu bigint)
 returns text
 language plpgsql
@@ -308,10 +399,10 @@ begin
   end if;
 
   select tt.name into v_top
-  from public.user_taste_preferences utp
-  join public.taste_tags tt on tt.id = utp.taste_tag_id
-  where utp.user_id = p_user
-  order by utp.ratio desc, tt.id
+  from public.calc_taste_profile(p_user) tp
+  join public.taste_tags tt on tt.id = tp.taste_tag_id
+  where tp.ratio > 0
+  order by tp.ratio desc, tt.id
   limit 1;
 
   if v_top is null then
@@ -321,7 +412,7 @@ begin
 end;
 $$;
 
--- 입맛 유형 이름·설명 (비율 상위 2개 기준). 맛이 없으면 둘 다 null
+-- 입맛 유형 이름·설명 (지금 입맛의 비율 상위 2개 기준). 맛이 없으면 둘 다 null
 --   이름: 2개 이상 → 짧은 이름 이어 붙이기(매콤달콤), 1개 → "{짧은 이름}파"(매콤파)
 create or replace function public.calc_taste_type(p_user uuid)
 returns table (type_name text, type_desc text)
@@ -339,12 +430,12 @@ begin
     raise exception '로그인이 필요합니다.';
   end if;
 
-  select array_agg(tt.name order by utp.ratio desc, tt.id),
-         array_agg(public.taste_short_name(tt.code, tt.name) order by utp.ratio desc, tt.id)
+  select array_agg(tt.name order by tp.ratio desc, tt.id),
+         array_agg(public.taste_short_name(tt.code, tt.name) order by tp.ratio desc, tt.id)
   into v_names, v_shorts
-  from public.user_taste_preferences utp
-  join public.taste_tags tt on tt.id = utp.taste_tag_id
-  where utp.user_id = p_user;
+  from public.calc_taste_profile(p_user) tp
+  join public.taste_tags tt on tt.id = tp.taste_tag_id
+  where tp.ratio > 0;
 
   v_count := coalesce(array_length(v_names, 1), 0);
 
@@ -371,6 +462,7 @@ revoke all on function public.calc_setting(text)                    from public,
 revoke all on function public.taste_short_name(text, text)          from public, anon, authenticated;
 revoke all on function public.has_batchim(text)                     from public, anon, authenticated;
 revoke all on function public.josa(text, text)                      from public, anon, authenticated;
+revoke all on function public.calc_taste_profile(uuid)              from public, anon, authenticated;
 revoke all on function public.calc_content_match(uuid, bigint)      from public, anon, authenticated;
 revoke all on function public.calc_user_similarity(uuid, uuid)      from public, anon, authenticated;
 revoke all on function public.calc_menu_match_detail(uuid, bigint)  from public, anon, authenticated;
@@ -1020,7 +1112,7 @@ end;
 $$;
 
 -- 마이페이지 요약
---   taste_ratios 예: [{"name": "매콤함", "ratio": 60}, ...] (ratio 내림차순)
+--   taste_ratios 예: [{"name": "매콤함", "ratio": 60}, ...] (ratio 내림차순). 평가로 보정한 지금 입맛이다 (고른 비율은 get_my_taste_profile)
 create or replace function public.get_my_summary()
 returns table (
   nickname text,
@@ -1049,10 +1141,10 @@ begin
   select p.nickname,
          p.region,
          coalesce((
-           select jsonb_agg(jsonb_build_object('name', tt.name, 'ratio', utp.ratio) order by utp.ratio desc, tt.id)
-           from public.user_taste_preferences utp
-           join public.taste_tags tt on tt.id = utp.taste_tag_id
-           where utp.user_id = v_uid
+           select jsonb_agg(jsonb_build_object('name', tt.name, 'ratio', tp.ratio) order by tp.ratio desc, tt.id)
+           from public.calc_taste_profile(v_uid) tp
+           join public.taste_tags tt on tt.id = tp.taste_tag_id
+           where tp.ratio > 0
          ), '[]'::jsonb),
          t.type_name,
          t.type_desc,
@@ -1067,6 +1159,39 @@ begin
   from public.profiles p
   cross join lateral public.calc_taste_type(v_uid) t
   where p.id = v_uid;
+end;
+$$;
+
+-- 내 입맛 자세히: 맛마다 고른 비율(declared)·평가로 본 비율(learned)·지금 비율(ratio). ratio 내림차순
+--   learn_percent(평가를 섞은 비중 %)와 review_count(내 평가 수)는 모든 행이 같다. 고른 입맛이 없으면 행이 없다.
+create or replace function public.get_my_taste_profile()
+returns table (
+  name text,
+  declared int,
+  learned int,
+  ratio int,
+  learn_percent int,
+  review_count int
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  return query
+  select tt.name, tp.declared, tp.learned, tp.ratio, tp.learn_percent,
+         (select count(*) from public.reviews rv where rv.user_id = v_uid)::int
+  from public.calc_taste_profile(v_uid) tp
+  join public.taste_tags tt on tt.id = tp.taste_tag_id
+  order by tp.ratio desc, tt.id;
 end;
 $$;
 
@@ -1286,6 +1411,7 @@ revoke all on function public.get_restaurant_detail(bigint)                    f
 revoke all on function public.get_restaurant_menus(bigint)                     from public, anon;
 revoke all on function public.get_allergy_menus(bigint)                        from public, anon;
 revoke all on function public.get_my_summary()                                 from public, anon;
+revoke all on function public.get_my_taste_profile()                           from public, anon;
 revoke all on function public.get_taste_mates(int)                             from public, anon;
 revoke all on function public.get_my_reviews()                                 from public, anon;
 revoke all on function public.get_regions()                                    from public, anon;
@@ -1301,6 +1427,7 @@ grant execute on function public.get_restaurant_detail(bigint)                 t
 grant execute on function public.get_restaurant_menus(bigint)                  to authenticated;
 grant execute on function public.get_allergy_menus(bigint)                     to authenticated;
 grant execute on function public.get_my_summary()                              to authenticated;
+grant execute on function public.get_my_taste_profile()                        to authenticated;
 grant execute on function public.get_taste_mates(int)                          to authenticated;
 grant execute on function public.get_my_reviews()                              to authenticated;
 grant execute on function public.get_regions()                                 to authenticated;

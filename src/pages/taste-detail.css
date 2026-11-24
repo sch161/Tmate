@@ -124,6 +124,26 @@
   white-space: nowrap;
 }
 
+/* 디자인 대기: 평가 반영 안내 (Figma 에 없는 임시 UI) */
+.learn-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.learn-note__title {
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-semibold);
+}
+
+.learn-note__desc {
+  font-size: var(--font-size-12);
+  font-weight: var(--font-weight-medium);
+}
+
 .taste-detail__hint {
   font-size: var(--font-size-13);
   font-weight: var(--font-weight-medium);

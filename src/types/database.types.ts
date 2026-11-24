@@ -844,6 +844,16 @@ export type Database = {
         Returns: string
       }
       calc_setting: { Args: { p_key: string }; Returns: number }
+      calc_taste_profile: {
+        Args: { p_user: string }
+        Returns: {
+          declared: number
+          learn_percent: number
+          learned: number
+          ratio: number
+          taste_tag_id: number
+        }[]
+      }
       calc_taste_type: {
         Args: { p_user: string }
         Returns: {
@@ -969,6 +979,17 @@ export type Database = {
           taste_ratios: Json
           taste_type_desc: string
           taste_type_name: string
+        }[]
+      }
+      get_my_taste_profile: {
+        Args: never
+        Returns: {
+          declared: number
+          learn_percent: number
+          learned: number
+          name: string
+          ratio: number
+          review_count: number
         }[]
       }
       get_recommended_menus: {
