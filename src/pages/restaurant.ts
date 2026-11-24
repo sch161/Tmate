@@ -14,6 +14,7 @@ import {
   type RestaurantMenu,
 } from '../api/restaurants';
 import mascotImage from '../assets/images/allergy-mascot.png';
+import { isMyStore } from '../api/stores';
 import { PATHS } from '../lib/constants';
 import { getAllergenStatusInfo } from '../utils/allergen-status';
 import { requireAuth } from '../utils/auth-guard';
@@ -226,8 +227,14 @@ function renderMenus(menus: RestaurantMenu[]): void {
     }
     content.append(line);
   }
+  // 디자인 대기: 내가 추가한 가게에만 보이는 메뉴 추가 링크 (Figma 에 없는 임시 UI)
+  if (myStore) content.append(el('a', { class: 'restaurant__add-menu', href: `${PATHS.storeAdd}?restaurant=${restaurantId}` }, '+ 메뉴 추가하기'));
   panel.replaceChildren(content);
 }
+
+/** 내가 추가한 가게인지 (메뉴 추가 링크를 보여줄지). 한 번만 확인한다 */
+let myStore = false;
+let myStoreChecked = false;
 
 async function loadMenusTab(): Promise<void> {
   if (!panel) return;
@@ -238,6 +245,10 @@ async function loadMenusTab(): Promise<void> {
   }
   renderLoading(panel);
   try {
+    if (!myStoreChecked) {
+      myStore = await isMyStore(restaurantId);
+      myStoreChecked = true;
+    }
     const menus = await getRestaurantMenus(restaurantId);
     menusCache = menus;
     for (const menu of menus) savedMenus.set(menu.menuId, menu.isSaved);
