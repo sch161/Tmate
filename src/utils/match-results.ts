@@ -1,24 +1,27 @@
 // 디자인 대기: 화면 나오면 교체
 // 궁합 검사 결과 문구와 결과 카드 계산. 점수 계산은 서버(functions.sql)가 하고, 여기서는 보여줄 문구만 고른다.
 import type { MatchFoodCompare } from '../api/match';
+import type { MascotName } from './mascots';
 
 export interface MatchTier {
   title: string;
   desc: string;
+  /** 결과 화면에 함께 보여줄 마스코트 표정 */
+  mascot: MascotName;
 }
 
 // 점수 구간(10% 단위) → 결과 이름·설명. min 이상이면 그 구간이다 (위에서부터 찾는다)
 const TIERS: { min: number; tier: MatchTier }[] = [
-  { min: 100, tier: { title: '전생에 한 식탁을 쓴 사이', desc: '메뉴판을 볼 필요도 없는 영혼의 먹친구' } },
-  { min: 90, tier: { title: '혀도 쌍둥이인가요?', desc: 'DNA 검사보다 정확한 입맛의 일치' } },
-  { min: 80, tier: { title: '먹방 듀오 데뷔 가능', desc: '함께 맛집 투어를 떠나기 좋은 사이' } },
-  { min: 70, tier: { title: '한입만 해도 기분 좋은 사이', desc: '서로의 메뉴까지 탐나는 이상적인 먹친구' } },
-  { min: 60, tier: { title: '평화로운 겸상 가능', desc: '서로의 취향을 존중하면 문제없음' } },
-  { min: 50, tier: { title: '반반 메뉴가 살린 우정', desc: '반반 메뉴를 개발한 사람에게 감사하세요' } },
-  { min: 40, tier: { title: '아슬아슬한 식탁 외교', desc: '메뉴 선정부터 치열한 협상이 필요함' } },
-  { min: 30, tier: { title: '메뉴판 앞에서는 남남', desc: '친한 건 알겠는데 입맛은 초면이네요' } },
-  { min: 20, tier: { title: '같은 식당, 다른 세계관', desc: '서로의 주문을 이해하기 어려운 사이' } },
-  { min: 0, tier: { title: '각자 배달시키세요', desc: '소중한 우정을 지키기 위해 개별 주문을 권장합니다' } },
+  { min: 100, tier: { title: '전생에 한 식탁을 쓴 사이', desc: '메뉴판을 볼 필요도 없는 영혼의 먹친구', mascot: 'heart' } },
+  { min: 90, tier: { title: '혀도 쌍둥이인가요?', desc: 'DNA 검사보다 정확한 입맛의 일치', mascot: 'heart' } },
+  { min: 80, tier: { title: '먹방 듀오 데뷔 가능', desc: '함께 맛집 투어를 떠나기 좋은 사이', mascot: 'thumbs-up' } },
+  { min: 70, tier: { title: '한입만 해도 기분 좋은 사이', desc: '서로의 메뉴까지 탐나는 이상적인 먹친구', mascot: 'thumbs-up' } },
+  { min: 60, tier: { title: '평화로운 겸상 가능', desc: '서로의 취향을 존중하면 문제없음', mascot: 'eating' } },
+  { min: 50, tier: { title: '반반 메뉴가 살린 우정', desc: '반반 메뉴를 개발한 사람에게 감사하세요', mascot: 'standing' } },
+  { min: 40, tier: { title: '아슬아슬한 식탁 외교', desc: '메뉴 선정부터 치열한 협상이 필요함', mascot: 'thinking' } },
+  { min: 30, tier: { title: '메뉴판 앞에서는 남남', desc: '친한 건 알겠는데 입맛은 초면이네요', mascot: 'wave' } },
+  { min: 20, tier: { title: '같은 식당, 다른 세계관', desc: '서로의 주문을 이해하기 어려운 사이', mascot: 'tired' } },
+  { min: 0, tier: { title: '각자 배달시키세요', desc: '소중한 우정을 지키기 위해 개별 주문을 권장합니다', mascot: 'crying' } },
 ];
 
 export function getMatchTier(score: number): MatchTier {
