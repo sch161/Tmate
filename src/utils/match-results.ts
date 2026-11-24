@@ -34,26 +34,35 @@ export interface MatchResultCard {
 const LOVE_MIN = 4; // 둘 다 이 별점 이상이면 "둘 다 사랑하는 음식"
 const FIGHT_DIFF = 3; // 별점 차이가 이 값 이상이면 "우정을 위협하는 음식"
 
+/** 카드 문구에 넣을 두 사람의 이름 (영수증처럼 "나·친구"가 아닌 제3자가 볼 때) */
+export interface MatchCardNames {
+  me: string;
+  friend: string;
+}
+
 /**
  * 음식별 답으로 결과 카드를 만든다. 종류마다 가장 뚜렷한 음식 하나만 고르고, 해당하는 음식이 없는 카드는 만들지 않는다.
  * 안 먹어본 음식은 점수에 쓰지 않고 "영업할 음식"·"함께 도전할 음식" 카드에만 쓴다.
+ * names 를 주면 "나"·"친구" 대신 그 이름으로 쓴다 (맛궁합 영수증용).
  */
-export function buildResultCards(rows: MatchFoodCompare[]): MatchResultCard[] {
+export function buildResultCards(rows: MatchFoodCompare[], names?: MatchCardNames): MatchResultCard[] {
   const cards: MatchResultCard[] = [];
+  const me = names?.me ?? '나';
+  const friend = names?.friend ?? '친구';
   const both = rows.filter((r) => r.myEaten && r.friendEaten && r.myRating !== null && r.friendRating !== null);
   const rating = (v: number | null): number => v ?? 0;
 
   const love = both.filter((r) => rating(r.myRating) >= LOVE_MIN && rating(r.friendRating) >= LOVE_MIN).sort((a, b) => rating(b.myRating) + rating(b.friendRating) - (rating(a.myRating) + rating(a.friendRating)))[0];
-  if (love) cards.push({ label: '둘 다 사랑하는 음식', foodName: love.foodName, detail: `나 ${love.myRating}점 · 친구 ${love.friendRating}점` });
+  if (love) cards.push({ label: '둘 다 사랑하는 음식', foodName: love.foodName, detail: `${me} ${love.myRating}점 · ${friend} ${love.friendRating}점` });
 
   const fight = both.filter((r) => Math.abs(rating(r.myRating) - rating(r.friendRating)) >= FIGHT_DIFF).sort((a, b) => Math.abs(rating(b.myRating) - rating(b.friendRating)) - Math.abs(rating(a.myRating) - rating(a.friendRating)))[0];
-  if (fight) cards.push({ label: '우정을 위협하는 음식', foodName: fight.foodName, detail: `나 ${fight.myRating}점 · 친구 ${fight.friendRating}점` });
+  if (fight) cards.push({ label: '우정을 위협하는 음식', foodName: fight.foodName, detail: `${me} ${fight.myRating}점 · ${friend} ${fight.friendRating}점` });
 
   const pitch = rows.filter((r) => r.myEaten && rating(r.myRating) >= LOVE_MIN && !r.friendEaten).sort((a, b) => rating(b.myRating) - rating(a.myRating))[0];
-  if (pitch) cards.push({ label: '친구에게 영업할 음식', foodName: pitch.foodName, detail: `나 ${pitch.myRating}점 · 친구 아직 안 먹어봄` });
+  if (pitch) cards.push({ label: names ? `${me} 님이 영업할 음식` : '친구에게 영업할 음식', foodName: pitch.foodName, detail: `${me} ${pitch.myRating}점 · ${friend} 아직 안 먹어봄` });
 
   const pitched = rows.filter((r) => r.friendEaten && rating(r.friendRating) >= LOVE_MIN && !r.myEaten).sort((a, b) => rating(b.friendRating) - rating(a.friendRating))[0];
-  if (pitched) cards.push({ label: '친구가 영업할 음식', foodName: pitched.foodName, detail: `친구 ${pitched.friendRating}점 · 나 아직 안 먹어봄` });
+  if (pitched) cards.push({ label: names ? `${friend} 님이 영업할 음식` : '친구가 영업할 음식', foodName: pitched.foodName, detail: `${friend} ${pitched.friendRating}점 · ${me} 아직 안 먹어봄` });
 
   const dare = rows.find((r) => !r.myEaten && !r.friendEaten && r.myWantTry === true && r.friendWantTry === true);
   if (dare) cards.push({ label: '함께 도전할 음식', foodName: dare.foodName, detail: '둘 다 안 먹어봤지만 먹어보고 싶음' });
