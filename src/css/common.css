@@ -217,7 +217,9 @@ body {
   --value: 0;
   --meter-color: var(--color-primary);
   position: relative;
+  /* Safari 는 flex-basis 만으로는 부모 너비 계산에 막대를 넣지 않아 옆 글자와 겹친다. width 도 함께 준다 */
   flex: 0 0 100px;
+  width: 100px;
   height: var(--meter-height);
   border-radius: var(--radius-md);
   overflow: hidden;
