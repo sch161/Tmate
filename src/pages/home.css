@@ -84,6 +84,17 @@
   margin-top: var(--space-5);
 }
 
+/* 검색 중에는 검색과 무관한 섹션(오늘의 추천 메뉴, 입맛 변경하기)을 숨겨 결과를 검색창 바로 아래에 보여준다 */
+.home--searching .home__recommend,
+.home--searching .home__taste-edit {
+  display: none;
+}
+
+/* 입맛 변경하기 링크가 숨겨진 검색 중에는 칩 줄과 첫 카드 사이에 섹션 간격만큼 여백을 둔다 */
+.home--searching .home__categories {
+  margin-bottom: var(--space-5);
+}
+
 .home__title {
   margin-bottom: var(--space-3);
   font-size: var(--font-size-18);

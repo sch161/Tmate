@@ -253,7 +253,8 @@ function createRestaurantCard(restaurant: RestaurantSummary): HTMLElement {
 /** 가게 목록이 비었을 때: 검색 결과 없음 / 빈 카테고리 / 지역에 가게 없음을 구분해 앱 오류로 오해하지 않게 한다. */
 function renderNoRestaurants(target: HTMLElement): void {
   if (query) {
-    renderEmpty(target, `'${query}'에 맞는 맛집이 없어요`, '다른 검색어로 찾아보세요');
+    renderEmpty(target, '검색 결과가 없어요', `'${query}'에 맞는 맛집이나 메뉴가 없어요. 다른 검색어로 찾아보세요`);
+    target.querySelector('.empty-state__desc')?.classList.add('text-wrap-ko');
     return;
   }
   if (categoryId !== undefined) {
@@ -343,6 +344,7 @@ function applyQuery(next: string): void {
   query = next.trim();
   if (searchInput) searchInput.value = query;
   if (searchReset) searchReset.hidden = !query;
+  qs('#app')?.classList.toggle('home--searching', query !== '');
   if (nearbyTitle) nearbyTitle.textContent = query ? '검색 결과' : '주변 맛집 보기';
   void loadRestaurants();
 }
@@ -424,6 +426,12 @@ async function start(): Promise<void> {
     applyQuery(searchInput?.value ?? '');
   });
   searchReset?.addEventListener('click', () => applyQuery(''));
+  // 입력을 모두 지우거나 검색창의 X 버튼을 누르면 제출 없이 바로 원래 홈 구성으로 돌아온다
+  searchInput?.addEventListener('input', () => {
+    if (searchInput.value.trim() === '' && query !== '') applyQuery('');
+  });
+  // 뒤로가기 등으로 브라우저가 입력값만 복원해도 화면(검색 전 상태)과 어긋나지 않게 비운다
+  if (searchInput) searchInput.value = '';
 
   void loadCategories();
   if (!region) await requireRegion();
