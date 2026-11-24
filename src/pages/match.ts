@@ -19,6 +19,7 @@ import starIcon from '../assets/icons/star.svg';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
+import { createMascot, type MascotName } from '../utils/mascots';
 import { buildResultCards, getMatchTier } from '../utils/match-results';
 import { renderError, renderLoading } from '../utils/state-views';
 
@@ -49,8 +50,10 @@ function setRoomInUrl(code: string | null): void {
 
 const message = (e: unknown, fallback: string): string => (e instanceof Error ? e.message : fallback);
 
-function heading(title: string, desc?: string): HTMLElement {
-  const head = el('header', { class: 'match__head' }, el('h1', { class: 'match__title' }, title));
+function heading(title: string, desc?: string, mascot?: MascotName): HTMLElement {
+  const head = el('header', { class: 'match__head' });
+  if (mascot) head.append(createMascot(mascot, 'lg'));
+  head.append(el('h1', { class: 'match__title' }, title));
   if (desc) head.append(el('p', { class: 'match__desc text-wrap-ko' }, desc));
   return head;
 }
@@ -100,7 +103,7 @@ async function showStart(): Promise<void> {
   });
 
   body.replaceChildren(
-    heading('친구랑 궁합 검사', '같이 온 친구와 같은 방에 들어가서 검사하면 둘의 맛궁합을 알려드려요'),
+    heading('친구랑 궁합 검사', '같이 온 친구와 같은 방에 들어가서 검사하면 둘의 맛궁합을 알려드려요', 'search'),
     el('section', { class: 'match__card' }, el('h2', { class: 'match__card-title' }, '내가 방을 만들게요'), el('p', { class: 'match__card-desc' }, '방 번호가 나오면 친구에게 알려주세요'), createButton),
     el('section', { class: 'match__card' }, el('h2', { class: 'match__card-title' }, '친구가 방을 만들었어요'), form),
     recent,
@@ -282,6 +285,7 @@ async function showTest(code: string): Promise<void> {
         else go(index + 1);
       };
       content.append(
+        createMascot('thinking', 'sm'),
         el('p', { class: 'match-step__part' }, '맛궁합 검사'),
         el('h2', { class: 'match-step__body text-wrap-ko' }, q.body),
         el('div', { class: 'match-step__options' }, optionButton(q.optionA, choices.get(q.questionId) === 1, () => pick(1)), optionButton(q.optionB, choices.get(q.questionId) === 2, () => pick(2))),
@@ -369,6 +373,7 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
     el(
       'section',
       { class: 'match-result' },
+      createMascot(tier.mascot, 'lg'),
       el('p', { class: 'match-result__with' }, `${friend.nickname}님과의 맛궁합`),
       el('p', { class: 'match-result__score' }, `${friend.score}%`),
       el('h1', { class: 'match-result__title text-wrap-ko' }, tier.title),
