@@ -881,9 +881,10 @@ $$;
 --   * 메뉴는 브랜드 소속이라 브랜드당 한 번만 나온다. restaurant_id 는 링크용으로, 해당 지역의 대표 지점(최소 id)을 돌려준다.
 --   * 이미 평가한 메뉴는 제외한다.
 --   * 알레르기 안전 정책 (이 함수의 상수 같은 규칙):
---       - 사용자가 알레르기를 1개 이상 등록했으면: 내 알레르기가 겹치는 메뉴(level 무관)를 제외하고,
---         allergen_status 가 unknown/estimated(= 공식 확인이 안 된 메뉴)인 메뉴도 제외한다. (안전 우선)
---         → 남는 것은 verified/official_extract 이면서 겹치지 않는 메뉴뿐이다.
+--       - 사용자가 알레르기를 1개 이상 등록했으면: 내 알레르기가 겹치는 메뉴(level 무관, 추정 포함)를 제외하고,
+--         allergen_status 가 unknown(정보 없음)인 메뉴도 제외한다. (모르는 메뉴를 안전하다고 보지 않는다)
+--         → 남는 것은 겹치지 않는 verified/official_extract/estimated 메뉴다. estimated(AI 추정)는 화면이 "알레르기 추정 · 가게 확인" 표시를 붙인다.
+--         (공식 표를 확인한 브랜드가 6개뿐이라 추정 메뉴를 빼면 추천이 거의 비기 때문에 2026-11 에 추정을 포함하도록 바꿨다)
 --       - 등록한 알레르기가 없으면: allergen_status 와 무관하게 포함한다.
 create or replace function public.get_recommended_menus(p_region text, p_limit int default 6)
 returns table (
@@ -957,7 +958,7 @@ begin
         join public.user_allergens ua on ua.allergen_id = ma.allergen_id
         where ma.menu_id = m.id and ua.user_id = v_uid
       )
-      and (not v_has_allergy or m.allergen_status in ('verified', 'official_extract'))
+      and (not v_has_allergy or m.allergen_status in ('verified', 'official_extract', 'estimated'))
   ) x
   order by x.match_percent desc, x.avg_rating desc nulls last, x.menu_id
   limit v_limit;
