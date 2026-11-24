@@ -19,6 +19,7 @@ import {
   createMatchPhotoToken,
   getMatchPairPlaces,
 } from '../api/match';
+import { getMyTastes } from '../api/me';
 import starIcon from '../assets/icons/star.svg';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
@@ -464,6 +465,22 @@ async function buildResultImage(input: Omit<ReceiptInput, 'photo'>, photo: strin
   return new Promise((resolve, reject) => canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('이미지를 만들지 못했어요'))), 'image/png'));
 }
 
+// 디자인 대기: 맛집 추천으로 넘어가는 버튼은 Figma 에 없는 임시 UI
+/** 궁합 검사만 하고 나가지 않게 결과 화면에서 맛집 추천으로 이어 준다. 입맛을 아직 등록하지 않았으면 등록부터 한다 */
+function createServiceLink(): HTMLElement {
+  const link = el('a', { class: 'btn-primary', href: PATHS.home }, '내 입맛에 맞는 맛집 보러 가기');
+  void getMyTastes()
+    .then((tastes) => {
+      if (tastes.length > 0) return;
+      link.textContent = '내 입맛 등록하고 맛집 추천받기';
+      link.setAttribute('href', PATHS.onboardingStart);
+    })
+    .catch(() => {
+      // 못 불러오면 홈으로 보낸다 (홈이 입맛 등록 여부를 다시 확인한다)
+    });
+  return link;
+}
+
 // 디자인 대기: 결과 이미지 저장 버튼은 Figma 에 없는 임시 UI
 /** "결과 이미지 저장": 공유 시트를 쓸 수 있으면(폰) 공유·저장, 아니면 파일로 내려받는다 */
 function createImageSave(getInput: () => Omit<ReceiptInput, 'photo'>, getPhoto: () => string | null): HTMLElement {
@@ -558,6 +575,7 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
     el(
       'div',
       { class: 'match__actions' },
+      createServiceLink(),
       createImageSave(
         () => ({ nicknameA: myNickname, nicknameB: friend.nickname, score: friend.score ?? 0, cards: imageCards, choices: choiceSummary, date: new Date() }),
         () => lastPhoto,
