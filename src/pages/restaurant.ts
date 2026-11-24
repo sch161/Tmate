@@ -14,13 +14,14 @@ import {
   type RestaurantMenu,
 } from '../api/restaurants';
 import mascotImage from '../assets/images/allergy-mascot.png';
-import { isMyStore } from '../api/stores';
+import { isMyStore, uploadStorePhoto } from '../api/stores';
 import { PATHS } from '../lib/constants';
 import { getAllergenStatusInfo } from '../utils/allergen-status';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { createImage } from '../utils/image';
 import { withReturnTo } from '../utils/navigation';
+import { fileToStorePhoto } from '../utils/store-photo';
 import { splitSharedNotice } from '../utils/notice';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 import { safeHttpUrl } from '../utils/url';
@@ -207,6 +208,7 @@ function renderMenus(menus: RestaurantMenu[]): void {
   if (!panel) return;
   if (menus.length === 0) {
     renderEmpty(panel, '등록된 메뉴가 아직 없어요', '메뉴 정보가 준비되면 보여드릴게요');
+    if (myStore) panel.append(el('div', { class: 'restaurant__list' }, el('a', { class: 'restaurant__add-menu', href: `${PATHS.storeAdd}?restaurant=${restaurantId}` }, '+ 메뉴 추가하기'), createPhotoPicker()));
     return;
   }
   // 디자인 대기: 안내 문구와 출처 줄은 Figma 에 없는 임시 UI
@@ -228,8 +230,38 @@ function renderMenus(menus: RestaurantMenu[]): void {
     content.append(line);
   }
   // 디자인 대기: 내가 추가한 가게에만 보이는 메뉴 추가 링크 (Figma 에 없는 임시 UI)
-  if (myStore) content.append(el('a', { class: 'restaurant__add-menu', href: `${PATHS.storeAdd}?restaurant=${restaurantId}` }, '+ 메뉴 추가하기'));
+  if (myStore) content.append(el('a', { class: 'restaurant__add-menu', href: `${PATHS.storeAdd}?restaurant=${restaurantId}` }, '+ 메뉴 추가하기'), createPhotoPicker());
   panel.replaceChildren(content);
+}
+
+// 디자인 대기: 내가 추가한 가게에만 보이는 사진 넣기 버튼 (Figma 에 없는 임시 UI)
+/** 가게 사진 넣기·바꾸기. 고르면 줄여서 올리고 위쪽 큰 사진을 바로 바꾼다 */
+function createPhotoPicker(): HTMLElement {
+  const label = (): string => (currentDetail?.imageUrl ? '가게 사진 바꾸기' : '+ 가게 사진 넣기');
+  const input = el('input', { type: 'file', accept: 'image/*', hidden: true });
+  const button = el('button', { class: 'restaurant__add-menu restaurant__add-photo', type: 'button' }, label());
+  button.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    button.disabled = true;
+    button.textContent = '사진 올리는 중...';
+    void fileToStorePhoto(file)
+      .then((photo) => uploadStorePhoto(restaurantId, photo.blob, photo.extension))
+      .then((url) => {
+        if (currentDetail) currentDetail.imageUrl = url;
+        const hero = detailArea?.querySelector('.restaurant__hero');
+        hero?.replaceWith(createImage(url, 'restaurant__hero', currentDetail?.categoryName, currentDetail?.brandName, 'photo'));
+        showToast('가게 사진을 넣었어요');
+      })
+      .catch((e: unknown) => showToast(e instanceof Error ? e.message : '사진을 올리지 못했어요'))
+      .finally(() => {
+        button.disabled = false;
+        button.textContent = label();
+      });
+  });
+  return el('div', {}, button, input);
 }
 
 /** 내가 추가한 가게인지 (메뉴 추가 링크를 보여줄지). 한 번만 확인한다 */

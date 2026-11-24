@@ -389,6 +389,11 @@ img.restaurant__hero.image--category {
 }
 
 /* 디자인 대기: 내가 추가한 가게의 메뉴 추가 링크 (Figma 에 없는 임시 UI) */
+.restaurant__add-photo {
+  width: 100%;
+  background: none;
+}
+
 .restaurant__add-menu {
   display: block;
   padding: var(--space-3);
