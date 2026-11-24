@@ -43,6 +43,7 @@
 | 알레르기 수정 / 프로필 수정 | `allergy-edit.html` / `profile-edit.html` |
 | 친구랑 궁합 검사 (`?room=방번호`) | `match.html` |
 | 맛궁합 랭킹(부스 큰 화면용) | `match-rank.html` |
+| 다른 폰으로 사진 보내기 (`?t=표`, 로그인 없이) | `match-photo.html` |
 | 맛궁합 영수증 인쇄(부스 진행자 노트북용, `?demo=1` 은 데모 데이터) | `match-print.html` |
 | 개발용 컴포넌트 미리보기(임시) | `ui-preview.html` |
 

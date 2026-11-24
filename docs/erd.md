@@ -174,6 +174,7 @@ erDiagram
 - `get_match_pair_choices(p_code, p_member_no_a, p_member_no_b)`(migrations/009): 두 사람의 PART 1 문항별 답. 결과 화면과 영수증의 "통한 취향 / 갈린 취향"에 쓴다
 - 손님 RPC `request_match_print(p_code, p_photo, p_show_on_rank)`: 그 방에서 검사를 마친 두 사람만 가능. `show_on_rank` 는 랭킹 화면에 사진을 띄워도 된다는 동의(기본 false)
 - `get_match_rank_photos(p_limit)`(migrations/010): 동의한 사진만 최근 것부터 (닉네임·점수·사진)
+- `match_photo_tokens`(token, room_id, created_by, created_at)(migrations/011): PC 로 검사한 손님이 QR 로 다른 폰에서 사진을 올릴 때 쓰는 표. 30분 유효. `create_match_photo_token(p_code)` 는 방 멤버만, `get_match_photo_token_info(p_token)` · `upload_match_photo_by_token(p_token, p_photo, p_show_on_rank)` 는 로그인 없이(anon) 부를 수 있다
 - 진행자 RPC `get_match_print_queue(p_passcode)` · `get_match_print_photo(p_passcode, p_request_id)` · `mark_match_printed(p_passcode, p_request_id)`: 진행자 번호가 맞아야 한다
 
 ## 친구랑 궁합 검사 (행사 체험용, migrations/003_match_test.sql)
