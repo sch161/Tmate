@@ -13,6 +13,9 @@
 --   collab_min_reviews 5    내 평가 수가 이 값 이상일 때부터 협업 점수를 섞는다 (미만이면 입맛 비율 × 메뉴 태그만 사용)
 --   collab_weight      5    일치도 = (협업 점수 × collab_weight + 콘텐츠 점수 × content_weight) / (두 가중치 합)
 --   content_weight     5    협업:콘텐츠 = 5:5
+--   match_room_max       6  궁합 검사: 한 방에 들어갈 수 있는 최대 인원
+--   match_food_count     5  궁합 검사: 방마다 무작위로 뽑는 음식 수 (PART 2)
+--   match_room_keep_days 7  궁합 검사: 이 일수가 지난 방은 새 방을 만들 때 지운다 (4자리 방 번호 재사용)
 --
 -- 계산식 요약
 --   콘텐츠 점수  = 내 입맛 비율(ratio) 중 메뉴의 맛 태그에 포함된 것의 합 (0~100)
@@ -51,6 +54,9 @@ begin
     when 'collab_min_reviews' then 5
     when 'collab_weight'      then 5
     when 'content_weight'     then 5
+    when 'match_room_max'       then 6
+    when 'match_food_count'     then 5
+    when 'match_room_keep_days' then 7
   end;
 
   if v_value is null then
@@ -1309,6 +1315,460 @@ grant execute on function public.update_my_tastes(int[], int[])                 
 -- 시드 사용자(seed_demo_users.sql): seed01 = 5eed0000-0000-4000-8000-000000000001 … seed12 = …0012
 -- 브랜드·가게·메뉴·평가 데이터는 실제 데이터가 들어온 뒤 확인한다.
 -- =====================================================================
+
+-- =====================================================================
+-- 친구랑 궁합 검사 (행사 체험용)
+--   흐름: 방 만들기/들어가기 → 검사(PART 1 둘 중 하나 문항 + PART 2 그 방의 음식) → 방 사람들과의 궁합
+--   궁합(%) = 두 사람이 같은 답을 고른 PART 1 문항 수 / 둘 다 답한 문항 수 × 100  (문항이 10개면 10% 단위)
+--   PART 2(음식)는 점수에 넣지 않는다. 결과 카드(둘 다 좋아하는 음식 등)와 랭킹 동점 처리에만 쓴다.
+--   다른 사람의 정보는 같은 방 사람의 닉네임·궁합 점수·그 방 음식에 대한 답만 돌려준다.
+-- =====================================================================
+
+-- 내부: p_code 방에서 로그인한 사용자가 멤버이면 방 id, 아니면 예외
+create or replace function public.calc_match_room_id(p_code text)
+returns bigint
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_room bigint;
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  select r.id into v_room
+  from public.match_rooms r
+  join public.match_room_members m on m.room_id = r.id and m.user_id = v_uid
+  where r.code = p_code;
+
+  if v_room is null then
+    raise exception '들어가 있지 않은 방이에요. 방 번호를 다시 확인해주세요.';
+  end if;
+  return v_room;
+end;
+$$;
+
+-- 내부: 같은 방 두 사람의 궁합 점수 (0~100). 둘 중 하나라도 검사를 마치지 않았으면 null
+create or replace function public.calc_match_score(p_room bigint, p_a uuid, p_b uuid)
+returns int
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_common int;
+  v_same int;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  select count(*), count(*) filter (where a.choice = b.choice)
+  into v_common, v_same
+  from public.match_answers a
+  join public.match_answers b on b.room_id = a.room_id and b.question_id = a.question_id
+  where a.room_id = p_room
+    and a.user_id = p_a
+    and b.user_id = p_b;
+
+  if v_common = 0 then
+    return null;
+  end if;
+  return round(v_same * 100.0 / v_common)::int;
+end;
+$$;
+
+-- 방을 만들고 들어간다. 반환: 4자리 방 번호.
+--   그 방에서 나올 음식을 match_food_count 개 무작위로 뽑아 고정한다 → 같은 방 친구에게 같은 음식이 나온다.
+--   방 번호를 다시 쓸 수 있도록 match_room_keep_days 일이 지난 방은 이때 지운다(답도 함께 지워진다).
+create or replace function public.create_match_room()
+returns text
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_code text;
+  v_room bigint;
+  v_try int := 0;
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if not exists (select 1 from public.match_questions q where q.is_active) then
+    raise exception '검사 문항이 아직 준비되지 않았어요.';
+  end if;
+
+  delete from public.match_rooms r
+  where r.created_at < now() - make_interval(days => public.calc_setting('match_room_keep_days')::int);
+
+  loop
+    v_code := lpad(floor(random() * 10000)::int::text, 4, '0');
+    begin
+      insert into public.match_rooms (code, created_by) values (v_code, v_uid) returning id into v_room;
+      exit;
+    exception when unique_violation then
+      v_try := v_try + 1;
+      if v_try >= 20 then
+        raise exception '방을 만들지 못했어요. 잠시 후 다시 시도해주세요.';
+      end if;
+    end;
+  end loop;
+
+  insert into public.match_room_foods (room_id, food_id, sort_order)
+  select v_room, x.id, row_number() over ()
+  from (
+    select f.id from public.match_foods f
+    where f.is_active
+    order by random()
+    limit public.calc_setting('match_food_count')::int
+  ) x;
+
+  insert into public.match_room_members (room_id, user_id, member_no) values (v_room, v_uid, 1);
+  return v_code;
+end;
+$$;
+
+-- 방 번호로 들어간다. 이미 들어가 있으면 아무 일도 하지 않는다.
+create or replace function public.join_match_room(p_code text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_room bigint;
+  v_members int;
+  v_next int;
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if p_code is null or p_code !~ '^[0-9]{4}$' then
+    raise exception '방 번호는 숫자 4자리예요.';
+  end if;
+
+  -- 같은 방에 동시에 들어와도 member_no 가 겹치지 않도록 방 행을 잠근다
+  select r.id into v_room from public.match_rooms r where r.code = p_code for update;
+  if v_room is null then
+    raise exception '없는 방 번호예요. 번호를 다시 확인해주세요.';
+  end if;
+  if exists (select 1 from public.match_room_members m where m.room_id = v_room and m.user_id = v_uid) then
+    return;
+  end if;
+
+  select count(*), coalesce(max(m.member_no), 0) + 1
+  into v_members, v_next
+  from public.match_room_members m
+  where m.room_id = v_room;
+  if v_members >= public.calc_setting('match_room_max') then
+    raise exception '방이 가득 찼어요.';
+  end if;
+
+  insert into public.match_room_members (room_id, user_id, member_no) values (v_room, v_uid, v_next);
+end;
+$$;
+
+-- 내가 가장 최근에 들어간 방 번호 (없으면 null)
+create or replace function public.get_my_match_room()
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  return (
+    select r.code
+    from public.match_room_members m
+    join public.match_rooms r on r.id = m.room_id
+    where m.user_id = v_uid
+    order by m.joined_at desc
+    limit 1
+  );
+end;
+$$;
+
+-- PART 1 문항과 이 방에서 내가 고른 답 (my_choice: 1=A, 2=B, null=아직)
+create or replace function public.get_match_questions(p_code text)
+returns table (
+  question_id smallint,
+  body text,
+  option_a text,
+  option_b text,
+  my_choice smallint
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_uid uuid := auth.uid();
+  v_room bigint := public.calc_match_room_id(p_code);
+begin
+  return query
+  select q.id, q.body, q.option_a, q.option_b, a.choice
+  from public.match_questions q
+  left join public.match_answers a on a.question_id = q.id and a.room_id = v_room and a.user_id = v_uid
+  where q.is_active
+  order by q.sort_order, q.id;
+end;
+$$;
+
+-- PART 2: 이 방의 음식과 내가 고른 답
+create or replace function public.get_match_foods(p_code text)
+returns table (
+  food_id smallint,
+  name text,
+  my_eaten boolean,
+  my_rating smallint,
+  my_want_try boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_uid uuid := auth.uid();
+  v_room bigint := public.calc_match_room_id(p_code);
+begin
+  return query
+  select f.id, f.name, a.eaten, a.rating, a.want_try
+  from public.match_room_foods rf
+  join public.match_foods f on f.id = rf.food_id
+  left join public.match_food_answers a on a.food_id = f.id and a.room_id = v_room and a.user_id = v_uid
+  where rf.room_id = v_room
+  order by rf.sort_order;
+end;
+$$;
+
+-- 이 방에서의 내 검사 결과를 통째로 저장한다 (다시 저장하면 바꿔 쓴다).
+--   p_choices 예: [{"question_id": 1, "choice": 1}, ...]   모든 문항에 답해야 한다 (1=A, 2=B)
+--   p_foods   예: [{"food_id": 3, "eaten": true, "rating": 5}, {"food_id": 7, "eaten": false, "want_try": true}]   이 방의 모든 음식에 답해야 한다
+create or replace function public.save_match_test(p_code text, p_choices jsonb, p_foods jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_room bigint := public.calc_match_room_id(p_code);
+  v_saved int;
+begin
+  if p_choices is null or jsonb_typeof(p_choices) <> 'array' or p_foods is null or jsonb_typeof(p_foods) <> 'array' then
+    raise exception '답변 형식이 올바르지 않아요.';
+  end if;
+
+  delete from public.match_answers where room_id = v_room and user_id = v_uid;
+  delete from public.match_food_answers where room_id = v_room and user_id = v_uid;
+
+  insert into public.match_answers (room_id, user_id, question_id, choice)
+  select distinct on (q.id) v_room, v_uid, q.id, x.choice
+  from jsonb_to_recordset(p_choices) as x(question_id smallint, choice smallint)
+  join public.match_questions q on q.id = x.question_id and q.is_active
+  where x.choice in (1, 2)
+  order by q.id;
+  get diagnostics v_saved = row_count;
+  if v_saved <> jsonb_array_length(p_choices)
+     or v_saved <> (select count(*) from public.match_questions q where q.is_active) then
+    raise exception '모든 문항에 답해주세요.';
+  end if;
+
+  insert into public.match_food_answers (room_id, user_id, food_id, eaten, rating, want_try)
+  select distinct on (rf.food_id) v_room, v_uid, rf.food_id, x.eaten,
+         case when x.eaten then x.rating end,
+         case when not x.eaten then x.want_try end
+  from jsonb_to_recordset(p_foods) as x(food_id smallint, eaten boolean, rating smallint, want_try boolean)
+  join public.match_room_foods rf on rf.room_id = v_room and rf.food_id = x.food_id
+  where x.eaten is not null
+    and ((x.eaten and x.rating between 1 and 5) or (not x.eaten and x.want_try is not null))
+  order by rf.food_id;
+  get diagnostics v_saved = row_count;
+  if v_saved <> jsonb_array_length(p_foods)
+     or v_saved <> (select count(*) from public.match_room_foods rf where rf.room_id = v_room) then
+    raise exception '모든 음식에 답해주세요.';
+  end if;
+
+  update public.match_room_members
+  set completed_at = now()
+  where room_id = v_room and user_id = v_uid;
+end;
+$$;
+
+-- 방 사람들과 나의 궁합. completed: 검사를 마쳤는지 / score: 나와의 궁합(%), 나 자신이거나 둘 중 하나가 아직이면 null
+create or replace function public.get_match_room(p_code text)
+returns table (
+  member_no smallint,
+  nickname text,
+  is_me boolean,
+  completed boolean,
+  score int
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_uid uuid := auth.uid();
+  v_room bigint := public.calc_match_room_id(p_code);
+begin
+  return query
+  select m.member_no,
+         p.nickname,
+         (m.user_id = v_uid),
+         (m.completed_at is not null),
+         case when m.user_id = v_uid then null else public.calc_match_score(v_room, v_uid, m.user_id) end
+  from public.match_room_members m
+  join public.profiles p on p.id = m.user_id
+  where m.room_id = v_room
+  order by (m.user_id = v_uid) desc, m.member_no;
+end;
+$$;
+
+-- 결과 카드용: 이 방의 음식에 대한 나와 친구(p_member_no)의 답을 나란히 돌려준다. 둘 다 검사를 마쳐야 한다.
+create or replace function public.get_match_compare(p_code text, p_member_no int)
+returns table (
+  food_name text,
+  my_eaten boolean,
+  my_rating smallint,
+  my_want_try boolean,
+  friend_eaten boolean,
+  friend_rating smallint,
+  friend_want_try boolean
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_uid uuid := auth.uid();
+  v_room bigint := public.calc_match_room_id(p_code);
+  v_friend uuid;
+begin
+  select m.user_id into v_friend
+  from public.match_room_members m
+  where m.room_id = v_room and m.member_no = p_member_no and m.user_id <> v_uid and m.completed_at is not null;
+  if v_friend is null
+     or not exists (select 1 from public.match_room_members m where m.room_id = v_room and m.user_id = v_uid and m.completed_at is not null) then
+    raise exception '두 사람 모두 검사를 마쳐야 결과를 볼 수 있어요.';
+  end if;
+
+  return query
+  select f.name, a.eaten, a.rating, a.want_try, b.eaten, b.rating, b.want_try
+  from public.match_room_foods rf
+  join public.match_foods f on f.id = rf.food_id
+  join public.match_food_answers a on a.room_id = v_room and a.user_id = v_uid and a.food_id = rf.food_id
+  join public.match_food_answers b on b.room_id = v_room and b.user_id = v_friend and b.food_id = rf.food_id
+  where rf.room_id = v_room
+  order by rf.sort_order;
+end;
+$$;
+
+-- 궁합 랭킹 (부스 화면용): 최근 p_hours 시간 안에 만든 방에서, 같은 방 두 사람의 궁합이 높은 순.
+--   동점이면 둘 다 먹어본 음식의 별점이 더 비슷한 쪽, 그다음 먼저 검사를 마친 쪽이 위다.
+create or replace function public.get_match_ranking(p_limit int default 10, p_hours int default 24)
+returns table (
+  rank int,
+  nickname_a text,
+  nickname_b text,
+  score int
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+#variable_conflict use_column
+declare
+  v_limit int;
+  v_hours int;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+
+  v_limit := least(greatest(coalesce(p_limit, 10), 1), 50);
+  v_hours := least(greatest(coalesce(p_hours, 24), 1), 720);
+
+  return query
+  with pairs as (
+    select a.room_id,
+           a.user_id as user_a,
+           b.user_id as user_b,
+           public.calc_match_score(a.room_id, a.user_id, b.user_id) as score,
+           greatest(a.completed_at, b.completed_at) as done_at
+    from public.match_room_members a
+    join public.match_room_members b on b.room_id = a.room_id and b.member_no > a.member_no
+    join public.match_rooms r on r.id = a.room_id
+    where r.created_at >= now() - make_interval(hours => v_hours)
+      and a.completed_at is not null
+      and b.completed_at is not null
+  ),
+  ranked as (
+    select x.*,
+           (
+             select avg(abs(fa.rating - fb.rating))
+             from public.match_food_answers fa
+             join public.match_food_answers fb on fb.room_id = fa.room_id and fb.food_id = fa.food_id and fb.user_id = x.user_b
+             where fa.room_id = x.room_id and fa.user_id = x.user_a and fa.eaten and fb.eaten
+           ) as food_diff
+    from pairs x
+    where x.score is not null
+  )
+  select row_number() over (order by y.score desc, y.food_diff asc nulls last, y.done_at)::int,
+         pa.nickname,
+         pb.nickname,
+         y.score
+  from ranked y
+  join public.profiles pa on pa.id = y.user_a
+  join public.profiles pb on pb.id = y.user_b
+  order by y.score desc, y.food_diff asc nulls last, y.done_at
+  limit v_limit;
+end;
+$$;
+
+revoke all on function public.calc_match_room_id(text)                  from public, anon, authenticated;
+revoke all on function public.calc_match_score(bigint, uuid, uuid)      from public, anon, authenticated;
+revoke all on function public.create_match_room()                       from public, anon;
+revoke all on function public.join_match_room(text)                     from public, anon;
+revoke all on function public.get_my_match_room()                       from public, anon;
+revoke all on function public.get_match_questions(text)                 from public, anon;
+revoke all on function public.get_match_foods(text)                     from public, anon;
+revoke all on function public.save_match_test(text, jsonb, jsonb)       from public, anon;
+revoke all on function public.get_match_room(text)                      from public, anon;
+revoke all on function public.get_match_compare(text, int)              from public, anon;
+revoke all on function public.get_match_ranking(int, int)               from public, anon;
+grant execute on function public.create_match_room()                    to authenticated;
+grant execute on function public.join_match_room(text)                  to authenticated;
+grant execute on function public.get_my_match_room()                    to authenticated;
+grant execute on function public.get_match_questions(text)              to authenticated;
+grant execute on function public.get_match_foods(text)                  to authenticated;
+grant execute on function public.save_match_test(text, jsonb, jsonb)    to authenticated;
+grant execute on function public.get_match_room(text)                   to authenticated;
+grant execute on function public.get_match_compare(text, int)           to authenticated;
+grant execute on function public.get_match_ranking(int, int)            to authenticated;
 
 -- [검증 1] 내부 함수를 직접 호출하면 권한 오류가 나야 한다: ERROR: permission denied for function calc_menu_match
 /*

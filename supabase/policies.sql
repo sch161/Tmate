@@ -242,3 +242,10 @@ create policy "review_taste_tags_delete_own" on review_taste_tags
 --   set local role anon;
 --   select count(*) from restaurants;
 -- rollback;
+
+-- ---------------------------------------------------------------------
+-- 궁합 검사 테이블 (match_*)
+--    클라이언트에 직접 열지 않는다. 권한과 정책을 주지 않고(RLS 는 schema.sql 에서 켠다) functions.sql 의 RPC 로만 읽고 쓴다.
+--    RPC 는 같은 방 사람의 닉네임·궁합 점수·그 방 음식에 대한 답만 돌려준다.
+-- ---------------------------------------------------------------------
+revoke all on match_questions, match_foods, match_rooms, match_room_foods, match_room_members, match_answers, match_food_answers from anon, authenticated;
