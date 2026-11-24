@@ -57,7 +57,7 @@
 - 아직 없는 것: 알림 설정, 프로필 사진 (마이페이지 Figma 의 "알림 설정" 줄은 만들지 않았다)
 - Figma 에 있어 읽고 구현한 화면: Splash, User-Login, User-Signup, Location, Flavor Info, Allergy Info_g, Allergy Info, Home, Details_s, Details_m, Save, User
 - Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, match, match-rank, 지역 선택 시트(src/utils/region-picker.ts)
-- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 원본 이미지를 받기 전까지 코드로 그린 임시 배너)
+- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 노란 띠 위로 검은 고딕 글자가 흘러가는 임시 배너)
 
 ## 코드 규칙
 

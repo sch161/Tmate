@@ -11,46 +11,13 @@
   </head>
   <body>
     <main class="app has-bottom-nav home" id="app">
-      <!-- 디자인 대기: 화면 나오면 교체. 원본 배너 이미지(src/assets/images/match-banner.png)를 받기 전까지 같은 모양을 코드(SVG+글자)로 그린 임시 배너 -->
-      <a class="home__banner" id="match-banner" href="#">
-        <svg class="home__banner-art" viewBox="0 0 600 200" preserveAspectRatio="none" aria-hidden="true" focusable="false">
-          <!-- 왼쪽 구름 말풍선: 검은 원(테두리) 위에 흰 원을 겹쳐 구름 모양을 만든다 -->
-          <g class="home__banner-outline">
-            <circle cx="28" cy="78" r="21" /><circle cx="52" cy="72" r="21" /><circle cx="62" cy="92" r="21" /><circle cx="50" cy="108" r="21" /><circle cx="28" cy="104" r="21" /><circle cx="42" cy="90" r="24" />
-          </g>
-          <g class="home__banner-bubble">
-            <circle cx="28" cy="78" r="17" /><circle cx="52" cy="72" r="17" /><circle cx="62" cy="92" r="17" /><circle cx="50" cy="108" r="17" /><circle cx="28" cy="104" r="17" /><circle cx="42" cy="90" r="20" />
-          </g>
-          <!-- 포크와 숟가락 (교차) -->
-          <g class="home__banner-line" transform="translate(43 91) rotate(-38)">
-            <path d="M0 17 V-5 M-5 -16 V-8 Q-5 -5 0 -5 Q5 -5 5 -8 V-16 M0 -16 V-6" />
-          </g>
-          <g transform="translate(43 91) rotate(38)">
-            <path class="home__banner-line" d="M0 17 V-4" />
-            <ellipse class="home__banner-fill" cx="0" cy="-10" rx="5" ry="7.5" />
-          </g>
-
-          <!-- 오른쪽 위 구름 말풍선 -->
-          <g class="home__banner-outline">
-            <circle cx="516" cy="42" r="20" /><circle cx="540" cy="38" r="20" /><circle cx="552" cy="56" r="20" /><circle cx="540" cy="70" r="20" /><circle cx="516" cy="66" r="20" /><circle cx="530" cy="54" r="23" />
-          </g>
-          <g class="home__banner-bubble">
-            <circle cx="516" cy="42" r="16" /><circle cx="540" cy="38" r="16" /><circle cx="552" cy="56" r="16" /><circle cx="540" cy="70" r="16" /><circle cx="516" cy="66" r="16" /><circle cx="530" cy="54" r="19" />
-          </g>
-          <!-- 버거 -->
-          <g class="home__banner-line home__banner-line--thin">
-            <path d="M517 52 Q517 41 531 41 Q545 41 545 52 Z" />
-            <path d="M516 57 H546" />
-            <path d="M518 62 H544 Q544 68 539 68 H523 Q518 68 518 62 Z" />
-          </g>
-
-          <!-- 반짝 선 -->
-          <g class="home__banner-line home__banner-line--burst">
-            <path d="M70 29 L98 48 M97 13 L109 36 M79 61 L96 62" />
-            <path d="M558 108 L578 87 M564 122 L590 114" />
-          </g>
-        </svg>
-        <span class="home__banner-text">내 친구랑 나는<br />얼마나 잘 맞을까?</span>
+      <!-- 디자인 대기: 화면 나오면 교체. 노란 띠 위로 검은 글자가 흘러가는 궁합 검사 배너 -->
+      <a class="home__banner" id="match-banner" href="#" aria-label="친구랑 궁합 검사하기">
+        <!-- 같은 문구 묶음을 두 번 이어 붙여 절반만큼 옮기면 끊김 없이 이어진다. 읽기 프로그램에는 aria-label 한 번만 읽힌다 -->
+        <span class="home__banner-track" aria-hidden="true">
+          <span class="home__banner-group"><span>친구랑 궁합 검사하기</span><span>내 친구랑 나는 얼마나 잘 맞을까?</span><span>친구랑 궁합 검사하기</span><span>지금 바로 맛궁합 확인!</span></span>
+          <span class="home__banner-group"><span>친구랑 궁합 검사하기</span><span>내 친구랑 나는 얼마나 잘 맞을까?</span><span>친구랑 궁합 검사하기</span><span>지금 바로 맛궁합 확인!</span></span>
+        </span>
       </a>
 
       <header class="home__location">
