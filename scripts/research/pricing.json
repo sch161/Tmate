@@ -1,11 +1,16 @@
 {
-  "_comment": "단가 값은 추측해서 채우지 않았다. 공식 가격표 developers.openai.com/api/docs/pricing 를 보고 직접 채울 것. null 이면 보고서에 '단가 미설정'으로 표시된다. 단가 단위: USD.",
+  "_comment": "단가 단위: USD. 토큰 단가는 2026-11 기준 Claude API 가격표 값이다. 바뀌면 공식 가격표를 보고 직접 고칠 것. 검색 호출 단가(web_search_per_1k_calls)는 확인하지 못해 비워 두었다. null 이면 보고서의 추정 비용에서 검색 비용이 빠진다.",
   "models": {
-    "gpt-6.1-sol": {
+    "claude-opus-5-5": {
+      "input_per_1m_tokens": 4.0,
+      "cached_input_per_1m_tokens": 0.2,
+      "output_per_1m_tokens": 20.0
+    },
+    "claude-sonnet-5-5": {
       "input_per_1m_tokens": 2.0,
       "cached_input_per_1m_tokens": 0.1,
       "output_per_1m_tokens": 10.0
     }
   },
-  "web_search_per_1k_calls": 10.0
+  "web_search_per_1k_calls": null
 }
