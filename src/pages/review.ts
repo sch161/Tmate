@@ -170,7 +170,7 @@ function renderForm(data: MenuForReview, tags: TasteTag[]): void {
     el(
       'div',
       { class: 'review__form' },
-      el('section', { class: 'review__menu' }, createImage(menu.imageUrl, 'review__image', menu.categoryName), info),
+      el('section', { class: 'review__menu' }, createImage(menu.imageUrl, 'review__image', menu.categoryName, menu.brandName), info),
       el('section', { class: 'review__section' }, el('h2', { class: 'review__title' }, '별점'), stars.root),
       el('section', { class: 'review__section' }, el('h2', { class: 'review__title' }, '맛 태그'), el('p', { class: 'review__hint text-wrap-ko' }, '이 메뉴에서 느낀 맛을 골라주세요'), chips),
       actions,

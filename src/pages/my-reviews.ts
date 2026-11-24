@@ -84,7 +84,7 @@ function createCard(item: MyReviewItem): HTMLElement {
     el('p', { class: 'review-card__brand' }, item.brandName),
     el('p', { class: 'review-card__rating' }, `${item.rating}점`),
   );
-  const main = el('button', { class: 'review-card__main', type: 'button' }, createImage(item.imageUrl, 'review-card__image', item.categoryName), info);
+  const main = el('button', { class: 'review-card__main', type: 'button' }, createImage(item.imageUrl, 'review-card__image', item.categoryName, item.brandName), info);
   main.addEventListener('click', () => void openBranch(item));
 
   const card = el('article', { class: 'review-card' }, main);
