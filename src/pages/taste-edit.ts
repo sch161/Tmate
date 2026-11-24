@@ -2,11 +2,11 @@
 // 디자인 대기: 화면 나오면 교체 (Figma 에 입맛 수정 화면이 없다)
 import { getMyTastes, updateMyTastes, type MyTaste } from '../api/me';
 import { getTasteTags } from '../api/lookups';
-import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { equalSplit } from '../utils/ratio';
 import { createRatioSliders } from '../utils/ratio-sliders';
+import { goAfterSave, goBack } from '../utils/navigation';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 import { createTasteGrid, type TasteTagItem } from '../utils/taste-grid';
 
@@ -25,8 +25,7 @@ type Step = 'select' | 'ratio';
 let onBack: () => void = leave;
 
 function leave(): void {
-  if (window.history.length > 1) window.history.back();
-  else window.location.replace(PATHS.mypage);
+  goBack();
 }
 
 /** 저장된 값과 같은지 (맛 id 와 비율이 모두 같으면 변경 없음) */
@@ -111,7 +110,7 @@ function render(tags: TasteTagItem[], mine: MyTaste[]): void {
     try {
       await updateMyTastes(values.map((t) => t.tasteId), values.map((t) => t.ratio));
       showToast('입맛을 바꿨어요');
-      window.setTimeout(() => window.location.replace(PATHS.mypage), LEAVE_DELAY_MS);
+      window.setTimeout(goAfterSave, LEAVE_DELAY_MS);
     } catch (e) {
       showToast(e instanceof Error ? e.message : '저장하지 못했어요. 잠시 후 다시 시도해주세요');
       busy = false;

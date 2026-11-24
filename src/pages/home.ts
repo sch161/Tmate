@@ -12,6 +12,7 @@ import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { renderBottomNav } from '../utils/bottom-nav';
 import { el, qs, showToast } from '../utils/dom';
+import { withReturnTo } from '../utils/navigation';
 import { pickRegion } from '../utils/region-picker';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
 
@@ -157,7 +158,7 @@ async function renderNoRecommendation(target: HTMLElement, seq: number): Promise
     renderEmpty(target, '내 알레르기를 반영하면 추천할 메뉴가 없어요', '알레르기 정보가 없는 메뉴는 안전을 위해 빼고 있어요');
     target.querySelector('.empty-state__title')?.classList.add('text-wrap-ko');
     target.querySelector('.empty-state__desc')?.classList.add('text-wrap-ko');
-    const allergyLink = el('a', { class: 'home__empty-link', href: PATHS.allergyEdit }, '알레르기 확인하기');
+    const allergyLink = el('a', { class: 'home__empty-link', href: withReturnTo(PATHS.allergyEdit) }, '알레르기 확인하기');
     const regionLink = el('button', { class: 'home__empty-link', type: 'button' }, '위치 변경하기');
     regionLink.addEventListener('click', () => void changeRegion());
     target.querySelector('.empty-state')?.append(el('div', { class: 'home__empty-links' }, allergyLink, regionLink));
@@ -398,7 +399,7 @@ async function start(): Promise<void> {
   if (!app || !recommendArea || !restaurantArea) return;
   app.append(renderBottomNav('home'));
   const tasteEdit = qs<HTMLAnchorElement>('#taste-edit');
-  if (tasteEdit) tasteEdit.href = PATHS.tasteEdit;
+  if (tasteEdit) tasteEdit.href = withReturnTo(PATHS.tasteEdit);
 
   if (!(await requireAuth())) return;
 

@@ -7,6 +7,7 @@ import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { renderBottomNav } from '../utils/bottom-nav';
 import { el, qs, showToast } from '../utils/dom';
+import { withReturnTo } from '../utils/navigation';
 import { pickRegion } from '../utils/region-picker';
 import { renderError, renderLoading } from '../utils/state-views';
 
@@ -148,9 +149,9 @@ function createSettings(summary: MySummary): HTMLElement {
     el(
       'div',
       { class: 'row-list row-list--box' },
-      createSettingRow('user', '프로필 수정', PATHS.profileEdit),
-      createSettingRow('sliders', '입맛 유형·선호도 수정', PATHS.tasteEdit),
-      createSettingRow('protect', '알레르기 및 제외 식재료', PATHS.allergyEdit),
+      createSettingRow('user', '프로필 수정', withReturnTo(PATHS.profileEdit)),
+      createSettingRow('sliders', '입맛 유형·선호도 수정', withReturnTo(PATHS.tasteEdit)),
+      createSettingRow('protect', '알레르기 및 제외 식재료', withReturnTo(PATHS.allergyEdit)),
       createLocationRow(summary),
     ),
   );
