@@ -192,9 +192,7 @@ export async function renderMatchReceipt(input: ReceiptInput): Promise<ReceiptIm
     ctx.putImageData(image, MARGIN, y);
     photoRows = { from: y, to: y + PHOTO_HEIGHT };
     y += PHOTO_HEIGHT;
-    // 테두리는 디더링 범위 밖(아래 줄)과 안쪽 양옆에 그린다. 순수한 검정이라 디더링해도 그대로 검정이다
-    ctx.lineWidth = 3;
-    ctx.strokeRect(MARGIN + 1.5, photoRows.from + 1.5, INNER - 3, PHOTO_HEIGHT - 3);
+    // 사진에는 테두리를 그리지 않는다 (흰 바탕에 줄여 넣은 사진이 네모 칸에 갇혀 보이지 않게)
     y += 18;
   }
 
