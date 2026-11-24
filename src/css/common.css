@@ -480,3 +480,8 @@ img.image--brand {
     font-size: var(--font-size-16) !important;
   }
 }
+
+/* 흰색 글자 로고는 어두운 바탕 위에 보여준다 */
+img.image--brand-dark {
+  background: var(--color-text);
+}

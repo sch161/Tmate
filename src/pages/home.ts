@@ -12,7 +12,7 @@ import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { renderBottomNav } from '../utils/bottom-nav';
 import { el, qs, showToast } from '../utils/dom';
-import { createCategoryFallback, createBrandLogo } from '../utils/image';
+import { createCategoryFallback, createBrandLogo, createBrandPhoto } from '../utils/image';
 import { withReturnTo } from '../utils/navigation';
 import { pickRegion } from '../utils/region-picker';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
@@ -66,8 +66,9 @@ function safeImageUrl(url: string | null): string | null {
 }
 
 /** 이미지가 없거나 불러오기에 실패하면 토큰 색 플레이스홀더로 바꾼다. */
-function createImage(url: string | null, className: string, categoryName: string | null = null, brandName: string | null = null): HTMLElement {
-  const placeholder = (): HTMLElement => createBrandLogo(className, brandName) ?? createCategoryFallback(className, categoryName) ?? el('div', { class: className });
+function createImage(url: string | null, className: string, categoryName: string | null = null, brandName: string | null = null, prefer: 'photo' | 'logo' = 'logo'): HTMLElement {
+  const placeholder = (): HTMLElement =>
+    (prefer === 'photo' ? createBrandPhoto(className, brandName) : null) ?? createBrandLogo(className, brandName) ?? createCategoryFallback(className, categoryName) ?? el('div', { class: className });
   const safe = safeImageUrl(url);
   if (!safe) return placeholder();
   const img = el('img', { class: className, src: safe, alt: '', loading: 'lazy' });
@@ -240,7 +241,7 @@ function createRestaurantCard(restaurant: RestaurantSummary): HTMLElement {
   const link = el(
     'a',
     { class: 'store-card__link', href: restaurantHref(restaurant.restaurantId) },
-    createImage(restaurant.imageUrl, 'store-card__image', restaurant.categoryName, restaurant.brandName),
+    createImage(restaurant.imageUrl, 'store-card__image', restaurant.categoryName, restaurant.brandName, 'photo'),
     info,
   );
 
