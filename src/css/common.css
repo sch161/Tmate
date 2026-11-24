@@ -462,3 +462,13 @@ img.image--category {
 .mascot--lg {
   height: 152px;
 }
+
+/* 아이폰 사파리는 글자가 16px 보다 작은 입력칸을 누르면 화면을 확대한다. 앱처럼 보이도록 iOS 에서만 입력칸 글자를 16px 로 맞춘다.
+   (-webkit-touch-callout 은 iOS 사파리 계열만 지원하므로 다른 기기의 디자인 크기는 그대로다. 화면 확대 자체를 막지는 않는다) */
+@supports (-webkit-touch-callout: none) {
+  input,
+  select,
+  textarea {
+    font-size: var(--font-size-16) !important;
+  }
+}
