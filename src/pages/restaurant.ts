@@ -163,7 +163,7 @@ function renderDetail(detail: RestaurantDetail): void {
   panel = el('div', { class: 'restaurant__panel', role: 'tabpanel' });
 
   detailArea.replaceChildren(
-    createImage(detail.imageUrl, 'restaurant__hero', detail.categoryName, detail.brandName),
+    createImage(detail.imageUrl, 'restaurant__hero', detail.categoryName, detail.brandName, 'photo'),
     el('section', { class: 'restaurant__info' }, el('div', { class: 'restaurant__lines' }, ...lines), intro),
     tabs,
     panel,
