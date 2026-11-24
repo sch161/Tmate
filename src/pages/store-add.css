@@ -120,3 +120,8 @@
   font-weight: var(--font-weight-medium);
   text-align: center;
 }
+
+.store-add__store-name {
+  font-size: var(--font-size-16);
+  font-weight: var(--font-weight-medium);
+}

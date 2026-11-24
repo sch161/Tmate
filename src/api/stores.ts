@@ -26,7 +26,7 @@ export interface AddedStore {
   unknownMenus: string[];
 }
 
-const FALLBACK_MESSAGE = '가게를 추가하지 못했어요. 잠시 후 다시 시도해주세요';
+const FALLBACK_MESSAGE = '추가하지 못했어요. 잠시 후 다시 시도해주세요';
 
 /** 함수가 돌려준 오류 본문({ message })에서 사용자에게 보여줄 문구를 꺼낸다 */
 async function readErrorMessage(error: unknown): Promise<string> {
@@ -47,6 +47,21 @@ export async function addStore(store: NewStore): Promise<AddedStore> {
   const result = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
   const restaurantId = result.restaurant_id;
   if (typeof restaurantId !== 'number') throw new Error(FALLBACK_MESSAGE);
+  const unknownMenus = Array.isArray(result.unknown_menus) ? result.unknown_menus.filter((name): name is string => typeof name === 'string') : [];
+  return { restaurantId, unknownMenus };
+}
+
+/** 내가 추가한 가게인지 (가게 상세에서 "메뉴 추가"를 보여줄지 정한다). 확인하지 못하면 false */
+export async function isMyStore(restaurantId: number): Promise<boolean> {
+  const { data, error } = await supabase.rpc('is_my_store', { p_restaurant_id: restaurantId });
+  return !error && data === true;
+}
+
+/** 내가 추가한 가게에 메뉴를 더 넣는다 (알레르기·맛은 가게 추가와 똑같이 AI 가 추정한다) */
+export async function addStoreMenus(restaurantId: number, menus: NewStoreMenu[]): Promise<AddedStore> {
+  const { data, error } = await supabase.functions.invoke('add-store', { body: { restaurantId, menus } });
+  if (error) throw new Error(await readErrorMessage(error));
+  const result = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : {};
   const unknownMenus = Array.isArray(result.unknown_menus) ? result.unknown_menus.filter((name): name is string => typeof name === 'string') : [];
   return { restaurantId, unknownMenus };
 }

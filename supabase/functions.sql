@@ -21,6 +21,7 @@
 --   store_add_daily_max   3   가게 추가: 한 사람이 24시간 동안 추가할 수 있는 가게 수
 --   store_add_attempt_max 10  가게 추가: 한 사람이 24시간 동안 AI 추정을 요청할 수 있는 횟수 (실패한 요청 포함)
 --   store_menu_max        8   가게 추가: 한 번에 넣을 수 있는 메뉴 수
+--   store_menu_total_max  30  가게 추가: 한 가게에 넣을 수 있는 메뉴 수 (나중에 더 넣는 것 포함)
 --
 -- 계산식 요약
 --   지금 입맛    = 고른 입맛 비율 × (1 - w) + 평가로 본 입맛 × w,  w = min(평가 수 × taste_learn_per_review, taste_learn_max)
@@ -70,6 +71,7 @@ begin
     when 'store_add_daily_max'   then 3
     when 'store_add_attempt_max' then 10
     when 'store_menu_max'        then 8
+    when 'store_menu_total_max'  then 30
   end;
 
   if v_value is null then
@@ -2085,58 +2087,22 @@ begin
 end;
 $$;
 
--- 가게와 메뉴 저장. 가게 id(restaurants.id)를 돌려준다
---   p_menus 예: [{"name": "김치찌개", "description": "돼지고기", "inferred": true,
---                 "taste_tag_ids": [1, 9], "allergens": [{"allergen_id": 5, "level": "danger"}, {"allergen_id": 3, "level": "caution"}]}]
---   inferred = true 이면 estimated(추정), 아니면 unknown(정보 없음)으로 저장하고 알레르기 행을 만들지 않는다.
-create or replace function public.add_user_store(p_name text, p_region text, p_address text, p_category_id int, p_menus jsonb)
-returns bigint
+-- 내부: 사용자가 넣은 메뉴들을 브랜드에 저장한다 (add_user_store · add_user_store_menus 가 같이 쓴다). p_menus 형식은 add_user_store 설명 참고
+create or replace function public.calc_insert_user_menus(p_brand bigint, p_menus jsonb)
+returns void
 language plpgsql
 security definer
 set search_path = ''
 as $$
 declare
-  v_uid uuid := auth.uid();
-  v_name text := btrim(regexp_replace(coalesce(p_name, ''), '\s+', ' ', 'g'));
-  v_address text := left(btrim(coalesce(p_address, '')), 100);
-  v_brand bigint;
-  v_restaurant bigint;
   v_menu_id bigint;
   v_menu jsonb;
   v_menu_name text;
   v_inferred boolean;
-  v_count int;
 begin
-  perform public.calc_store_add_check(p_name, p_region);
-
-  if p_category_id is null or not exists (select 1 from public.food_categories c where c.id = p_category_id) then
-    raise exception '음식 종류를 선택해주세요.';
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
   end if;
-  if p_menus is null or jsonb_typeof(p_menus) <> 'array' then
-    raise exception '메뉴를 1개 이상 입력해주세요.';
-  end if;
-  v_count := jsonb_array_length(p_menus);
-  if v_count < 1 or v_count > public.calc_setting('store_menu_max') then
-    raise exception '메뉴는 1~%개까지 입력할 수 있어요.', public.calc_setting('store_menu_max')::int;
-  end if;
-  if exists (
-    select 1 from jsonb_array_elements(p_menus) m
-    where char_length(btrim(coalesce(m ->> 'name', ''))) < 1 or char_length(btrim(m ->> 'name')) > 40
-  ) then
-    raise exception '메뉴 이름은 1~40자로 입력해주세요.';
-  end if;
-  if (select count(distinct lower(replace(btrim(m ->> 'name'), ' ', ''))) from jsonb_array_elements(p_menus) m) <> v_count then
-    raise exception '같은 메뉴가 두 번 들어 있어요.';
-  end if;
-
-  insert into public.brands (name, is_franchise, category_id, research_status, researched_at, created_by)
-  values (v_name, false, p_category_id, 'done', now(), v_uid)
-  returning id into v_brand;
-
-  insert into public.restaurants (brand_id, name, address, region, sido, sigungu)
-  select v_brand, v_name, case when v_address = '' then p_region else v_address end, p_region, x.sido, x.sigungu
-  from (select r.sido, r.sigungu from public.restaurants r where r.region = p_region order by r.id limit 1) x
-  returning id into v_restaurant;
 
   for v_menu in select m from jsonb_array_elements(p_menus) m loop
     v_menu_name := btrim(v_menu ->> 'name');
@@ -2144,7 +2110,7 @@ begin
 
     insert into public.menus (brand_id, name, description, allergen_status, allergen_checked_at, allergen_note, menu_source_name)
     values (
-      v_brand,
+      p_brand,
       v_menu_name,
       nullif(left(btrim(coalesce(v_menu ->> 'description', '')), 100), ''),
       case when v_inferred then 'estimated'::public.allergen_status else 'unknown'::public.allergen_status end,
@@ -2180,6 +2146,59 @@ begin
       group by x.allergen_id;
     end if;
   end loop;
+end;
+$$;
+
+-- 가게와 메뉴 저장. 가게 id(restaurants.id)를 돌려준다
+--   p_menus 예: [{"name": "김치찌개", "description": "돼지고기", "inferred": true,
+--                 "taste_tag_ids": [1, 9], "allergens": [{"allergen_id": 5, "level": "danger"}, {"allergen_id": 3, "level": "caution"}]}]
+--   inferred = true 이면 estimated(추정), 아니면 unknown(정보 없음)으로 저장하고 알레르기 행을 만들지 않는다.
+create or replace function public.add_user_store(p_name text, p_region text, p_address text, p_category_id int, p_menus jsonb)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_name text := btrim(regexp_replace(coalesce(p_name, ''), '\s+', ' ', 'g'));
+  v_address text := left(btrim(coalesce(p_address, '')), 100);
+  v_brand bigint;
+  v_restaurant bigint;
+  v_count int;
+begin
+  perform public.calc_store_add_check(p_name, p_region);
+
+  if p_category_id is null or not exists (select 1 from public.food_categories c where c.id = p_category_id) then
+    raise exception '음식 종류를 선택해주세요.';
+  end if;
+  if p_menus is null or jsonb_typeof(p_menus) <> 'array' then
+    raise exception '메뉴를 1개 이상 입력해주세요.';
+  end if;
+  v_count := jsonb_array_length(p_menus);
+  if v_count < 1 or v_count > public.calc_setting('store_menu_max') then
+    raise exception '메뉴는 1~%개까지 입력할 수 있어요.', public.calc_setting('store_menu_max')::int;
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_menus) m
+    where char_length(btrim(coalesce(m ->> 'name', ''))) < 1 or char_length(btrim(m ->> 'name')) > 40
+  ) then
+    raise exception '메뉴 이름은 1~40자로 입력해주세요.';
+  end if;
+  if (select count(distinct lower(replace(btrim(m ->> 'name'), ' ', ''))) from jsonb_array_elements(p_menus) m) <> v_count then
+    raise exception '같은 메뉴가 두 번 들어 있어요.';
+  end if;
+
+  insert into public.brands (name, is_franchise, category_id, research_status, researched_at, created_by)
+  values (v_name, false, p_category_id, 'done', now(), v_uid)
+  returning id into v_brand;
+
+  insert into public.restaurants (brand_id, name, address, region, sido, sigungu)
+  select v_brand, v_name, case when v_address = '' then p_region else v_address end, p_region, x.sido, x.sigungu
+  from (select r.sido, r.sigungu from public.restaurants r where r.region = p_region order by r.id limit 1) x
+  returning id into v_restaurant;
+
+  perform public.calc_insert_user_menus(v_brand, p_menus);
 
   return v_restaurant;
 end;
@@ -2190,6 +2209,120 @@ revoke all on function public.begin_store_add(text, text)                     fr
 revoke all on function public.add_user_store(text, text, text, int, jsonb)    from public, anon;
 grant execute on function public.begin_store_add(text, text)                  to authenticated;
 grant execute on function public.add_user_store(text, text, text, int, jsonb) to authenticated;
+
+-- 내가 추가한 가게인지 (가게 상세에서 "메뉴 추가" 버튼을 보여줄지 정한다)
+create or replace function public.is_my_store(p_restaurant_id bigint)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  return exists (
+    select 1 from public.restaurants r join public.brands b on b.id = r.brand_id
+    where r.id = p_restaurant_id and b.created_by = auth.uid() and not b.is_franchise
+  );
+end;
+$$;
+
+-- 내부: 내가 추가한 가게면 브랜드 id, 아니면 예외
+create or replace function public.calc_my_store_brand(p_restaurant_id bigint)
+returns bigint
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_brand bigint;
+begin
+  if auth.uid() is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  select b.id into v_brand
+  from public.restaurants r join public.brands b on b.id = r.brand_id
+  where r.id = p_restaurant_id and b.created_by = auth.uid() and not b.is_franchise;
+  if v_brand is null then
+    raise exception '내가 추가한 가게에만 메뉴를 넣을 수 있어요.';
+  end if;
+  return v_brand;
+end;
+$$;
+
+-- 메뉴 추가 시작: 내 가게인지 확인하고 AI 추정 요청 1회를 기록한다 (하루 요청 한도는 가게 추가와 같이 센다)
+create or replace function public.begin_store_menu_add(p_restaurant_id bigint)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  perform public.calc_my_store_brand(p_restaurant_id);
+  if (
+    select count(*) from public.store_add_attempts a
+    where a.user_id = v_uid and a.created_at > now() - interval '24 hours'
+  ) >= public.calc_setting('store_add_attempt_max') then
+    raise exception '오늘은 너무 많이 시도했어요. 내일 다시 해주세요.';
+  end if;
+  insert into public.store_add_attempts (user_id) values (v_uid);
+end;
+$$;
+
+-- 내가 추가한 가게에 메뉴를 더 넣는다. 한 번에 store_menu_max 개, 가게 전체로 store_menu_total_max 개까지
+create or replace function public.add_user_store_menus(p_restaurant_id bigint, p_menus jsonb)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_brand bigint := public.calc_my_store_brand(p_restaurant_id);
+  v_count int;
+  v_existing int;
+begin
+  if p_menus is null or jsonb_typeof(p_menus) <> 'array' then
+    raise exception '메뉴를 1개 이상 입력해주세요.';
+  end if;
+  v_count := jsonb_array_length(p_menus);
+  if v_count < 1 or v_count > public.calc_setting('store_menu_max') then
+    raise exception '메뉴는 한 번에 1~%개까지 넣을 수 있어요.', public.calc_setting('store_menu_max')::int;
+  end if;
+  select count(*) into v_existing from public.menus m where m.brand_id = v_brand;
+  if v_existing + v_count > public.calc_setting('store_menu_total_max') then
+    raise exception '한 가게에는 메뉴를 %개까지 넣을 수 있어요.', public.calc_setting('store_menu_total_max')::int;
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_menus) m
+    where char_length(btrim(coalesce(m ->> 'name', ''))) < 1 or char_length(btrim(m ->> 'name')) > 40
+  ) then
+    raise exception '메뉴 이름은 1~40자로 입력해주세요.';
+  end if;
+  if (select count(distinct lower(replace(btrim(m ->> 'name'), ' ', ''))) from jsonb_array_elements(p_menus) m) <> v_count
+     or exists (
+       select 1 from jsonb_array_elements(p_menus) m
+       join public.menus e on e.brand_id = v_brand and lower(replace(e.name, ' ', '')) = lower(replace(btrim(m ->> 'name'), ' ', ''))
+     ) then
+    raise exception '이미 있는 메뉴가 들어 있어요.';
+  end if;
+
+  perform public.calc_insert_user_menus(v_brand, p_menus);
+end;
+$$;
+
+revoke all on function public.calc_insert_user_menus(bigint, jsonb)    from public, anon, authenticated;
+revoke all on function public.calc_my_store_brand(bigint)              from public, anon, authenticated;
+revoke all on function public.is_my_store(bigint)                      from public, anon;
+revoke all on function public.begin_store_menu_add(bigint)             from public, anon;
+revoke all on function public.add_user_store_menus(bigint, jsonb)      from public, anon;
+grant execute on function public.is_my_store(bigint)                   to authenticated;
+grant execute on function public.begin_store_menu_add(bigint)          to authenticated;
+grant execute on function public.add_user_store_menus(bigint, jsonb)   to authenticated;
 
 -- =====================================================================
 -- 궁합 영수증 사진 올리기 (손님 폰 → 진행자 인쇄 화면)
