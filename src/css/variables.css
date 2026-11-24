@@ -73,8 +73,9 @@
 
   /* size */
   --app-max-width: 402px;
-  --bottom-nav-height: 96px;
-  --bottom-nav-icon: 40px;
+  --bottom-nav-height: 60px;
+  --bottom-nav-icon: 28px;
+  --bottom-nav-tap: 56px;
   --progress-height: 3px;
   --meter-height: 11px;
   --meter-height-lg: 22px;
