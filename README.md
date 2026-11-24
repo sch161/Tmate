@@ -90,7 +90,7 @@ npm run dev
 2. `supabase/policies.sql`
 3. `supabase/functions.sql` (재실행 가능)
 4. `supabase/seed_reference.sql` (음식 카테고리, 맛 태그, 알레르기 표준 19종)
-5. `supabase/seed_branches.sql` (브랜드와 지점, 재실행 가능)
+5. `supabase/seed_branches.sql` (브랜드와 지점, 재실행 가능) → `supabase/seed_branch_coords.sql` (지점 좌표, 가까운 순 정렬용, 재실행 가능)
 6. `supabase/seed_brand_menus.sql` (브랜드 메뉴·알레르기, 재실행 가능)
 7. `npm run gen:types`
 

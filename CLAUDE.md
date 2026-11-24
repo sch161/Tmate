@@ -32,7 +32,7 @@
 ## 도메인 규칙
 
 - 로그인은 아이디 방식이다. 아이디는 영문 소문자·숫자·밑줄 4~20자이고, Supabase Auth 에는 `${아이디}@tmate-app.com` 이메일로 가입/로그인한다 (변환은 src/lib/constants.ts 한 곳에서만). 이메일 인증은 꺼져 있다. 가입 시 트리거가 profiles 를 자동 생성하고 nickname 기본값은 아이디다. 회원가입 화면에서 닉네임을 필수로 받아 가입 직후 저장한다(랭킹·영수증·결과 화면에는 아이디가 아니라 닉네임이 나온다)
-- 지역은 구 단위 문자열이다 (예: '서울시 구로구'). profiles.region 과 restaurants.region 을 문자열로 비교해 "주변 맛집"을 필터한다. 좌표·거리 계산은 하지 않는다
+- 지역은 구 단위 문자열이다 (예: '서울시 구로구'). profiles.region 과 restaurants.region 을 문자열로 비교해 "주변 맛집"을 필터한다. 홈의 "가까운 순" 버튼을 누르면 그때만 위치 권한을 묻고, 그 지역 안에서 내 위치와 가까운 순으로 정렬해 거리를 보여준다(get_restaurants 의 p_lat·p_lng. 내 위치는 저장하지 않는다). 가게 좌표(restaurants.lat·lng)는 공공데이터 지점에만 있고 supabase/seed_branch_coords.sql(scripts/import/build-branch-coords.mjs 가 생성, 직접 수정 금지)이 채운다
 - 온보딩 순서: 위치(Location) → 맛 선택(Flavor Info, 최대 3개) → 비율 조절(Allergy Info_g, 합계 100) → 알레르기 선택(Allergy Info, 선택 사항) → 홈
 - 브랜드 구조: 지점(restaurants)은 공공데이터(소상공인 상가정보)에서 가져오고, 메뉴·알레르기는 브랜드(brands) 단위로 한 번만 조사해 그 브랜드의 모든 지점이 공유한다. 개인 식당은 가게 1개 = 브랜드 1개(1:1)로 같은 구조를 쓴다. 음식 종류는 한식·중식·일식·양식·카페·디저트·치킨·분식·아시안 8개다. 공식 알레르기 표를 확인한 브랜드는 6개이고, 나머지 87개 브랜드는 대표 메뉴를 AI 추정(estimated)으로 넣었다
 - 평가 단위는 브랜드 메뉴다 (별점 1~5 + 맛 태그 여러 개). 지점 평점·맛 태그·취향 일치도는 소속 브랜드 메뉴 기준이라 같은 브랜드의 지점은 같은 값이다
@@ -42,6 +42,7 @@
 - 하단 네비게이션은 홈 / 저장 / 마이페이지 3개다
 - 친구랑 궁합 검사(행사 체험용): 방 번호(4자리)로 친구와 묶고(한 방에 2명까지), 둘 중 하나 문항 10개 + 방마다 무작위 음식 5개에 답한다. 궁합(%)은 같은 답을 고른 문항 비율이고 음식 답은 결과 카드에만 쓴다. 결과 화면과 영수증에는 같이 고른 보기(통한 취향)와 다르게 고른 보기(갈린 취향)도 보여준다(get_match_pair_choices). 결과 화면 아래에는 두 사람 취향 일치도의 평균이 높은 가게를 "둘이 같이 가볼 만한 곳"으로 보여준다(get_match_pair_places. 둘 다 입맛 정보가 없으면 평점 순). 문항·음식은 supabase/seed_match.sql, 결과 문구는 src/utils/match-results.ts 에 있다
 - 맛궁합 영수증 인쇄(부스 진행자용): 맥북 Chrome 에서 MXW01 미니 감열 프린터(가로 384점, BLE)로 사진과 궁합 결과를 뽑는다. 바이트를 만드는 순수 함수는 src/utils/mxw01-protocol.ts(node scripts/test-mxw01.mjs 로 테스트), Web Bluetooth 전송은 src/utils/mxw01-printer.ts, 영수증 그림은 src/utils/match-receipt.ts 에 있다. 진행자는 방 멤버가 아니므로 get_match_room_pairs · get_match_pair_foods(migrations/004_match_print.sql)로 읽는다. 실제 프린터 통신은 여기서 확인할 수 없으므로 프로토콜을 바꾸면 docs/match-print.md 의 절차로 실제 기기에서 다시 확인한다
+- 궁합 결과 화면의 맨 아래 버튼은 맛집 추천으로 이어 준다(입맛을 등록했으면 홈, 아니면 온보딩)
 - 궁합 영수증 사진 올리기: 손님이 결과 화면에서 폰으로 찍은 사진(src/utils/match-photo.ts 가 자르지 않고 흰 바탕의 480×360 JPEG 안에 줄여 넣는다)을 request_match_print 로 올리면 인쇄 화면의 "폰으로 올라온 사진" 대기 목록에 뜬다. 손님이 동의(show_on_rank)한 사진만 랭킹 화면에 띄운다(get_match_rank_photos). 결과 화면의 "결과 이미지 저장"은 영수증과 같은 그림을 PNG 로 저장·공유한다. 랭킹 화면의 바로가기 QR 은 정적 그림(src/assets/images/site-qr.svg, 사이트 주소가 바뀌면 다시 만든다)이다. 진행자용 RPC(get_match_print_queue 등)는 진행자 번호(match_print_settings.passcode, DB 에만 둔다)가 맞아야 하고, 사진은 하루 뒤 지운다
 - 다른 폰으로 사진 보내기: PC 로 검사한 손님은 결과 화면의 QR(src/utils/qr.ts 가 직접 만든다. node scripts/test-qr.mjs)을 폰으로 찍어 match-photo 화면에서 로그인 없이 사진을 올린다. QR 주소의 표(match_photo_tokens)는 30분만 쓸 수 있고, 이 화면용 RPC 2개만 anon 에게 열려 있다
 - 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
@@ -65,7 +66,7 @@
 - 아직 없는 것: 알림 설정, 프로필 사진 (마이페이지 Figma 의 "알림 설정" 줄은 만들지 않았다)
 - Figma 에 있어 읽고 구현한 화면: Splash, User-Login, User-Signup, Location, Flavor Info, Allergy Info_g, Allergy Info, Home, Details_s, Details_m, Save, User
 - Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, store-add, match, match-rank, match-photo, match-print(영수증 배치 src/utils/match-receipt.ts 포함), 지역 선택 시트(src/utils/region-picker.ts)
-- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 내 입맛 화면의 평가 반영 안내(taste-detail.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 노란 띠 위로 검은 고딕 글자가 흘러가는 임시 배너), 홈의 오늘의 추천 메뉴 캐러셀(home.*, 한 줄로 옆으로 넘기고 3.5초마다 한 장씩 넘어간다. Figma 는 2열 격자), 맛 선택 카드의 예시 음식 문구와 2열 배치·비율 슬라이더의 예시 문구(src/utils/taste-examples.ts, Figma 의 Flavor Info 는 3열에 이름만 있음)
+- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 가까운 순 버튼(home.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 내 입맛 화면의 평가 반영 안내(taste-detail.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 노란 띠 위로 검은 고딕 글자가 흘러가는 임시 배너), 홈의 오늘의 추천 메뉴 캐러셀(home.*, 한 줄로 옆으로 넘기고 3.5초마다 한 장씩 넘어간다. Figma 는 2열 격자), 맛 선택 카드의 예시 음식 문구와 2열 배치·비율 슬라이더의 예시 문구(src/utils/taste-examples.ts, Figma 의 Flavor Info 는 3열에 이름만 있음)
 
 ## 코드 규칙
 
