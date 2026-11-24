@@ -264,3 +264,17 @@ revoke all on match_print_requests, match_print_settings from anon, authenticate
 
 -- 다른 폰으로 사진 보내기 표 (match_photo_tokens): 클라이언트에 직접 열지 않는다
 revoke all on match_photo_tokens from anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 가게 사진 버킷 (Storage): 누구나 볼 수 있고, 로그인한 사용자가 자기 폴더(내 id/)에만 올린다
+--   600KB 까지, JPEG·PNG 만. 어느 가게의 사진으로 쓸지는 set_my_store_photo 가 확인한다.
+-- ---------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('store-photos', 'store-photos', true, 614400, array['image/jpeg', 'image/png'])
+on conflict (id) do update
+  set public = excluded.public, file_size_limit = excluded.file_size_limit, allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "store_photos_insert_own" on storage.objects;
+create policy "store_photos_insert_own" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'store-photos' and (storage.foldername(name))[1] = (select auth.uid())::text);
