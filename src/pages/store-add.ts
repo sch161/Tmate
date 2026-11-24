@@ -2,7 +2,8 @@
 // 디자인 대기: 화면 나오면 교체 (Figma 에 가게 추가 화면이 없다)
 import { getMyProfile } from '../api/auth';
 import { getFoodCategories, type FoodCategory } from '../api/lookups';
-import { addStore, MENU_NAME_MAX_LENGTH, STORE_MENU_MAX, STORE_NAME_MAX_LENGTH } from '../api/stores';
+import { getRestaurantDetail } from '../api/restaurants';
+import { addStore, addStoreMenus, MENU_NAME_MAX_LENGTH, STORE_MENU_MAX, STORE_NAME_MAX_LENGTH } from '../api/stores';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
@@ -16,7 +17,8 @@ const ADDRESS_MAX_LENGTH = 100;
 const body = qs<HTMLElement>('#body');
 const backButton = qs<HTMLButtonElement>('#back');
 
-function renderForm(categories: FoodCategory[], initialRegion: string): void {
+/** existing 이 있으면 그 가게(내가 추가한 가게)에 메뉴만 더 넣는 모드다 */
+function renderForm(categories: FoodCategory[], initialRegion: string, existing: { id: number; name: string } | null = null): void {
   if (!body) return;
   let region = initialRegion;
   let categoryId: number | null = null;
@@ -31,7 +33,8 @@ function renderForm(categories: FoodCategory[], initialRegion: string): void {
   const addMenuButton = el('button', { class: 'store-add__add-menu', type: 'button' }, '+ 메뉴 추가');
   const error = el('p', { class: 'error-message', role: 'alert' });
   error.hidden = true;
-  const submitButton = el('button', { class: 'btn-primary', id: 'submit', type: 'button', disabled: true }, '가게 추가하기');
+  const submitLabel = existing ? '메뉴 추가하기' : '가게 추가하기';
+  const submitButton = el('button', { class: 'btn-primary', id: 'submit', type: 'button', disabled: true }, submitLabel);
   const progress = el('p', { class: 'store-add__progress text-wrap-ko', role: 'status' });
   progress.hidden = true;
 
@@ -46,9 +49,11 @@ function renderForm(categories: FoodCategory[], initialRegion: string): void {
 
   /** 입력이 모자라면 그 이유, 다 찼으면 null */
   const missing = (): string | null => {
-    if (name.value.trim().length < 2) return '가게 이름을 2자 이상 입력해주세요';
-    if (!region) return '지역을 골라주세요';
-    if (categoryId === null) return '음식 종류를 골라주세요';
+    if (!existing) {
+      if (name.value.trim().length < 2) return '가게 이름을 2자 이상 입력해주세요';
+      if (!region) return '지역을 골라주세요';
+      if (categoryId === null) return '음식 종류를 골라주세요';
+    }
     const names = menuNames().filter((value) => value !== '');
     if (names.length === 0) return '메뉴를 1개 이상 입력해주세요';
     if (new Set(names.map((value) => value.replace(/\s+/g, '').toLowerCase())).size !== names.length) return '같은 메뉴가 두 번 들어 있어요';
@@ -100,7 +105,7 @@ function renderForm(categories: FoodCategory[], initialRegion: string): void {
 
   const setBusy = (value: boolean): void => {
     busy = value;
-    submitButton.textContent = value ? '추가하는 중...' : '가게 추가하기';
+    submitButton.textContent = value ? '추가하는 중...' : submitLabel;
     progress.hidden = !value;
     progress.textContent = value ? 'AI가 메뉴의 알레르기와 맛을 살펴보고 있어요. 10초쯤 걸려요' : '';
     for (const control of body.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input, button')) {
@@ -112,7 +117,7 @@ function renderForm(categories: FoodCategory[], initialRegion: string): void {
   const submit = async (): Promise<void> => {
     if (busy) return;
     const problem = missing();
-    if (problem || categoryId === null) {
+    if (problem || (!existing && categoryId === null)) {
       error.textContent = problem ?? '';
       error.hidden = false;
       return;
@@ -120,8 +125,9 @@ function renderForm(categories: FoodCategory[], initialRegion: string): void {
     clearError();
     setBusy(true);
     try {
-      const added = await addStore({ name: name.value.trim(), region, address: address.value.trim(), categoryId, menus: filledMenus() });
-      showToast(added.unknownMenus.length > 0 ? '가게를 추가했어요. 일부 메뉴는 알레르기 정보가 없어요' : '가게를 추가했어요');
+      const added = existing ? await addStoreMenus(existing.id, filledMenus()) : await addStore({ name: name.value.trim(), region, address: address.value.trim(), categoryId: categoryId ?? 0, menus: filledMenus() });
+      const done = existing ? '메뉴를 추가했어요' : '가게를 추가했어요';
+      showToast(added.unknownMenus.length > 0 ? `${done}. 일부 메뉴는 알레르기 정보가 없어요` : done);
       window.setTimeout(() => window.location.replace(`${PATHS.restaurant}?id=${added.restaurantId}`), LEAVE_DELAY_MS);
     } catch (e) {
       setBusy(false);
@@ -153,10 +159,9 @@ function renderForm(categories: FoodCategory[], initialRegion: string): void {
       'div',
       { class: 'store-add__form' },
       el('p', { class: 'store-add__notice text-wrap-ko' }, '알레르기 정보는 AI가 메뉴 이름으로 추정해요. 정확하지 않을 수 있어서 "추정"으로 표시되고, 알레르기를 등록한 분께는 추천되지 않아요.'),
-      field('가게 이름', name, 'store-name'),
-      field('지역', regionButton),
-      field('주소', address, 'store-address'),
-      field('음식 종류', categoryGroup),
+      ...(existing
+        ? [field('가게', el('p', { class: 'store-add__store-name text-wrap-ko' }, existing.name))]
+        : [field('가게 이름', name, 'store-name'), field('지역', regionButton), field('주소', address, 'store-address'), field('음식 종류', categoryGroup)]),
       el('div', { class: 'store-add__field' }, el('p', { class: 'store-add__label' }, `메뉴 (최대 ${STORE_MENU_MAX}개)`), menuList, addMenuButton),
       error,
       progress,
@@ -171,6 +176,19 @@ async function load(): Promise<void> {
   if (!body) return;
   renderLoading(body);
   try {
+    // ?restaurant=가게id 이면 그 가게에 메뉴만 더 넣는다 (내 가게인지는 서버가 확인한다)
+    const restaurantId = Number(new URLSearchParams(window.location.search).get('restaurant'));
+    if (Number.isInteger(restaurantId) && restaurantId > 0) {
+      const detail = await getRestaurantDetail(restaurantId);
+      if (!detail) {
+        renderError(body, '가게를 찾지 못했어요', () => void load());
+        return;
+      }
+      const title = qs('.store-add__title');
+      if (title) title.textContent = '메뉴 추가';
+      renderForm([], '', { id: restaurantId, name: detail.name });
+      return;
+    }
     const [categories, profile] = await Promise.all([getFoodCategories(), getMyProfile()]);
     // 홈에서 보던 지역(?region=)을 우선 쓰고, 없으면 내 지역을 쓴다. 저장할 때 서버가 지역을 다시 확인한다
     const fromQuery = new URLSearchParams(window.location.search).get('region')?.trim() ?? '';
