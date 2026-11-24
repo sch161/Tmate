@@ -2,14 +2,14 @@
 //   프린터 연결(MXW01, Web Bluetooth) → 방 번호로 팀 선택 → 웹캠 사진 → 영수증 미리보기·인쇄 → 다음 팀
 //   ?demo=1 이면 서버 대신 예시 팀·음식(src/utils/match-print-demo.ts)을 쓴다.
 // 디자인 대기: 화면 나오면 교체 (Figma 에 이 화면이 없다)
-import { getMatchPairFoods, getMatchPrintPhoto, getMatchPrintQueue, getMatchRoomPairs, markMatchPrinted, type MatchFoodCompare, type MatchPrintRequest, type MatchRoomPair } from '../api/match';
+import { getMatchPairChoices, getMatchPairFoods, getMatchPrintPhoto, getMatchPrintQueue, getMatchRoomPairs, markMatchPrinted, type MatchFoodCompare, type MatchPrintRequest, type MatchRoomPair } from '../api/match';
 import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
 import { dataUrlToCanvas } from '../utils/match-photo';
 import { DEMO_PAIRS, getDemoPairFoods } from '../utils/match-print-demo';
 import { RECEIPT_MAX_CARDS, RECEIPT_PHOTO_ASPECT, renderMatchReceipt, type ReceiptImage } from '../utils/match-receipt';
-import { buildResultCards, getMatchTier } from '../utils/match-results';
+import { buildChoiceSummary, buildResultCards, getMatchTier, type ChoiceSummary } from '../utils/match-results';
 import { Mxw01Printer, type PrintOptions, type PrinterState } from '../utils/mxw01-printer';
 import { MXW01_DEFAULT_INTENSITY, MXW01_TEST_PATTERN_HEIGHT, buildPrintData, buildTestPatternMono, monoToRgba, statusErrorMessage } from '../utils/mxw01-protocol';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
@@ -535,8 +535,18 @@ async function showPreview(job: Job, photo: HTMLCanvasElement | null): Promise<v
   if (token !== stageToken) return;
 
   const cards = buildResultCards(foods, { me: job.pair.nicknameA, friend: job.pair.nicknameB }).slice(0, RECEIPT_MAX_CARDS);
+  // 통한 취향·갈린 취향은 못 불러와도 인쇄는 할 수 있게 한다 (그 칸 없이)
+  let choices: ChoiceSummary | undefined;
+  if (!DEMO) {
+    try {
+      choices = buildChoiceSummary(await getMatchPairChoices(job.code, job.pair.memberNoA, job.pair.memberNoB));
+    } catch {
+      choices = undefined;
+    }
+    if (token !== stageToken) return;
+  }
   const date = new Date();
-  const draw = (): Promise<ReceiptImage> => renderMatchReceipt({ nicknameA: job.pair.nicknameA, nicknameB: job.pair.nicknameB, score: job.pair.score, cards, photo, date, photoGamma });
+  const draw = (): Promise<ReceiptImage> => renderMatchReceipt({ nicknameA: job.pair.nicknameA, nicknameB: job.pair.nicknameB, score: job.pair.score, cards, choices, photo, date, photoGamma });
   let receipt: ReceiptImage;
   try {
     receipt = await draw();
