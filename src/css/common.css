@@ -158,8 +158,10 @@ body {
 
 /* 선택 카드 안의 아이콘 */
 .select-card__icon {
+  /* 아이콘마다 가로세로 비율이 달라서 56×38 칸 안에 비율을 지켜 맞춘다 (width/height 속성과 같은 값 → 레이아웃이 흔들리지 않는다) */
+  width: 56px;
   height: 38px;
-  width: auto;
+  object-fit: contain;
 }
 
 .select-grid {
