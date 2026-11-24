@@ -17,6 +17,7 @@ import {
   requestMatchPrint,
   getMatchPairChoices,
   createMatchPhotoToken,
+  getMatchPairPlaces,
 } from '../api/match';
 import starIcon from '../assets/icons/star.svg';
 import { PATHS } from '../lib/constants';
@@ -425,6 +426,32 @@ function createPhotoPrint(code: string, onPhoto: (photo: string) => void): HTMLE
   return el('section', { class: 'match-photo' }, consentLabel, button, input, status, qrButton, qrBox);
 }
 
+// 디자인 대기: 둘이 같이 가볼 만한 곳은 Figma 에 없는 임시 UI
+/** 결과 화면의 "둘이 같이 가볼 만한 곳". 곁들이는 정보라 못 불러오거나 없으면 아무것도 보여주지 않는다 */
+function createPairPlaces(code: string, friend: MatchMember): HTMLElement {
+  const section = el('section', { class: 'match-places' });
+  section.hidden = true;
+  getMatchPairPlaces(code, friend.memberNo)
+    .then((places) => {
+      if (places.length === 0) return;
+      section.replaceChildren(
+        el('h2', { class: 'match-places__title' }, '둘이 같이 가볼 만한 곳'),
+        ...places.map((place) =>
+          el(
+            'a',
+            { class: 'match-places__item', href: `${PATHS.restaurant}?id=${place.restaurantId}` },
+            el('span', { class: 'match-places__text' }, el('span', { class: 'match-places__name text-wrap-ko' }, place.restaurantName), el('span', { class: 'match-places__meta' }, [place.categoryName, place.region].filter(Boolean).join(' · '))),
+            // 둘 다 입맛 정보가 없으면(행사 손님) 일치도 대신 화살표만 보여준다
+            el('span', { class: 'match-places__match' }, place.pairMatch > 0 ? `둘의 일치도 ${place.pairMatch}%` : '보러 가기'),
+          ),
+        ),
+      );
+      section.hidden = false;
+    })
+    .catch(() => undefined);
+  return section;
+}
+
 /** 결과를 영수증 모양 이미지(PNG)로 만든다. 부스에서 뽑는 영수증과 같은 그림이다 */
 async function buildResultImage(input: Omit<ReceiptInput, 'photo'>, photo: string | null): Promise<Blob> {
   const receipt = await renderMatchReceipt({ ...input, photo: photo ? await dataUrlToCanvas(photo) : null });
@@ -524,6 +551,7 @@ async function showDetail(code: string, friend: MatchMember): Promise<void> {
       el('p', { class: 'match-result__desc text-wrap-ko' }, tier.desc),
     ),
     cardList,
+    createPairPlaces(code, friend),
     createPhotoPrint(code, (photo) => {
       lastPhoto = photo;
     }),

@@ -1098,6 +1098,19 @@ export type Database = {
           food_name: string
         }[]
       }
+      get_match_pair_places: {
+        Args: { p_code: string; p_limit?: number; p_member_no: number }
+        Returns: {
+          brand_name: string
+          category_name: string
+          friend_match: number
+          my_match: number
+          pair_match: number
+          region: string
+          restaurant_id: number
+          restaurant_name: string
+        }[]
+      }
       get_match_photo_token_info: {
         Args: { p_token: string }
         Returns: {

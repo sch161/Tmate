@@ -272,3 +272,28 @@ export async function getMatchPrintStats(passcode: string): Promise<{ teams: num
   const row = data?.[0];
   return { teams: row?.teams ?? 0, waiting: row?.waiting ?? 0, printed: row?.printed ?? 0 };
 }
+
+/** 둘이 같이 가볼 만한 곳 한 건. pairMatch 는 두 사람 취향 일치도의 평균(%)이고, 둘 다 입맛 정보가 없으면 0 이다 */
+export interface MatchPairPlace {
+  restaurantId: number;
+  restaurantName: string;
+  brandName: string;
+  categoryName: string | null;
+  region: string;
+  pairMatch: number;
+}
+
+/** 궁합 결과의 "둘이 같이 가볼 만한 곳": 두 사람 취향 일치도의 평균이 높은 순 */
+export async function getMatchPairPlaces(code: string, memberNo: number, limit = 3): Promise<MatchPairPlace[]> {
+  const { data, error } = await supabase.rpc('get_match_pair_places', { p_code: code, p_member_no: memberNo, p_limit: limit });
+  if (error) throw toError(error, '추천 가게를 불러오지 못했어요');
+  return (data ?? []).map((row) => ({
+    restaurantId: row.restaurant_id,
+    restaurantName: row.restaurant_name,
+    brandName: row.brand_name,
+    // 생성된 타입은 nullable 을 표현하지 못한다. 음식 종류가 없는 브랜드는 null 이 온다
+    categoryName: (row.category_name as string | null) ?? null,
+    region: row.region,
+    pairMatch: row.pair_match,
+  }));
+}
