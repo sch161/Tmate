@@ -51,6 +51,7 @@
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
+  --font-weight-black: 900; /* 가장 굵게 (궁합 검사 배너). Pretendard 는 900 까지 있고 Paperlogy 는 700 까지만 있다 */
   --line-height-base: normal;
 
   /* spacing */
