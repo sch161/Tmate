@@ -8,6 +8,11 @@
   --color-primary-soft: #ffbbb4; /* 선택된 카드/칩 배경 */
   --color-accent: #ffbf00; /* 평점 막대 */
 
+  /* color — 궁합 검사 배너 (홈 상단). 임시 배너를 코드로 그리는 동안만 쓴다 */
+  --color-banner: #ffe600; /* 배너 배경 노랑 */
+  --color-banner-ink: #000000; /* 배너 글자·선 */
+  --color-banner-bubble: #ffffff; /* 배너 구름 말풍선 */
+
   /* color — surface */
   --color-background: #fff7ee; /* 화면 배경 */
   --color-surface: #ffe9d2; /* 카드/비선택 배경, 하단 네비 배경 */
