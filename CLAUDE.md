@@ -18,7 +18,7 @@
 - src/types/database.types.ts : 자동 생성 파일. 직접 수정 금지 (npm run gen:types)
 - src/lib/ : supabase.ts(클라이언트), constants.ts(PATHS 경로 상수, 아이디 → 이메일 변환)
 - src/css/ : index.css(모든 페이지의 진입점), reset.css, variables.css(디자인 토큰), common.css
-- src/assets/ : 아이콘·이미지·폰트
+- src/assets/ : 아이콘·이미지·폰트. 마스코트 표정 10종은 src/assets/images/mascot/ 에 있고 src/utils/mascots.ts 의 createMascot 로만 쓴다
 - supabase/ : schema.sql(최종 구조), migrations/(기존 DB 에 한 번만 적용), policies.sql, functions.sql, seed_reference.sql(기준 데이터), seed_branches.sql·seed_brand_menus.sql(스크립트가 생성하는 지점·브랜드 메뉴 seed, 직접 수정 금지), seed_demo_users.sql(개발용 가상 사용자, 배포 전 삭제)
 - scripts/import/ : 공공데이터 CSV → 지점·브랜드 메뉴 seed SQL 생성 스크립트 (README 참고)
 - scripts/research/ : 브랜드 메뉴·알레르기 AI 조사 로컬 스크립트 (README 참고, 결과물 out/ 은 git 제외)
