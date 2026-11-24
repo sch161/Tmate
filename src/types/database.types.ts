@@ -1015,6 +1015,17 @@ export type Database = {
           name: string
         }[]
       }
+      get_match_pair_choices: {
+        Args: { p_code: string; p_member_no_a: number; p_member_no_b: number }
+        Returns: {
+          a_choice: number
+          b_choice: number
+          body: string
+          option_a: string
+          option_b: string
+          sort_order: number
+        }[]
+      }
       get_match_pair_foods: {
         Args: { p_code: string; p_member_no_a: number; p_member_no_b: number }
         Returns: {
