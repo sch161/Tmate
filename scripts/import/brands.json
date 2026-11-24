@@ -45,7 +45,7 @@
   },
   {
     "name": "BBQ",
-    "category": "양식",
+    "category": "치킨",
     "name_patterns": [
       "비비큐",
       "BBQ치킨",
@@ -102,7 +102,7 @@
   },
   {
     "name": "김가네",
-    "category": "한식",
+    "category": "분식",
     "name_patterns": [
       "김가네김밥"
     ],
@@ -128,7 +128,7 @@
   },
   {
     "name": "동대문엽기떡볶이",
-    "category": "한식",
+    "category": "분식",
     "name_patterns": [
       "엽기떡볶이"
     ],
@@ -169,7 +169,7 @@
   },
   {
     "name": "신전떡볶이",
-    "category": "한식",
+    "category": "분식",
     "name_patterns": [
       "신전떡볶이"
     ],
@@ -424,5 +424,695 @@
     ],
     "allergen_table_is_set_based": false,
     "result_key": "공차"
+  },
+  {
+    "name": "탕화쿵푸마라탕",
+    "category": "중식",
+    "name_patterns": [
+      "탕화쿵푸"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "탕화쿵푸마라탕"
+  },
+  {
+    "name": "춘리마라탕",
+    "category": "중식",
+    "name_patterns": [
+      "춘리마라탕"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "춘리마라탕"
+  },
+  {
+    "name": "마라공방",
+    "category": "중식",
+    "name_patterns": [
+      "마라공방"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "마라공방"
+  },
+  {
+    "name": "라공방",
+    "category": "중식",
+    "name_patterns": [
+      "라공방"
+    ],
+    "exclude_patterns": [
+      "마라공방"
+    ],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "라공방"
+  },
+  {
+    "name": "보배반점",
+    "category": "중식",
+    "name_patterns": [
+      "보배반점"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "보배반점"
+  },
+  {
+    "name": "교동짬뽕",
+    "category": "중식",
+    "name_patterns": [
+      "교동짬뽕"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "교동짬뽕"
+  },
+  {
+    "name": "샹츠마라",
+    "category": "중식",
+    "name_patterns": [
+      "샹츠마라"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "샹츠마라"
+  },
+  {
+    "name": "라화쿵부",
+    "category": "중식",
+    "name_patterns": [
+      "라화쿵부"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "라화쿵부"
+  },
+  {
+    "name": "소림마라",
+    "category": "중식",
+    "name_patterns": [
+      "소림마라"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "소림마라"
+  },
+  {
+    "name": "홍짜장",
+    "category": "중식",
+    "name_patterns": [
+      "홍짜장"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "홍짜장"
+  },
+  {
+    "name": "니뽕내뽕",
+    "category": "중식",
+    "name_patterns": [
+      "니뽕내뽕"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "니뽕내뽕"
+  },
+  {
+    "name": "하이디라오",
+    "category": "중식",
+    "name_patterns": [
+      "하이디라오"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "하이디라오"
+  },
+  {
+    "name": "짬뽕지존",
+    "category": "중식",
+    "name_patterns": [
+      "짬뽕지존"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "짬뽕지존"
+  },
+  {
+    "name": "교촌치킨",
+    "category": "치킨",
+    "name_patterns": [
+      "교촌치킨",
+      "교촌"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "교촌치킨"
+  },
+  {
+    "name": "굽네치킨",
+    "category": "치킨",
+    "name_patterns": [
+      "굽네"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "굽네치킨"
+  },
+  {
+    "name": "bhc",
+    "category": "치킨",
+    "name_patterns": [
+      "비에이치씨",
+      "BHC",
+      "bhc"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "bhc"
+  },
+  {
+    "name": "처갓집양념치킨",
+    "category": "치킨",
+    "name_patterns": [
+      "처갓집"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "처갓집양념치킨"
+  },
+  {
+    "name": "페리카나",
+    "category": "치킨",
+    "name_patterns": [
+      "페리카나"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "페리카나"
+  },
+  {
+    "name": "푸라닭",
+    "category": "치킨",
+    "name_patterns": [
+      "푸라닭"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "푸라닭"
+  },
+  {
+    "name": "노랑통닭",
+    "category": "치킨",
+    "name_patterns": [
+      "노랑통닭"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "노랑통닭"
+  },
+  {
+    "name": "네네치킨",
+    "category": "치킨",
+    "name_patterns": [
+      "네네치킨"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "네네치킨"
+  },
+  {
+    "name": "맘스터치",
+    "category": "양식",
+    "name_patterns": [
+      "맘스터치"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "맘스터치"
+  },
+  {
+    "name": "프랭크버거",
+    "category": "양식",
+    "name_patterns": [
+      "프랭크버거"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "프랭크버거"
+  },
+  {
+    "name": "노브랜드버거",
+    "category": "양식",
+    "name_patterns": [
+      "노브랜드버거"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "노브랜드버거"
+  },
+  {
+    "name": "써브웨이",
+    "category": "양식",
+    "name_patterns": [
+      "써브웨이",
+      "서브웨이"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "써브웨이"
+  },
+  {
+    "name": "이삭토스트",
+    "category": "양식",
+    "name_patterns": [
+      "이삭토스트"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "이삭토스트"
+  },
+  {
+    "name": "도미노피자",
+    "category": "양식",
+    "name_patterns": [
+      "도미노피자",
+      "도미노"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "도미노피자"
+  },
+  {
+    "name": "피자스쿨",
+    "category": "양식",
+    "name_patterns": [
+      "피자스쿨"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "피자스쿨"
+  },
+  {
+    "name": "피자알볼로",
+    "category": "양식",
+    "name_patterns": [
+      "피자알볼로"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "피자알볼로"
+  },
+  {
+    "name": "미스터피자",
+    "category": "양식",
+    "name_patterns": [
+      "미스터피자"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "미스터피자"
+  },
+  {
+    "name": "아웃백스테이크하우스",
+    "category": "양식",
+    "name_patterns": [
+      "아웃백"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "아웃백스테이크하우스"
+  },
+  {
+    "name": "스파게티스토리",
+    "category": "양식",
+    "name_patterns": [
+      "스파게티스토리"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "스파게티스토리"
+  },
+  {
+    "name": "롤링파스타",
+    "category": "양식",
+    "name_patterns": [
+      "롤링파스타"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "롤링파스타"
+  },
+  {
+    "name": "샐러디",
+    "category": "양식",
+    "name_patterns": [
+      "샐러디"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "샐러디"
+  },
+  {
+    "name": "백소정",
+    "category": "일식",
+    "name_patterns": [
+      "백소정"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "백소정"
+  },
+  {
+    "name": "긴자료코",
+    "category": "일식",
+    "name_patterns": [
+      "긴자료코"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "긴자료코"
+  },
+  {
+    "name": "동경규동",
+    "category": "일식",
+    "name_patterns": [
+      "동경규동"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "동경규동"
+  },
+  {
+    "name": "가츠몽",
+    "category": "일식",
+    "name_patterns": [
+      "가츠몽"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "가츠몽"
+  },
+  {
+    "name": "우동키노야",
+    "category": "일식",
+    "name_patterns": [
+      "우동키노야"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "우동키노야"
+  },
+  {
+    "name": "쿠우쿠우",
+    "category": "일식",
+    "name_patterns": [
+      "쿠우쿠우"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "쿠우쿠우"
+  },
+  {
+    "name": "스시로",
+    "category": "일식",
+    "name_patterns": [
+      "스시로"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "스시로"
+  },
+  {
+    "name": "은행골",
+    "category": "일식",
+    "name_patterns": [
+      "은행골"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "은행골"
+  },
+  {
+    "name": "본도시락",
+    "category": "한식",
+    "name_patterns": [
+      "본도시락"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "본도시락"
+  },
+  {
+    "name": "신의주찹쌀순대",
+    "category": "한식",
+    "name_patterns": [
+      "신의주찹쌀순대"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "신의주찹쌀순대"
+  },
+  {
+    "name": "등촌샤브칼국수",
+    "category": "한식",
+    "name_patterns": [
+      "등촌샤브칼국수",
+      "등촌칼국수"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "등촌샤브칼국수"
+  },
+  {
+    "name": "땅스부대찌개",
+    "category": "한식",
+    "name_patterns": [
+      "땅스부대찌개"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "땅스부대찌개"
+  },
+  {
+    "name": "백채김치찌개",
+    "category": "한식",
+    "name_patterns": [
+      "백채김치찌개"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "백채김치찌개"
+  },
+  {
+    "name": "봉추찜닭",
+    "category": "한식",
+    "name_patterns": [
+      "봉추찜닭"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "봉추찜닭"
+  },
+  {
+    "name": "하남돼지집",
+    "category": "한식",
+    "name_patterns": [
+      "하남돼지집"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "하남돼지집"
+  },
+  {
+    "name": "가장맛있는족발",
+    "category": "한식",
+    "name_patterns": [
+      "가장맛있는족발"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "가장맛있는족발"
+  },
+  {
+    "name": "육쌈냉면",
+    "category": "한식",
+    "name_patterns": [
+      "육쌈냉면"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "육쌈냉면"
+  },
+  {
+    "name": "국수나무",
+    "category": "한식",
+    "name_patterns": [
+      "국수나무"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "국수나무"
+  },
+  {
+    "name": "큰맘할매순대국",
+    "category": "한식",
+    "name_patterns": [
+      "큰맘할매순대국"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "큰맘할매순대국"
+  },
+  {
+    "name": "인생아구찜",
+    "category": "한식",
+    "name_patterns": [
+      "인생아구찜"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "인생아구찜"
+  },
+  {
+    "name": "육회바른연어",
+    "category": "한식",
+    "name_patterns": [
+      "육회바른연어"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "육회바른연어"
+  },
+  {
+    "name": "청년다방",
+    "category": "분식",
+    "name_patterns": [
+      "청년다방"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "청년다방"
+  },
+  {
+    "name": "죠스떡볶이",
+    "category": "분식",
+    "name_patterns": [
+      "죠스떡볶이"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "죠스떡볶이"
+  },
+  {
+    "name": "얌샘김밥",
+    "category": "분식",
+    "name_patterns": [
+      "얌샘김밥"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "얌샘김밥"
+  },
+  {
+    "name": "봉구스밥버거",
+    "category": "분식",
+    "name_patterns": [
+      "봉구스밥버거"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "봉구스밥버거"
+  },
+  {
+    "name": "미분당",
+    "category": "아시안",
+    "name_patterns": [
+      "미분당"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "미분당"
+  },
+  {
+    "name": "포메인",
+    "category": "아시안",
+    "name_patterns": [
+      "포메인"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "포메인"
+  },
+  {
+    "name": "미스사이공",
+    "category": "아시안",
+    "name_patterns": [
+      "미스사이공"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [],
+    "allergen_table_is_set_based": false,
+    "result_key": "미스사이공"
   }
 ]
