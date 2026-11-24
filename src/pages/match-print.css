@@ -1,0 +1,514 @@
+/* 맛궁합 영수증 인쇄 (부스 진행자 노트북용, 디자인 대기: 토큰 기반 임시 UI). 값은 variables.css 토큰만 쓴다.
+   큰 숫자·제목은 match-rank 처럼 기준 글자 크기의 em 배수로 키운다. 402px 모바일 프레임(.app)은 쓰지 않는다. */
+.print {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: var(--space-5) var(--space-6) var(--space-6);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-16);
+}
+
+.print__head,
+.print__layout {
+  max-width: 80em;
+  margin-inline: auto;
+}
+
+.print__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.print__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+
+.print__badge {
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-banner);
+  color: var(--color-banner-ink);
+  font-size: var(--font-size-13);
+  font-weight: var(--font-weight-bold);
+}
+
+.print__desc {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-14);
+}
+
+.print__link {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-size-13);
+  text-align: left;
+  text-decoration: underline;
+}
+
+.print__link:disabled {
+  color: var(--color-disabled);
+  cursor: not-allowed;
+}
+
+.print__layout {
+  display: grid;
+  grid-template-columns: minmax(18em, 22em) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-5);
+  margin-top: var(--space-5);
+}
+
+.print__side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+/* 버튼: 이 화면의 버튼은 글자 길이만큼만 차지한다 (.btn-primary 의 width: 100% 를 덮어쓴다) */
+.print .btn-primary {
+  width: auto;
+  padding: var(--space-2) var(--space-5);
+}
+
+.print-button {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-text);
+  border-radius: var(--radius-xl);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.print-button:disabled {
+  border-color: var(--color-disabled);
+  color: var(--color-disabled);
+  cursor: not-allowed;
+}
+
+.is-error {
+  color: var(--color-error);
+}
+
+/* 1. 프린터 카드 */
+.print-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.print-card__title {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+}
+
+.print-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.print-card__message {
+  min-height: 1.5em;
+  font-size: var(--font-size-14);
+}
+
+.print-card__message:empty {
+  display: none;
+}
+
+.print-alert {
+  padding: var(--space-3);
+  border: 2px solid var(--color-error);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-error);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+}
+
+.printer-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: var(--font-weight-semibold);
+}
+
+.printer-status__dot {
+  flex-shrink: 0;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  background: var(--color-disabled);
+}
+
+.printer-status[data-state='connecting'] .printer-status__dot,
+.printer-status[data-state='printing'] .printer-status__dot {
+  background: var(--color-accent);
+}
+
+.printer-status[data-state='connected'] .printer-status__dot {
+  background: var(--color-primary);
+}
+
+.print-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: var(--font-size-14);
+}
+
+.print-select {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+/* 진단 로그 */
+.print-log {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-lg);
+}
+
+.print-log__summary {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+  cursor: pointer;
+}
+
+.print-log__desc,
+.print-log__option {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-13);
+}
+
+.print-log__option {
+  display: block;
+}
+
+.print-log__actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.print-log__list {
+  max-height: 22em;
+  margin-top: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-family: var(--font-family-gothic);
+  font-size: var(--font-size-12);
+  overflow-y: auto;
+  user-select: text;
+}
+
+.print-log__line {
+  padding-block: var(--space-1);
+  border-bottom: 1px solid var(--color-surface-border);
+  overflow-wrap: anywhere;
+}
+
+/* 오른쪽: 단계 */
+.print__main {
+  min-width: 0;
+}
+
+.print-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.print-steps__item {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--color-surface-border);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-medium);
+}
+
+.print-steps__item.is-current {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-weight: var(--font-weight-bold);
+}
+
+.print__stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-height: 24em;
+  margin-top: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.print-stage__title {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+}
+
+.print-stage__desc {
+  margin-top: var(--space-1);
+  font-size: var(--font-size-14);
+}
+
+.print-stage__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.print-stage__pair {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+/* 2. 팀 선택 */
+.print-room {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.print-room__input {
+  width: 12em;
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.3em;
+}
+
+.print-room__input::placeholder {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-regular);
+  letter-spacing: normal;
+}
+
+.print-room__results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.print-room__results .empty-state {
+  background: var(--color-background);
+}
+
+.print-room__count {
+  font-size: var(--font-size-14);
+  font-weight: var(--font-weight-semibold);
+}
+
+.print-pairs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.print-pair {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-surface-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-background);
+  color: var(--color-text);
+  text-align: left;
+}
+
+.print-pair:hover,
+.print-pair:focus-visible {
+  border-color: var(--color-primary);
+}
+
+.print-pair__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.print-pair__names {
+  font-size: 1.25em;
+  font-weight: var(--font-weight-bold);
+  overflow-wrap: anywhere;
+}
+
+.print-pair__heart {
+  color: var(--color-primary);
+}
+
+.print-pair__tier {
+  font-size: var(--font-size-14);
+}
+
+.print-pair__score {
+  flex-shrink: 0;
+  color: var(--color-primary);
+  font-size: 1.75em;
+  font-weight: var(--font-weight-bold);
+}
+
+/* 3. 사진: 틀의 비율(4:3)이 영수증 사진 칸과 같다 → 보이는 범위가 그대로 찍힌다 */
+.print-cam {
+  position: relative;
+  width: 100%;
+  max-width: 36em;
+  aspect-ratio: 4 / 3;
+  border-radius: var(--radius-lg);
+  background: var(--color-text);
+  overflow: hidden;
+}
+
+.print-cam__video,
+.print-cam__still {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 살아 있는 화면만 거울처럼 뒤집는다 (찍힌 사진은 실제 방향으로 보여준다) */
+.print-cam__video {
+  transform: scaleX(-1);
+}
+
+.print-cam__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.print-cam__count {
+  display: grid;
+  place-items: center;
+  width: 1.6em;
+  height: 1.6em;
+  border-radius: 50%;
+  background: var(--color-overlay);
+  color: var(--color-text-on-primary);
+  font-size: 7em;
+  font-weight: var(--font-weight-bold);
+}
+
+.print-cam__notice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 80%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  font-size: var(--font-size-14);
+  text-align: center;
+  pointer-events: auto;
+}
+
+/* 4. 미리보기·인쇄 */
+.print-preview {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-5);
+}
+
+.print-paper {
+  max-width: 100%;
+  max-height: 70dvh;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-background);
+  overflow: auto;
+}
+
+/* 프린터의 점 하나 = 화면의 1px 로, 줄이거나 부드럽게 만들지 않고 보여준다 */
+.print-paper__canvas {
+  max-width: none;
+  image-rendering: pixelated;
+}
+
+.print-preview__panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.print-preview__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--font-size-14);
+}
+
+.print-preview__progress {
+  width: 100%;
+  max-width: 20em;
+  height: var(--meter-height);
+  border-radius: var(--radius-md);
+}
+
+.print-preview__result:empty {
+  display: none;
+}
+
+.print-preview__result {
+  font-weight: var(--font-weight-semibold);
+}
+
+.print .toast {
+  bottom: var(--space-5);
+}
+
+/* hidden 속성으로 숨긴 요소: .btn-primary 처럼 display 를 정한 클래스가 hidden 을 덮어쓰지 않게 한다 */
+.print [hidden] {
+  display: none;
+}
+
+/* 좁은 화면(창을 줄였을 때): 한 줄로 쌓는다 */
+@media (max-width: 60em) {
+  .print {
+    padding: var(--space-3);
+  }
+
+  .print__head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .print__layout,
+  .print-preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

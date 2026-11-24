@@ -89,3 +89,15 @@
   font-size: 0.8em;
   text-align: center;
 }
+
+/* 진행자용 영수증 인쇄 화면으로 가는 작은 링크 (큰 화면에서 눈에 띄지 않게 둔다) */
+.rank__tools {
+  margin-top: var(--space-2);
+  font-size: 0.7em;
+  text-align: center;
+}
+
+.rank__tool-link {
+  text-decoration: underline;
+  opacity: 0.6;
+}

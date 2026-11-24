@@ -177,5 +177,6 @@ erDiagram
 - PART 2(음식)는 점수에 넣지 않는다. 결과 카드(둘 다 좋아하는 음식, 한쪽만 먹어본 음식 등)와 랭킹 동점 처리에만 쓴다
 - RPC: `create_match_room`(방 번호 반환, 음식 `match_food_count`(5)개 무작위 고정), `join_match_room(p_code)`, `get_my_match_room`(가장 최근 방 번호), `get_match_questions(p_code)`, `get_match_foods(p_code)`, `save_match_test(p_code, p_choices, p_foods)`(모든 문항·음식에 답해야 저장), `get_match_room(p_code)`(방 사람들과 나의 궁합), `get_match_compare(p_code, p_member_no)`(음식별 나와 친구의 답), `get_match_ranking(p_limit, p_hours)`(같은 방 두 사람의 궁합 순위)
 - 다른 사람의 정보는 같은 방 사람의 닉네임·궁합 점수·그 방 음식에 대한 답만 돌려준다. 한 방의 최대 인원은 `match_room_max`(6)명
+- 영수증 인쇄(부스 진행자용, migrations/004_match_print.sql): `get_match_room_pairs(p_code)`(그 방에서 둘 다 검사를 마친 두 사람 조합의 `member_no_a`·`member_no_b`·닉네임·궁합 점수), `get_match_pair_foods(p_code, p_member_no_a, p_member_no_b)`(두 사람의 음식별 답 `a_*`·`b_*`). 위 RPC 와 달리 방 멤버가 아니어도 로그인만 하면 방 번호로 읽을 수 있고, 돌려주는 범위는 같다(닉네임·점수·그 방 음식 답, 사용자 id 없음). 테이블은 바꾸지 않는다
 - `match_room_keep_days`(7)일이 지난 방은 새 방을 만들 때 지워진다(답 포함). 4자리 방 번호를 다시 쓰기 위해서다
 - 문항·음식은 `seed_match.sql` 로 넣는다. 문항을 다시 넣으면 그 문항의 답이 함께 지워진다

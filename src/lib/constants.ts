@@ -31,6 +31,7 @@ export const PATHS = {
   profileEdit: '/src/pages/profile-edit.html',
   match: '/src/pages/match.html', // 친구랑 궁합 검사 (?room=방번호)
   matchRank: '/src/pages/match-rank.html', // 맛궁합 랭킹 (부스 큰 화면용)
+  matchPrint: '/src/pages/match-print.html', // 맛궁합 영수증 인쇄 (부스 진행자 노트북용, ?demo=1 이면 데모 데이터)
 } as const;
 
 export function toEmail(username: string): string {

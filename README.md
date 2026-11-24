@@ -18,6 +18,7 @@
   - 내 입맛 자세히 보기, 입맛 수정(맛 선택·비율), 내가 평가한 메뉴(수정·삭제), 나의 취향 메이트 목록.
   - 설정: 닉네임 수정, 알레르기 수정, 내 주변 맛집 위치(지역) 설정.
 - **친구랑 궁합 검사**(행사 체험용): 홈 상단 배너에서 시작합니다. 방을 만들거나 친구의 방 번호(4자리)로 들어가 둘 중 하나 문항 10개와 음식 경험 5개에 답하면, 같은 방 친구와의 맛궁합(%)·결과 이름·음식 카드(둘 다 좋아하는 음식 등)를 보여줍니다. 부스 화면용 랭킹 페이지가 따로 있습니다.
+- **맛궁합 영수증 인쇄**(부스 진행자용): 노트북(맥북 Chrome)에서 방 번호로 팀을 고르고, 웹캠 사진과 궁합 결과(점수·결과 이름·음식 카드)를 MXW01 미니 감열 프린터(블루투스)로 뽑습니다. 미리보기는 실제로 찍힐 흑백 점 그대로 보여줍니다. `?demo=1` 로 열면 예시 팀으로 전체 흐름을 시험할 수 있습니다. 처음 시험하는 방법은 `docs/match-print.md` 에 있습니다.
 - **아직 없는 것**: 알림 설정, 프로필 사진.
 
 ## 화면 목록
@@ -40,6 +41,7 @@
 | 알레르기 수정 / 프로필 수정 | `allergy-edit.html` / `profile-edit.html` |
 | 친구랑 궁합 검사 (`?room=방번호`) | `match.html` |
 | 맛궁합 랭킹(부스 큰 화면용) | `match-rank.html` |
+| 맛궁합 영수증 인쇄(부스 진행자 노트북용, `?demo=1` 은 데모 데이터) | `match-print.html` |
 | 개발용 컴포넌트 미리보기(임시) | `ui-preview.html` |
 
 하단 네비게이션은 홈 / 저장 / 마이페이지 3개입니다.
@@ -113,6 +115,8 @@ delete from auth.users where email like 'seed%@tmate-app.com';
 
 방 번호로 묶인 친구와 둘 중 하나 문항 10개·음식 경험 5개에 답하고 궁합(%)을 보는 기능의 DB 부분입니다. `supabase/migrations/003_match_test.sql` → `supabase/functions.sql` → `supabase/seed_match.sql` 순서로 실행합니다. 구조는 `docs/erd.md` 에 있습니다.
 
+영수증 인쇄 화면(`match-print.html`)은 방 멤버가 아닌 진행자가 방 번호로 읽는 RPC 2개(`get_match_room_pairs`, `get_match_pair_foods`)를 씁니다. 위 순서로 이미 설정한 DB 에는 `supabase/migrations/004_match_print.sql` 하나만 더 실행하면 됩니다(함수만 추가, 테이블·데이터 변경 없음. 새로 설정하는 DB 는 `functions.sql` 에 들어 있어 따로 실행할 필요가 없습니다). 적용 전에는 `?demo=1` 데모 데이터로만 동작합니다.
+
 ## 데이터 출처와 한계
 
 - **지점**: 소상공인시장진흥공단 상가(상권)정보 서울 CSV(공공데이터포털). `scripts/import/` 의 스크립트가 지정 브랜드의 지점만 뽑아 `seed_branches.sql` 을 만들며, 같은 (브랜드, 도로명주소)는 1개 지점으로 합칩니다.
@@ -148,7 +152,7 @@ src/pages/              화면(HTML + 페이지 스크립트 + 페이지 CSS)
 src/api/                Supabase 호출 함수 (화면 코드는 supabase 를 직접 import 하지 않는다)
 src/lib/                supabase.ts(클라이언트), constants.ts(경로·아이디→이메일 변환)
 src/utils/              공통 유틸(DOM, 하단 네비, 인증 가드, 상태 뷰, 지역 선택 시트 등)
-src/types/              database.types.ts (자동 생성, 직접 수정 금지)
+src/types/              database.types.ts (자동 생성, 직접 수정 금지), web-bluetooth.d.ts (Web Bluetooth 타입, 직접 작성)
 src/css/                index.css(진입점), reset / variables(디자인 토큰) / common
 src/assets/             아이콘·이미지·폰트
 supabase/               schema / policies / functions / seed_*.sql / migrations/
@@ -156,6 +160,7 @@ scripts/import/         공공데이터 CSV → 지점·브랜드 메뉴 seed SQ
 scripts/research/       브랜드 메뉴·알레르기 AI 조사 로컬 스크립트 (README 참고)
 data/raw/               공공데이터 원본 CSV (git 제외)
 docs/erd.md             ERD
+docs/match-print.md     맛궁합 영수증 인쇄(미니 프린터) 처음 시험하는 방법
 ```
 
 ## 스크립트 자체 테스트
@@ -166,7 +171,10 @@ docs/erd.md             ERD
 node scripts/import/selftest.mjs
 node scripts/research/selftest.mjs
 node scripts/test-notice.mjs
+node scripts/test-mxw01.mjs   # MXW01 프린터 프로토콜(CRC·패킷·줄 묶기·디더링·전체 쓰기 순서)
 ```
+
+프린터와의 실제 블루투스 통신은 자동 테스트로 확인할 수 없습니다. 실제 기기 시험 절차는 `docs/match-print.md` 를 따릅니다.
 
 ## 협업 규칙
 

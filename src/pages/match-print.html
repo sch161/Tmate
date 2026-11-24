@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fff7ee" />
+    <link rel="icon" type="image/png" href="/src/assets/images/search-mascot.png" />
+    <title>맛궁합 영수증 인쇄 - T:MATE</title>
+    <link rel="stylesheet" href="/src/css/index.css" />
+    <link rel="stylesheet" href="/src/pages/match-print.css" />
+  </head>
+  <body>
+    <!-- 부스 진행자의 노트북(맥북 Chrome)용이라 402px 모바일 프레임(.app)을 쓰지 않는다 -->
+    <main class="print" id="app">
+      <header class="print__head">
+        <div>
+          <h1 class="print__title">맛궁합 영수증 인쇄 <span class="print__badge" id="demo-badge" hidden>데모 데이터</span></h1>
+          <p class="print__desc">진행자용 화면이에요. 방 번호로 팀을 찾아 사진과 궁합 결과를 미니 프린터로 뽑아요</p>
+        </div>
+        <a class="print__link" id="rank-link" href="#">랭킹 화면 보기</a>
+      </header>
+
+      <div class="print__layout">
+        <aside class="print__side">
+          <section class="print-card" aria-labelledby="printer-title">
+            <h2 class="print-card__title" id="printer-title">1. 프린터 연결</h2>
+            <p class="print-alert text-wrap-ko" id="bt-unsupported" role="alert" hidden>
+              이 브라우저는 블루투스 프린터를 지원하지 않아요. 맥북의 Chrome 에서 이 주소를 열어주세요 (Safari·Firefox 는 안 돼요)
+            </p>
+            <p class="printer-status" id="printer-status" data-state="idle"><span class="printer-status__dot" aria-hidden="true"></span><span id="printer-status-text">연결 안 됨</span></p>
+            <div class="print-card__actions">
+              <button class="btn-primary" id="connect" type="button">프린터 연결</button>
+              <button class="print-button" id="test-print" type="button" disabled>테스트 인쇄</button>
+              <button class="print-button" id="disconnect" type="button" hidden>연결 끊기</button>
+            </div>
+            <p class="print-card__message text-wrap-ko" id="printer-message" role="status"></p>
+            <label class="print-field">
+              <span>인쇄 농도</span>
+              <select class="print-select" id="intensity">
+                <option value="64">연하게</option>
+                <option value="93" selected>보통</option>
+                <option value="128">진하게</option>
+                <option value="160">아주 진하게</option>
+              </select>
+            </label>
+            <button class="print__link" id="connect-any" type="button">목록에 프린터가 안 보이면: 모든 기기에서 찾기</button>
+          </section>
+
+          <details class="print-log" id="log-panel">
+            <summary class="print-log__summary">진단 로그 <span id="log-count">0줄</span></summary>
+            <p class="print-log__desc text-wrap-ko">인쇄가 안 되면 아래 내용을 복사해서 보내주세요</p>
+            <div class="print-log__actions">
+              <button class="print-button" id="log-copy" type="button">로그 복사</button>
+              <button class="print-button" id="log-clear" type="button">지우기</button>
+            </div>
+            <label class="print-log__option text-wrap-ko"><input type="checkbox" id="ignore-responses" /> 프린터 응답을 기다리지 않고 보내기 (진단용)</label>
+            <ol class="print-log__list" id="log-list" aria-live="off"></ol>
+          </details>
+        </aside>
+
+        <section class="print__main" aria-live="polite">
+          <ol class="print-steps" id="steps">
+            <li class="print-steps__item" data-step="room">2. 팀 선택</li>
+            <li class="print-steps__item" data-step="camera">3. 사진</li>
+            <li class="print-steps__item" data-step="preview">4. 인쇄</li>
+          </ol>
+          <div class="print__stage" id="stage"></div>
+        </section>
+      </div>
+    </main>
+    <script type="module" src="/src/pages/match-print.ts"></script>
+  </body>
+</html>

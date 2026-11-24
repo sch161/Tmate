@@ -1,6 +1,7 @@
 // 맛궁합 랭킹: 부스의 큰 화면에 띄워 두는 페이지. 진행자 계정으로 로그인한 뒤 열어 두면 몇 초마다 스스로 갱신한다.
 // 디자인 대기: 화면 나오면 교체 (Figma 에 이 화면이 없다)
 import { getMatchRanking, type MatchRankingRow } from '../api/match';
+import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs } from '../utils/dom';
 import { getMatchTier } from '../utils/match-results';
@@ -54,6 +55,7 @@ async function load(): Promise<void> {
 
 async function start(): Promise<void> {
   if (!(await requireAuth())) return;
+  qs<HTMLAnchorElement>('#print-link')?.setAttribute('href', PATHS.matchPrint);
   await load();
 }
 
