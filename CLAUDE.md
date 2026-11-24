@@ -40,6 +40,7 @@
 - 친구랑 궁합 검사(행사 체험용): 방 번호(4자리)로 친구와 묶고, 둘 중 하나 문항 10개 + 방마다 무작위 음식 5개에 답한다. 궁합(%)은 같은 답을 고른 문항 비율이고 음식 답은 결과 카드에만 쓴다. 문항·음식은 supabase/seed_match.sql, 결과 문구는 src/utils/match-results.ts 에 있다
 - 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
 - 알레르기·입맛(맛 선택+비율) 수정은 RPC(update_my_allergens, update_my_tastes)가 한 트랜잭션으로 교체 저장한다. 지역·닉네임은 profiles 의 해당 컬럼만 update 한다
+- 평가로 입맛 자동 보정: 취향 일치도·입맛 유형·마이페이지 맛 비율은 고른 비율(user_taste_preferences)에 평가로 본 입맛을 섞은 "지금 입맛"(calc_taste_profile)으로 계산한다. 평가 1개마다 7%, 최대 70% 섞는다. 저장하지 않고 조회할 때 계산하며, 입맛 수정 화면은 고른 비율만 다룬다
 
 ## 디자인 규칙
 
@@ -57,7 +58,7 @@
 - 아직 없는 것: 알림 설정, 프로필 사진 (마이페이지 Figma 의 "알림 설정" 줄은 만들지 않았다)
 - Figma 에 있어 읽고 구현한 화면: Splash, User-Login, User-Signup, Location, Flavor Info, Allergy Info_g, Allergy Info, Home, Details_s, Details_m, Save, User
 - Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, match, match-rank, 지역 선택 시트(src/utils/region-picker.ts)
-- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 노란 띠 위로 검은 고딕 글자가 흘러가는 임시 배너), 맛 선택 카드의 예시 음식 문구와 2열 배치·비율 슬라이더의 예시 문구(src/utils/taste-examples.ts, Figma 의 Flavor Info 는 3열에 이름만 있음)
+- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 내 입맛 화면의 평가 반영 안내(taste-detail.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 노란 띠 위로 검은 고딕 글자가 흘러가는 임시 배너), 맛 선택 카드의 예시 음식 문구와 2열 배치·비율 슬라이더의 예시 문구(src/utils/taste-examples.ts, Figma 의 Flavor Info 는 3열에 이름만 있음)
 
 ## 코드 규칙
 
