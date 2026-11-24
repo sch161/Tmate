@@ -18,6 +18,9 @@
 --   match_room_max       2  궁합 검사: 한 방에 들어갈 수 있는 최대 인원 (둘만의 궁합)
 --   match_food_count     5  궁합 검사: 방마다 무작위로 뽑는 음식 수 (PART 2)
 --   match_room_keep_days 7  궁합 검사: 이 일수가 지난 방은 새 방을 만들 때 지운다 (4자리 방 번호 재사용)
+--   store_add_daily_max   3   가게 추가: 한 사람이 24시간 동안 추가할 수 있는 가게 수
+--   store_add_attempt_max 10  가게 추가: 한 사람이 24시간 동안 AI 추정을 요청할 수 있는 횟수 (실패한 요청 포함)
+--   store_menu_max        8   가게 추가: 한 번에 넣을 수 있는 메뉴 수
 --
 -- 계산식 요약
 --   지금 입맛    = 고른 입맛 비율 × (1 - w) + 평가로 본 입맛 × w,  w = min(평가 수 × taste_learn_per_review, taste_learn_max)
@@ -64,6 +67,9 @@ begin
     when 'match_room_max'       then 2
     when 'match_food_count'     then 5
     when 'match_room_keep_days' then 7
+    when 'store_add_daily_max'   then 3
+    when 'store_add_attempt_max' then 10
+    when 'store_menu_max'        then 8
   end;
 
   if v_value is null then
@@ -2010,6 +2016,180 @@ grant execute on function public.get_match_compare(text, int)           to authe
 grant execute on function public.get_match_ranking(int, int)            to authenticated;
 grant execute on function public.get_match_room_pairs(text)             to authenticated;
 grant execute on function public.get_match_pair_foods(text, int, int)   to authenticated;
+
+-- =====================================================================
+-- 가게 추가 (사용자가 직접 추가하는 개인 식당)
+--   흐름: 화면 → Edge Function(add-store) → begin_store_add(확인·요청 기록) → AI 가 메뉴 이름으로 알레르기·맛 추정 → add_user_store(저장)
+--   * 가게 1개 = 브랜드 1개(is_franchise = false, created_by = 추가한 사람).
+--   * 알레르기는 AI 추정이라 메뉴의 allergen_status 는 언제나 estimated(추정) 또는 unknown(정보 없음)이다. 공식 확인(verified) 으로는 저장하지 않는다.
+--     → 알레르기를 등록한 사용자에게는 추천에서 빠지고 알레르기 탭에서 "정보 없음"으로 보인다 (안전 우선 규칙 그대로).
+--   * add_user_store 는 로그인 사용자가 직접 불러도 같은 규칙(추정 표시, 하루 한도, 중복 확인)이 적용된다.
+-- =====================================================================
+
+-- 내부: 가게 추가 입력 확인 (이름·지역·하루 한도·중복). 문제가 있으면 예외
+create or replace function public.calc_store_add_check(p_name text, p_region text)
+returns void
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_name text := btrim(regexp_replace(coalesce(p_name, ''), '\s+', ' ', 'g'));
+begin
+  if v_uid is null then
+    raise exception '로그인이 필요합니다.';
+  end if;
+  if char_length(v_name) < 2 or char_length(v_name) > 40 then
+    raise exception '가게 이름은 2~40자로 입력해주세요.';
+  end if;
+  if p_region is null or not exists (select 1 from public.restaurants r where r.region = p_region) then
+    raise exception '지역을 다시 선택해주세요.';
+  end if;
+  if (
+    select count(*) from public.brands b
+    where b.created_by = v_uid and b.created_at > now() - interval '24 hours'
+  ) >= public.calc_setting('store_add_daily_max') then
+    raise exception '가게는 하루에 %곳까지 추가할 수 있어요.', public.calc_setting('store_add_daily_max')::int;
+  end if;
+  if exists (
+    select 1 from public.restaurants r
+    where r.region = p_region
+      and lower(replace(r.name, ' ', '')) = lower(replace(v_name, ' ', ''))
+  ) then
+    raise exception '이미 등록된 가게예요.';
+  end if;
+end;
+$$;
+
+-- 가게 추가 시작: 입력을 확인하고 AI 추정 요청 1회를 기록한다 (하루 요청 한도). Edge Function 이 AI 를 부르기 전에 호출한다
+create or replace function public.begin_store_add(p_name text, p_region text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+begin
+  perform public.calc_store_add_check(p_name, p_region);
+
+  if (
+    select count(*) from public.store_add_attempts a
+    where a.user_id = v_uid and a.created_at > now() - interval '24 hours'
+  ) >= public.calc_setting('store_add_attempt_max') then
+    raise exception '오늘은 가게 추가를 너무 많이 시도했어요. 내일 다시 해주세요.';
+  end if;
+  insert into public.store_add_attempts (user_id) values (v_uid);
+end;
+$$;
+
+-- 가게와 메뉴 저장. 가게 id(restaurants.id)를 돌려준다
+--   p_menus 예: [{"name": "김치찌개", "description": "돼지고기", "inferred": true,
+--                 "taste_tag_ids": [1, 9], "allergens": [{"allergen_id": 5, "level": "danger"}, {"allergen_id": 3, "level": "caution"}]}]
+--   inferred = true 이면 estimated(추정), 아니면 unknown(정보 없음)으로 저장하고 알레르기 행을 만들지 않는다.
+create or replace function public.add_user_store(p_name text, p_region text, p_address text, p_category_id int, p_menus jsonb)
+returns bigint
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_name text := btrim(regexp_replace(coalesce(p_name, ''), '\s+', ' ', 'g'));
+  v_address text := left(btrim(coalesce(p_address, '')), 100);
+  v_brand bigint;
+  v_restaurant bigint;
+  v_menu_id bigint;
+  v_menu jsonb;
+  v_menu_name text;
+  v_inferred boolean;
+  v_count int;
+begin
+  perform public.calc_store_add_check(p_name, p_region);
+
+  if p_category_id is null or not exists (select 1 from public.food_categories c where c.id = p_category_id) then
+    raise exception '음식 종류를 선택해주세요.';
+  end if;
+  if p_menus is null or jsonb_typeof(p_menus) <> 'array' then
+    raise exception '메뉴를 1개 이상 입력해주세요.';
+  end if;
+  v_count := jsonb_array_length(p_menus);
+  if v_count < 1 or v_count > public.calc_setting('store_menu_max') then
+    raise exception '메뉴는 1~%개까지 입력할 수 있어요.', public.calc_setting('store_menu_max')::int;
+  end if;
+  if exists (
+    select 1 from jsonb_array_elements(p_menus) m
+    where char_length(btrim(coalesce(m ->> 'name', ''))) < 1 or char_length(btrim(m ->> 'name')) > 40
+  ) then
+    raise exception '메뉴 이름은 1~40자로 입력해주세요.';
+  end if;
+  if (select count(distinct lower(replace(btrim(m ->> 'name'), ' ', ''))) from jsonb_array_elements(p_menus) m) <> v_count then
+    raise exception '같은 메뉴가 두 번 들어 있어요.';
+  end if;
+
+  insert into public.brands (name, is_franchise, category_id, research_status, researched_at, created_by)
+  values (v_name, false, p_category_id, 'done', now(), v_uid)
+  returning id into v_brand;
+
+  insert into public.restaurants (brand_id, name, address, region, sido, sigungu)
+  select v_brand, v_name, case when v_address = '' then p_region else v_address end, p_region, x.sido, x.sigungu
+  from (select r.sido, r.sigungu from public.restaurants r where r.region = p_region order by r.id limit 1) x
+  returning id into v_restaurant;
+
+  for v_menu in select m from jsonb_array_elements(p_menus) m loop
+    v_menu_name := btrim(v_menu ->> 'name');
+    v_inferred := coalesce((v_menu ->> 'inferred')::boolean, false);
+
+    insert into public.menus (brand_id, name, description, allergen_status, allergen_checked_at, allergen_note, menu_source_name)
+    values (
+      v_brand,
+      v_menu_name,
+      nullif(left(btrim(coalesce(v_menu ->> 'description', '')), 100), ''),
+      case when v_inferred then 'estimated'::public.allergen_status else 'unknown'::public.allergen_status end,
+      case when v_inferred then now() end,
+      case when v_inferred then 'AI가 메뉴 이름으로 추정한 정보예요. 가게에 꼭 확인하세요' end,
+      '사용자 등록'
+    )
+    returning id into v_menu_id;
+
+    -- 맛 태그: 있는 맛만, 최대 3개
+    insert into public.menu_taste_tags (menu_id, taste_tag_id)
+    select v_menu_id, t.id
+    from (
+      select distinct tt.id
+      from jsonb_array_elements_text(case when jsonb_typeof(v_menu -> 'taste_tag_ids') = 'array' then v_menu -> 'taste_tag_ids' else '[]'::jsonb end) e(value)
+      join public.taste_tags tt on tt.id::text = e.value
+      order by tt.id
+      limit 3
+    ) t;
+
+    -- 알레르기: 추정한 메뉴만. 같은 알레르기가 두 번 오면 위험(danger)을 남긴다
+    if v_inferred then
+      insert into public.menu_allergens (menu_id, allergen_id, level, original_text)
+      select v_menu_id, x.allergen_id,
+             case when bool_or(x.level = 'danger') then 'danger'::public.allergen_level else 'caution'::public.allergen_level end,
+             'AI 추정'
+      from (
+        select al.id as allergen_id, a ->> 'level' as level
+        from jsonb_array_elements(case when jsonb_typeof(v_menu -> 'allergens') = 'array' then v_menu -> 'allergens' else '[]'::jsonb end) a
+        join public.allergens al on al.id::text = a ->> 'allergen_id'
+        where a ->> 'level' in ('danger', 'caution')
+      ) x
+      group by x.allergen_id;
+    end if;
+  end loop;
+
+  return v_restaurant;
+end;
+$$;
+
+revoke all on function public.calc_store_add_check(text, text)                from public, anon, authenticated;
+revoke all on function public.begin_store_add(text, text)                     from public, anon;
+revoke all on function public.add_user_store(text, text, text, int, jsonb)    from public, anon;
+grant execute on function public.begin_store_add(text, text)                  to authenticated;
+grant execute on function public.add_user_store(text, text, text, int, jsonb) to authenticated;
 
 -- [검증 1] 내부 함수를 직접 호출하면 권한 오류가 나야 한다: ERROR: permission denied for function calc_menu_match
 /*

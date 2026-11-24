@@ -249,3 +249,9 @@ create policy "review_taste_tags_delete_own" on review_taste_tags
 --    RPC 는 같은 방 사람의 닉네임·궁합 점수·그 방 음식에 대한 답만 돌려준다.
 -- ---------------------------------------------------------------------
 revoke all on match_questions, match_foods, match_rooms, match_room_foods, match_room_members, match_answers, match_food_answers from anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 가게 추가 요청 기록 (store_add_attempts)
+--    클라이언트에 직접 열지 않는다. functions.sql 의 RPC(begin_store_add)로만 쓴다.
+-- ---------------------------------------------------------------------
+revoke all on store_add_attempts from anon, authenticated;

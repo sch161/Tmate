@@ -405,6 +405,11 @@ async function start(): Promise<void> {
   if (matchBanner) matchBanner.href = PATHS.match;
   const tasteEdit = qs<HTMLAnchorElement>('#taste-edit');
   if (tasteEdit) tasteEdit.href = withReturnTo(PATHS.tasteEdit);
+  // 디자인 대기: Figma 에 없는 임시 링크. 누를 때의 지역을 넘겨 가게 추가 화면의 기본 지역으로 쓴다
+  qs<HTMLAnchorElement>('#store-add')?.addEventListener('click', (event) => {
+    event.preventDefault();
+    window.location.href = region ? `${PATHS.storeAdd}?region=${encodeURIComponent(region)}` : PATHS.storeAdd;
+  });
 
   if (!(await requireAuth())) return;
 

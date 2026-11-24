@@ -159,6 +159,14 @@ erDiagram
 - 내 입맛 교체 저장(`update_my_tastes(p_taste_ids int[], p_ratios int[])`): 두 배열은 같은 순서의 짝. 맛 1~3개, 비율 1~100, 합계 100, 중복·없는 맛 불가(`save_onboarding` 의 맛 검증과 같다). `user_taste_preferences` 의 내 행만 바꾸고 지역·온보딩 완료·알레르기는 건드리지 않는다
 - 일치도 계산: 평가 수가 적은 사용자는 지금 입맛 비율 × 메뉴 태그, 평가가 쌓이면 유사 사용자 기반
 
+## 가게 추가 (사용자가 직접 추가하는 개인 식당, migrations/007_store_add.sql)
+
+- 가게 1개 = 브랜드 1개로 `brands`(is_franchise = false, `created_by` = 추가한 사람) · `restaurants` · `menus` 에 들어간다
+- 흐름: 화면 → Edge Function `add-store`(supabase/functions/add-store) → `begin_store_add`(입력 확인·요청 기록) → AI 가 메뉴 이름으로 알레르기·맛 추정 → `add_user_store`(저장)
+- 알레르기는 AI 추정이라 메뉴의 `allergen_status` 는 `estimated`(추정) 또는 `unknown`(이름만으로 알 수 없음)으로만 저장한다. `menu_allergens.original_text` 는 'AI 추정', `menus.menu_source_name` 은 '사용자 등록'
+- `store_add_attempts`(id, user_id, created_at): AI 추정 요청 기록. 클라이언트에 열지 않는다
+- 한도(`calc_setting`): 하루 가게 3곳(`store_add_daily_max`), 하루 요청 10회(`store_add_attempt_max`), 한 번에 메뉴 8개(`store_menu_max`). 같은 지역에 같은 이름(띄어쓰기·대소문자 무시)은 추가할 수 없다
+
 ## 친구랑 궁합 검사 (행사 체험용, migrations/003_match_test.sql)
 
 클라이언트에 직접 열지 않는 테이블이다. RLS 를 켜고 권한·정책을 주지 않으며 RPC 로만 읽고 쓴다.
