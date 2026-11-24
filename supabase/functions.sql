@@ -796,12 +796,15 @@ begin
            bb.brand_name as brand_name,
            bb.is_franchise as is_franchise,
            bi.has_official_allergen as has_official_allergen,
-           bb.category_name as category_name
+           bb.category_name as category_name,
+           -- 같은 브랜드 지점이 줄지어 나오지 않게, 브랜드 안에서의 순번을 매긴다
+           row_number() over (partition by bb.brand_id order by bb.restaurant_id) as brand_rank
     from base bb
     join brand_info bi on bi.brand_id = bb.brand_id
     left join brand_match bm on bm.brand_id = bb.brand_id
   ) x
-  order by x.match_percent desc, x.avg_rating desc nulls last, x.restaurant_id
+  -- 브랜드마다 한 곳씩 먼저(일치도 높은 브랜드부터), 그다음 두 번째 지점들 … 순서로 섞어 다양하게 보여준다
+  order by x.brand_rank, x.match_percent desc, x.avg_rating desc nulls last, x.restaurant_id
   limit v_limit;
 end;
 $$;
