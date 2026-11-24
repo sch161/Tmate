@@ -261,6 +261,18 @@ test('브랜드 요청 본문: 도메인 제한·max_tokens·브랜드 입력, �
   assert.equal(buildRequestBody(franchise, { model: 'm', effort: 'low', maxToolCalls: 0, maxOutputTokens: 0 }).max_tokens, 16000);
   assert.ok(!buildRequestBody(franchise, { model: 'm', effort: 'low' }).system.includes('브랜드 조사 모드'));
 });
+test('페이지 모드: 도구 없이 공식 본문만 넣고, 그 페이지 주소만 verified 출처로 인정', () => {
+  const pagePlace = { ...brandPlace, page: { url: normalizeUrl(OFFICIAL), text: '빅맥 (난류, 우유)' } };
+  const b = buildRequestBody(pagePlace, { model: 'm', effort: 'low', webFetch: true, maxToolCalls: 10 });
+  assert.equal(b.tools, undefined);
+  assert.ok(b.messages[0].content.includes(`<official_page url="${normalizeUrl(OFFICIAL)}">`) && b.messages[0].content.includes('빅맥 (난류, 우유)'));
+  assert.ok(b.system.includes('검색 도구가 없다') && !b.system.includes('반드시 web_search 도구로'));
+  const only = new Set([normalizeUrl(OFFICIAL)]);
+  const ctx = { place: pagePlace, knownUrls: only, sourceUrls: only, fetchedUrls: only };
+  assert.equal(validateResult({ menus: [menu()] }, ctx).result.menus[0].allergen_status, 'verified');
+  const other = validateResult({ menus: [menu({ allergen_sources: [{ url: 'https://www.mcdonalds.co.kr/kor/other' }] })] }, ctx);
+  assert.equal(other.result.menus[0].allergen_status, 'unknown');
+});
 test('응답 추출: sourceUrls 는 검색 결과·연 페이지만 담는다 (인용에만 있는 URL 은 제외)', () => {
   const ex = extractResponse({ content: [
     searchUse('s1'),

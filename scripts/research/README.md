@@ -8,6 +8,10 @@
 7. 자체 테스트: `node scripts/research/selftest.mjs`
 8. 결과: `scripts/research/out/results.json`, `out/report.md` (out/ 은 git 제외)
 9. 브랜드 모드(공통 대표 메뉴 10개): `node scripts/research/research.mjs --brand scripts/research/test-brands.json` → `out/brand-*.{json,md}`
+9-1. **페이지 모드(권장)**: 공식 알레르기 페이지를 직접 열어 저장한 본문을 넣어 주고 정리만 시킨다. 검색을 하지 않아 싸고(실측: 맥도날드 약 0.13 USD, 31초, 공식 표와 10/10 일치), 우리가 직접 연 페이지라 `verified` 로 인정한다
+   - 본문 저장: `node scripts/research/open-page.mjs <공식 페이지 주소> scripts/research/out/pages/<브랜드>.txt` (Playwright 가 있는 환경. 없으면 브라우저에서 본문을 복사해 txt 로 저장)
+   - 브랜드 입력에 `"page_url": "<공식 페이지 주소>", "page_file": "<저장한 txt 경로>"` 를 추가하고 9번과 같이 실행한다. `page_url` 은 `official_domains` 안의 주소여야 한다
+   - 저장한 본문은 조사 결과를 공식 표와 대조할 때도 쓴다
 10. 옵션 `ANTHROPIC_TIMEOUT_MS`(기본 600000), `ANTHROPIC_MAX_TOOL_CALLS`(도구별 호출 상한, 기본 10), `ANTHROPIC_MAX_TOKENS`(생각+출력 상한, 기본 16000), `ANTHROPIC_NO_FALLBACK=1`(거절 시 대체 모델 재실행 끄기)
 11. 상태 규칙: `verified` 는 `web_fetch` 로 공식 페이지 본문을 연 기록이 있을 때만 인정한다. 기록이 없으면 코드가 `official_extract` 로 낮춘다
 12. 알려진 한계: 알레르기 표가 페이지 로드 후 동적으로 채워지는 사이트(예: 맥도날드)는 검색 결과에 값이 없어 전부 `unknown` 이 될 수 있다 (2026-11 실측, `--no-fetch`)
