@@ -130,29 +130,74 @@ test('파싱: 코드블록·앞뒤 설명이 섞여도 JSON 추출', () => {
   assert.deepEqual(parseModelJson('결과입니다 {"a":1} 끝'), { a: 1 });
   assert.equal(parseModelJson('JSON 아님'), null);
 });
-test('응답 추출: 검색 호출 수·sources·annotations 병합', () => {
+// Messages API 응답 블록 모양 (실제 호출에서 본 구조)
+const searchUse = (id) => ({ type: 'server_tool_use', id, name: 'web_search', input: { query: 'q' } });
+const searchResult = (id, urls) => ({ type: 'web_search_tool_result', tool_use_id: id, content: urls.map((url) => ({ type: 'web_search_result', title: 't', url })) });
+
+test('응답 추출: 검색 호출 수·검색 결과 URL·인용 URL 병합, 코드 실행 블록은 무시', () => {
   const resp = {
-    output: [
-      { type: 'web_search_call', action: { sources: [{ url: `${OFFICIAL}?utm_source=openai` }] } },
-      { type: 'web_search_call', action: {} },
-      { type: 'message', content: [{ type: 'output_text', text: '{}', annotations: [{ type: 'url_citation', url: 'https://blog.example.com/x/' }] }] },
+    content: [
+      { type: 'server_tool_use', id: 'c1', name: 'code_execution', input: { code: '' } },
+      searchUse('s1'),
+      searchResult('s1', [`${OFFICIAL}?utm_source=openai`]),
+      { type: 'code_execution_tool_result', tool_use_id: 'c1', content: { type: 'code_execution_result', stdout: '', stderr: '', return_code: 0 } },
+      searchUse('s2'),
+      { type: 'web_search_tool_result', tool_use_id: 's2', content: { type: 'web_search_tool_result_error', error_code: 'max_uses_exceeded' } },
+      { type: 'text', text: '{}', citations: [{ type: 'web_search_result_location', url: 'https://blog.example.com/x/' }] },
     ],
   };
   const ex = extractResponse(resp);
   assert.equal(ex.searchCalls, 2);
+  assert.equal(ex.fetchCalls, 0);
   assert.ok(ex.knownUrls.has(normalizeUrl(OFFICIAL)) && ex.knownUrls.has(normalizeUrl('https://blog.example.com/x')));
+  assert.deepEqual(ex.toolErrors, ['web_search: max_uses_exceeded']);
 });
-test('요청 본문: web_search 강제, KR, include, 도메인 제한은 프랜차이즈만', () => {
-  const opt = { model: 'm', effort: 'low', background: false, maxToolCalls: 0 };
+test('응답 추출: 최종 텍스트는 마지막 도구 호출 뒤의 것만', () => {
+  const ex = extractResponse({ content: [{ type: 'text', text: '검색해 볼게요 {중간}' }, searchUse('s1'), searchResult('s1', [OFFICIAL]), { type: 'text', text: '{"a":' }, { type: 'text', text: '1}' }] });
+  assert.equal(ex.text, '{"a":1}');
+});
+test('응답 추출: web_fetch 로 연 URL 은 fetchedUrls·sourceUrls 에 담긴다', () => {
+  const ex = extractResponse({ content: [
+    { type: 'server_tool_use', id: 'f1', name: 'web_fetch', input: { url: OFFICIAL } },
+    { type: 'web_fetch_tool_result', tool_use_id: 'f1', content: { type: 'web_fetch_result', url: OFFICIAL, content: {} } },
+    { type: 'web_fetch_tool_result', tool_use_id: 'f2', content: { type: 'web_fetch_tool_result_error', error_code: 'url_not_accessible' } },
+  ] });
+  assert.equal(ex.fetchCalls, 1);
+  assert.ok(ex.fetchedUrls.has(normalizeUrl(OFFICIAL)) && ex.sourceUrls.has(normalizeUrl(OFFICIAL)));
+  assert.deepEqual(ex.toolErrors, ['web_fetch: url_not_accessible']);
+});
+test('요청 본문: 도구 강제 없음, KR, effort, 도메인 제한은 프랜차이즈만, web_fetch 는 옵션', () => {
+  const opt = { model: 'm', effort: 'low', maxToolCalls: 0, webFetch: true, fallbacks: true };
   const f = buildRequestBody(franchise, opt);
-  assert.equal(f.tools[0].type, 'web_search');
-  assert.equal(f.tool_choice, 'required');
-  assert.deepEqual(f.tools[0].user_location, { type: 'approximate', country: 'KR' });
-  assert.deepEqual(f.tools[0].filters, { allowed_domains: ['mcdonalds.co.kr'] });
-  assert.deepEqual(f.include, ['web_search_call.action.sources']);
-  assert.equal(f.background, undefined);
-  assert.equal(buildRequestBody(indie, opt).tools[0].filters, undefined);
-  assert.equal(buildRequestBody(indie, { ...opt, background: true }).background, true);
+  assert.equal(f.tools[0].type, 'web_search_20260209');
+  assert.equal(f.tools[1].type, 'web_fetch_20260209');
+  assert.equal(f.tool_choice, undefined);
+  assert.equal(f.thinking, undefined);
+  assert.deepEqual(f.tools[0].user_location, { type: 'approximate', country: 'KR', timezone: 'Asia/Seoul' });
+  assert.deepEqual(f.tools[0].allowed_domains, ['mcdonalds.co.kr']);
+  assert.deepEqual(f.tools[1].allowed_domains, ['mcdonalds.co.kr']);
+  assert.deepEqual(f.output_config, { effort: 'low' });
+  assert.equal(f.fallbacks, 'default');
+  assert.equal(f.max_tokens, 16000);
+  assert.equal(f.messages.length, 1);
+  assert.ok(f.system.includes('web_fetch 도구로 본문을 직접 열어'));
+  const i = buildRequestBody(indie, { ...opt, webFetch: false, fallbacks: false, maxToolCalls: 3 });
+  assert.equal(i.tools.length, 1);
+  assert.equal(i.tools[0].allowed_domains, undefined);
+  assert.equal(i.tools[0].max_uses, 3);
+  assert.equal(i.fallbacks, undefined);
+  assert.ok(i.system.includes('web_fetch 도구를 쓸 수 없다'));
+});
+test('verified: 본문을 연 기록이 없으면 official_extract 로 낮추고 값은 유지', () => {
+  const ctx = { place: franchise, knownUrls: known, sourceUrls: new Set([normalizeUrl(OFFICIAL)]) };
+  const down = validateResult({ menus: [menu()] }, { ...ctx, fetchedUrls: new Set() });
+  assert.equal(down.result.menus[0].allergen_status, 'official_extract');
+  assert.equal(down.result.menus[0].allergens.length, 1);
+  assert.equal(down.stats.downgraded, 1);
+  assert.equal(down.stats.demoted, 0);
+  const kept = validateResult({ menus: [menu()] }, { ...ctx, fetchedUrls: new Set([normalizeUrl(OFFICIAL)]) });
+  assert.equal(kept.result.menus[0].allergen_status, 'verified');
+  assert.equal(kept.stats.downgraded, 0);
 });
 
 // ---- official_extract / 브랜드 모드 ----
@@ -208,18 +253,19 @@ test('브랜드 모드: 메뉴는 10개로 제한', () => {
   assert.equal(result.menus.length, 10);
   assert.ok(result.warnings.some((w) => w.includes('10개 초과')));
 });
-test('브랜드 요청 본문: 도메인 제한·max_output_tokens·브랜드 입력, 가게 모드는 상한 없음', () => {
-  const b = buildRequestBody(brandPlace, { model: 'm', effort: 'low', background: false, maxToolCalls: 0, maxOutputTokens: 32000 });
-  assert.equal(b.max_output_tokens, 32000);
-  assert.deepEqual(b.tools[0].filters, { allowed_domains: ['mcdonalds.co.kr'] });
-  assert.ok(b.input.includes('"brand":"B"') && b.instructions.includes('브랜드 조사 모드') && b.instructions.includes('official_extract'));
-  assert.equal(buildRequestBody(franchise, { model: 'm', effort: 'low', maxToolCalls: 0, maxOutputTokens: 0 }).max_output_tokens, undefined);
-  assert.ok(!buildRequestBody(franchise, { model: 'm', effort: 'low' }).instructions.includes('브랜드 조사 모드'));
+test('브랜드 요청 본문: 도메인 제한·max_tokens·브랜드 입력, 가게 모드는 브랜드 지시문 없음', () => {
+  const b = buildRequestBody(brandPlace, { model: 'm', effort: 'low', maxToolCalls: 0, maxOutputTokens: 32000 });
+  assert.equal(b.max_tokens, 32000);
+  assert.deepEqual(b.tools[0].allowed_domains, ['mcdonalds.co.kr']);
+  assert.ok(b.messages[0].content.includes('"brand":"B"') && b.system.includes('브랜드 조사 모드') && b.system.includes('official_extract'));
+  assert.equal(buildRequestBody(franchise, { model: 'm', effort: 'low', maxToolCalls: 0, maxOutputTokens: 0 }).max_tokens, 16000);
+  assert.ok(!buildRequestBody(franchise, { model: 'm', effort: 'low' }).system.includes('브랜드 조사 모드'));
 });
-test('응답 추출: sourceUrls 는 sources 만 담는다', () => {
-  const ex = extractResponse({ output: [
-    { type: 'web_search_call', action: { sources: [{ url: OFFICIAL }] } },
-    { type: 'message', content: [{ type: 'output_text', text: '{}', annotations: [{ type: 'url_citation', url: 'https://blog.example.com/x' }] }] },
+test('응답 추출: sourceUrls 는 검색 결과·연 페이지만 담는다 (인용에만 있는 URL 은 제외)', () => {
+  const ex = extractResponse({ content: [
+    searchUse('s1'),
+    searchResult('s1', [OFFICIAL]),
+    { type: 'text', text: '{}', citations: [{ type: 'web_search_result_location', url: 'https://blog.example.com/x' }] },
   ] });
   assert.ok(ex.sourceUrls.has(normalizeUrl(OFFICIAL)) && !ex.sourceUrls.has(normalizeUrl('https://blog.example.com/x')));
 });
