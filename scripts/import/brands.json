@@ -29,5 +29,18 @@
     ],
     "allergen_table_is_set_based": true,
     "result_key": "롯데리아"
+  },
+  {
+    "name": "버거킹",
+    "category": "양식",
+    "name_patterns": [
+      "버거킹"
+    ],
+    "exclude_patterns": [],
+    "official_domains": [
+      "burgerking.co.kr"
+    ],
+    "allergen_table_is_set_based": false,
+    "result_key": "버거킹"
   }
 ]

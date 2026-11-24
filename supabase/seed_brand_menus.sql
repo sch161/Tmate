@@ -491,4 +491,247 @@ cross join (values ('달콤함'), ('짭조름함')) as v(name)
 join taste_tags t on t.name = v.name
 where b.name = '롯데리아' and b.is_franchise and m.name = '데리버거 세트';
 
+-- ===== 버거킹 (메뉴 10개) =====
+do $$
+begin
+  if not exists (select 1 from brands b where b.name = '버거킹' and b.is_franchise) then
+    raise exception '브랜드 버거킹 이(가) 없어요. seed_branches.sql 을 먼저 실행하세요.';
+  end if;
+end;
+$$;
+update brands b set
+  allergen_source_url = 'https://www.burgerking.co.kr/menu/detail/1080013', allergen_data_date = null::date,
+  shared_notice = '지점에 따라 판매하지 않는 제품이 있을 수 있음', research_status = 'done', researched_at = now(), research_error = null
+where b.name = '버거킹' and b.is_franchise;
+
+-- 버거킹 / 와퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '와퍼', '직화 소고기 패티 대표 버거', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '와퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쇠고기', 'danger', '쇠고기'), ('토마토', 'danger', '토마토'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀'), ('알류', 'danger', '난류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '와퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '와퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '와퍼';
+
+-- 버거킹 / 치즈와퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치즈와퍼', '치즈를 더한 와퍼', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '치즈와퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', '밀'), ('대두', 'danger', '대두'), ('우유', 'danger', '우유'), ('토마토', 'danger', '토마토'), ('알류', 'danger', '난류'), ('쇠고기', 'danger', '쇠고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '치즈와퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '치즈와퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '치즈와퍼';
+
+-- 버거킹 / 불고기와퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '불고기와퍼', '불고기 소스 소고기 버거', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '불고기와퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('밀', 'danger', '밀'), ('대두', 'danger', '대두'), ('알류', 'danger', '난류'), ('쇠고기', 'danger', '쇠고기'), ('토마토', 'danger', '토마토')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '불고기와퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '불고기와퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('달콤함'), ('짭조름함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '불고기와퍼';
+
+-- 버거킹 / 통새우와퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '통새우와퍼', '통새우를 올린 와퍼', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '통새우와퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('대두', 'danger', '대두'), ('우유', 'danger', '우유'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기'), ('새우', 'danger', '새우'), ('알류', 'danger', '난류'), ('밀', 'danger', '밀')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '통새우와퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '통새우와퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '통새우와퍼';
+
+-- 버거킹 / 몬스터와퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '몬스터와퍼', '소고기·치킨 패티 푸짐 버거', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '몬스터와퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('돼지고기', 'danger', '돼지고기'), ('알류', 'danger', '난류'), ('쇠고기', 'danger', '쇠고기'), ('닭고기', 'danger', '닭고기'), ('토마토', 'danger', '토마토'), ('우유', 'danger', '우유'), ('대두', 'danger', '대두'), ('밀', 'danger', '밀')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '몬스터와퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '몬스터와퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('매콤함'), ('감칠맛')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '몬스터와퍼';
+
+-- 버거킹 / 베이컨치즈와퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '베이컨치즈와퍼', '베이컨과 치즈 얹은 와퍼', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '베이컨치즈와퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('우유', 'danger', '우유'), ('돼지고기', 'danger', '돼지고기'), ('밀', 'danger', '밀'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기'), ('알류', 'danger', '난류'), ('대두', 'danger', '대두')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '베이컨치즈와퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '베이컨치즈와퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '베이컨치즈와퍼';
+
+-- 버거킹 / 콰트로치즈와퍼
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '콰트로치즈와퍼', '네 가지 치즈 와퍼', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '콰트로치즈와퍼');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기'), ('밀', 'danger', '밀'), ('알류', 'danger', '난류'), ('대두', 'danger', '대두'), ('우유', 'danger', '우유')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '콰트로치즈와퍼';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '콰트로치즈와퍼');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('느끼함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '콰트로치즈와퍼';
+
+-- 버거킹 / 와퍼주니어
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '와퍼주니어', '작은 사이즈 와퍼', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '와퍼주니어');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('쇠고기', 'danger', '쇠고기'), ('밀', 'danger', '밀'), ('대두', 'danger', '대두'), ('토마토', 'danger', '토마토'), ('알류', 'danger', '난류')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '와퍼주니어';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '와퍼주니어');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('감칠맛'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '와퍼주니어';
+
+-- 버거킹 / 롱치킨버거
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '롱치킨버거', '길쭉한 치킨 패티 버거', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '롱치킨버거');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('알류', 'danger', '난류'), ('밀', 'danger', '밀'), ('대두', 'danger', '대두'), ('닭고기', 'danger', '닭고기')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '롱치킨버거';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '롱치킨버거');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('고소함'), ('담백함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '롱치킨버거';
+
+-- 버거킹 / 치즈버거
+insert into menus (brand_id, name, description, allergen_status, allergen_source_url, allergen_checked_at, allergen_note, menu_source_url, menu_source_name)
+select b.id, '치즈버거', '치즈 얹은 기본 버거', 'verified'::allergen_status, 'https://www.burgerking.co.kr/menu/detail/1080013', '2026-11-24T02:11:23.150Z'::timestamptz, null, 'https://www.burgerking.co.kr/menu/detail/1080013', '공식 사이트'
+from brands b where b.name = '버거킹' and b.is_franchise
+on conflict (brand_id, name) do update set
+  description = excluded.description, allergen_status = excluded.allergen_status, allergen_source_url = excluded.allergen_source_url,
+  allergen_checked_at = excluded.allergen_checked_at, allergen_note = excluded.allergen_note,
+  menu_source_url = excluded.menu_source_url, menu_source_name = excluded.menu_source_name;
+delete from menu_allergens where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '치즈버거');
+insert into menu_allergens (menu_id, allergen_id, level, original_text)
+select m.id, a.id, v.level::allergen_level, v.original_text
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('대두', 'danger', '대두'), ('알류', 'danger', '난류'), ('토마토', 'danger', '토마토'), ('쇠고기', 'danger', '쇠고기'), ('밀', 'danger', '밀'), ('우유', 'danger', '우유')) as v(name, level, original_text)
+join allergens a on a.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '치즈버거';
+delete from menu_taste_tags where menu_id in (select m.id from menus m join brands b on b.id = m.brand_id where b.name = '버거킹' and b.is_franchise and m.name = '치즈버거');
+insert into menu_taste_tags (menu_id, taste_tag_id)
+select m.id, t.id
+from menus m join brands b on b.id = m.brand_id
+cross join (values ('짭조름함'), ('고소함')) as v(name)
+join taste_tags t on t.name = v.name
+where b.name = '버거킹' and b.is_franchise and m.name = '치즈버거';
+
 commit;

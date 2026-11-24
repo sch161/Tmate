@@ -176,6 +176,7 @@ function menuSql(brand, m) {
  * @returns { sql, logs, names:{[brand]:string[]}, brandsDone:string[] }
  */
 export function buildSql(results, brands, opts = {}) {
+  // opts.previousSql: 기존 seed_brand_menus.sql 내용 (이번 입력에 없는 브랜드의 구간을 유지하는 데 쓴다)
   const logs = [];
   const names = {};
   const out = [];
@@ -186,10 +187,19 @@ export function buildSql(results, brands, opts = {}) {
   out.push('-- =====================================================================');
   out.push('begin;', '');
   const done = [];
+  const previous = extractBrandSections(opts.previousSql);
   for (const brand of brands) {
     const entry = results.find((r) => r?.input?.brand === brand.result_key || r?.input?.name === brand.result_key);
     if (!entry || !entry.result) {
-      logs.push(`[${brand.name}] 조사 결과가 없어 건너뜀 (result_key=${brand.result_key})`);
+      // 이번 입력에 없는 브랜드는 기존 seed 의 그 브랜드 구간을 그대로 유지한다 (브랜드를 하나씩 추가 조사할 수 있게)
+      const kept = previous.get(brand.name);
+      if (kept) {
+        out.push(...kept);
+        logs.push(`[${brand.name}] 이번 조사 결과에 없어 기존 seed 구간을 그대로 유지`);
+        done.push(brand.name);
+      } else {
+        logs.push(`[${brand.name}] 조사 결과가 없어 건너뜀 (result_key=${brand.result_key})`);
+      }
       continue;
     }
     const res = entry.result;
@@ -234,6 +244,23 @@ export function buildSql(results, brands, opts = {}) {
   return { sql: `${out.join('\n')}\n`, logs, names, brandsDone: done };
 }
 
+/** 기존 seed_brand_menus.sql 에서 브랜드별 구간('-- ===== 브랜드 (메뉴 N개) =====' 부터 다음 구간·commit 전까지)을 줄 배열로 꺼낸다. */
+export function extractBrandSections(previousSql) {
+  const sections = new Map();
+  let current = null;
+  for (const line of String(previousSql ?? '').split('\n')) {
+    const m = /^-- ===== (.+) \(메뉴 \d+개\) =====$/.exec(line);
+    if (m) {
+      current = [];
+      sections.set(m[1], current);
+    } else if (line === 'commit;') {
+      current = null;
+    }
+    if (current) current.push(line);
+  }
+  return sections;
+}
+
 // ---------- 실행 ----------
 
 function main() {
@@ -243,7 +270,14 @@ function main() {
   const brands = JSON.parse(readFileSync(resolve(REPO_ROOT, opt('--brands', 'scripts/import/brands.json')), 'utf8'));
   const results = JSON.parse(readFileSync(input, 'utf8'));
   const checkedAt = statSync(input).mtime.toISOString();
-  const { sql, logs, names, brandsDone } = buildSql(results, brands, { checkedAt });
+  const seedPath = join(REPO_ROOT, 'supabase', 'seed_brand_menus.sql');
+  let previousSql = '';
+  try {
+    previousSql = readFileSync(seedPath, 'utf8');
+  } catch {
+    // 처음 만드는 경우
+  }
+  const { sql, logs, names, brandsDone } = buildSql(results, brands, { checkedAt, previousSql });
 
   mkdirSync(OUT_DIR, { recursive: true });
   writeFileSync(join(REPO_ROOT, 'supabase', 'seed_brand_menus.sql'), sql);
