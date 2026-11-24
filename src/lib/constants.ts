@@ -29,6 +29,8 @@ export const PATHS = {
   myReviews: '/src/pages/my-reviews.html',
   tasteMates: '/src/pages/taste-mates.html',
   profileEdit: '/src/pages/profile-edit.html',
+  match: '/src/pages/match.html', // 친구랑 궁합 검사 (?room=방번호)
+  matchRank: '/src/pages/match-rank.html', // 맛궁합 랭킹 (부스 큰 화면용)
 } as const;
 
 export function toEmail(username: string): string {

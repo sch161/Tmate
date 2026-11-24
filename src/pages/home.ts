@@ -401,6 +401,8 @@ async function start(): Promise<void> {
   const app = qs('#app');
   if (!app || !recommendArea || !restaurantArea) return;
   app.append(renderBottomNav('home'));
+  const matchBanner = qs<HTMLAnchorElement>('#match-banner');
+  if (matchBanner) matchBanner.href = PATHS.match;
   const tasteEdit = qs<HTMLAnchorElement>('#taste-edit');
   if (tasteEdit) tasteEdit.href = withReturnTo(PATHS.tasteEdit);
 

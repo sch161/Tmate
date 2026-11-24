@@ -157,3 +157,25 @@ erDiagram
 - 내 알레르기 교체 저장(`update_my_allergens(p_allergen_ids int[])`): 빈 배열이면 모두 해제, null·중복은 무시, 없는 알레르기 id 는 예외. 한 트랜잭션으로 삭제 후 삽입
 - 내 입맛 교체 저장(`update_my_tastes(p_taste_ids int[], p_ratios int[])`): 두 배열은 같은 순서의 짝. 맛 1~3개, 비율 1~100, 합계 100, 중복·없는 맛 불가(`save_onboarding` 의 맛 검증과 같다). `user_taste_preferences` 의 내 행만 바꾸고 지역·온보딩 완료·알레르기는 건드리지 않는다
 - 일치도 계산: 평가 수가 적은 사용자는 입맛 비율 × 메뉴 태그, 평가가 쌓이면 유사 사용자 기반
+
+## 친구랑 궁합 검사 (행사 체험용, migrations/003_match_test.sql)
+
+클라이언트에 직접 열지 않는 테이블이다. RLS 를 켜고 권한·정책을 주지 않으며 RPC 로만 읽고 쓴다.
+흐름: 방 만들기/들어가기 → 검사(PART 1 둘 중 하나 문항 + PART 2 그 방의 음식) → 방 사람들과의 궁합.
+
+| 테이블 | 주요 컬럼 | 설명 |
+|---|---|---|
+| `match_questions` | `sort_order`, `body`, `option_a`, `option_b`, `is_active` | PART 1 문항 (둘 중 하나) |
+| `match_foods` | `name`(unique), `is_active` | PART 2 음식 후보 |
+| `match_rooms` | `code`(숫자 4자리, unique), `created_by → profiles`, `created_at` | 같이 온 친구끼리 묶는 방. 검사 한 번 = 방 하나 |
+| `match_room_foods` | PK(`room_id → match_rooms`, `food_id → match_foods`), `sort_order` | 그 방에서 나올 음식. 방을 만들 때 무작위로 정해져 같은 방 친구에게 같은 음식이 나온다 |
+| `match_room_members` | PK(`room_id`, `user_id → profiles`), `member_no`(방 안 번호), `joined_at`, `completed_at` | 방 멤버. 다른 사람은 `member_no` 로 가리킨다 |
+| `match_answers` | PK(`room_id`, `user_id`, `question_id → match_questions`), `choice`(1=A, 2=B) | PART 1 답 |
+| `match_food_answers` | PK(`room_id`, `user_id`, `food_id → match_foods`), `eaten`, `rating`(1~5), `want_try` | PART 2 답. 먹어봤으면 별점, 안 먹어봤으면 먹어보고 싶은지 |
+
+- 궁합(%) = 두 사람이 같은 답을 고른 PART 1 문항 수 / 둘 다 답한 문항 수 × 100 (문항 10개면 10% 단위). 둘 중 하나라도 검사를 마치지 않았으면 계산하지 않는다
+- PART 2(음식)는 점수에 넣지 않는다. 결과 카드(둘 다 좋아하는 음식, 한쪽만 먹어본 음식 등)와 랭킹 동점 처리에만 쓴다
+- RPC: `create_match_room`(방 번호 반환, 음식 `match_food_count`(5)개 무작위 고정), `join_match_room(p_code)`, `get_my_match_room`(가장 최근 방 번호), `get_match_questions(p_code)`, `get_match_foods(p_code)`, `save_match_test(p_code, p_choices, p_foods)`(모든 문항·음식에 답해야 저장), `get_match_room(p_code)`(방 사람들과 나의 궁합), `get_match_compare(p_code, p_member_no)`(음식별 나와 친구의 답), `get_match_ranking(p_limit, p_hours)`(같은 방 두 사람의 궁합 순위)
+- 다른 사람의 정보는 같은 방 사람의 닉네임·궁합 점수·그 방 음식에 대한 답만 돌려준다. 한 방의 최대 인원은 `match_room_max`(6)명
+- `match_room_keep_days`(7)일이 지난 방은 새 방을 만들 때 지워진다(답 포함). 4자리 방 번호를 다시 쓰기 위해서다
+- 문항·음식은 `seed_match.sql` 로 넣는다. 문항을 다시 넣으면 그 문항의 답이 함께 지워진다

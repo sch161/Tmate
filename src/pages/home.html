@@ -11,6 +11,15 @@
   </head>
   <body>
     <main class="app has-bottom-nav home" id="app">
+      <!-- 디자인 대기: 화면 나오면 교체. 노란 띠 위로 검은 글자가 흘러가는 궁합 검사 배너 -->
+      <a class="home__banner" id="match-banner" href="#" aria-label="친구랑 궁합 검사하기">
+        <!-- 같은 문구 묶음을 두 번 이어 붙여 절반만큼 옮기면 끊김 없이 이어진다. 읽기 프로그램에는 aria-label 한 번만 읽힌다 -->
+        <span class="home__banner-track" aria-hidden="true">
+          <span class="home__banner-group"><span>친구랑 궁합 검사하기</span><span>내 친구랑 나는 얼마나 잘 맞을까?</span><span>친구랑 궁합 검사하기</span><span>지금 바로 맛궁합 확인!</span></span>
+          <span class="home__banner-group"><span>친구랑 궁합 검사하기</span><span>내 친구랑 나는 얼마나 잘 맞을까?</span><span>친구랑 궁합 검사하기</span><span>지금 바로 맛궁합 확인!</span></span>
+        </span>
+      </a>
+
       <header class="home__location">
         <p class="home__region"><span class="home__region-icon" aria-hidden="true"></span><span id="region-text">불러오는 중…</span></p>
         <button class="home__region-change" id="region-change" type="button">위치 변경하기</button>

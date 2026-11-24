@@ -37,6 +37,7 @@
 - 알레르기는 식약처 공식 19종 표준(allergens.name)으로 통일한다 (화면 표기는 display_name, 조사 결과 매핑은 aliases). 정보가 없으면 "정보 없음(unknown)"으로 저장하고, 모르는 메뉴를 안전하다고 표시하지 않는다. 메뉴의 allergen_status 는 verified(공식 본문 확인) / official_extract(공식 도메인 발췌) / estimated(추정) / unknown(정보 없음)이다
 - 알레르기 추천 규칙: 사용자가 알레르기를 1개 이상 등록했으면 추천에서 겹치는 메뉴와 unknown/estimated 메뉴를 제외한다(안전 우선). 등록한 알레르기가 없으면 상태와 무관하게 포함한다. 가게 상세의 알레르기 탭에서는 겹치는 메뉴를 경고(위험/주의)로, 등록자의 unknown/estimated 메뉴를 "정보 없음"으로 보여준다
 - 하단 네비게이션은 홈 / 저장 / 마이페이지 3개다
+- 친구랑 궁합 검사(행사 체험용): 방 번호(4자리)로 친구와 묶고, 둘 중 하나 문항 10개 + 방마다 무작위 음식 5개에 답한다. 궁합(%)은 같은 답을 고른 문항 비율이고 음식 답은 결과 카드에만 쓴다. 문항·음식은 supabase/seed_match.sql, 결과 문구는 src/utils/match-results.ts 에 있다
 - 온보딩 위치 화면은 위치 권한을 요청하지 않고 지역 선택 시트(src/utils/region-picker.ts)에서 고르게 한다
 - 알레르기·입맛(맛 선택+비율) 수정은 RPC(update_my_allergens, update_my_tastes)가 한 트랜잭션으로 교체 저장한다. 지역·닉네임은 profiles 의 해당 컬럼만 update 한다
 
@@ -52,11 +53,11 @@
 
 ## 화면 현황
 
-- 구현된 화면(src/pages): 스플래시(index.html), login, signup, onboarding-location / flavor / ratio / allergy, home, restaurant, review, save, mypage, my-reviews, taste-detail, taste-edit, taste-mates, allergy-edit, profile-edit (ui-preview 는 개발용 임시 페이지)
+- 구현된 화면(src/pages): 스플래시(index.html), login, signup, onboarding-location / flavor / ratio / allergy, home, restaurant, review, save, mypage, my-reviews, taste-detail, taste-edit, taste-mates, allergy-edit, profile-edit, match(친구랑 궁합 검사), match-rank(맛궁합 랭킹, 부스 큰 화면용이라 402px 프레임을 쓰지 않는다) (ui-preview 는 개발용 임시 페이지)
 - 아직 없는 것: 알림 설정, 프로필 사진 (마이페이지 Figma 의 "알림 설정" 줄은 만들지 않았다)
 - Figma 에 있어 읽고 구현한 화면: Splash, User-Login, User-Signup, Location, Flavor Info, Allergy Info_g, Allergy Info, Home, Details_s, Details_m, Save, User
-- Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, 지역 선택 시트(src/utils/region-picker.ts)
-- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 맛 선택 카드의 예시 음식 문구와 2열 배치·비율 슬라이더의 예시 문구(src/utils/taste-examples.ts, Figma 의 Flavor Info 는 3열에 이름만 있음)
+- Figma 에 없어 임시 UI 로 만든 화면 (`// 디자인 대기` 주석, 검색: `grep -rn "디자인 대기" src`): review(평가 작성), my-reviews, allergy-edit, profile-edit, taste-edit, taste-detail, taste-mates, match, match-rank, 지역 선택 시트(src/utils/region-picker.ts)
+- 일부만 임시인 요소: 가게 상세의 알레르기 탭 안내 영역·"정보 없음" 칩·출처 링크(restaurant.*), 알레르기 정보 상태 라벨(src/utils/allergen-status.ts), 저장 화면의 겹침 경고 칩·검색창 문구(save.*), 홈의 추천·카테고리 빈 상태 문구(home.ts), 마이페이지의 입맛 정보 없음 카드·현재 지역 표시(mypage.*), 온보딩 위치 화면 문구(Figma 문구와 다름), 알레르기·맛 아이콘 매핑(allergen-icons.ts 는 3종만, taste-icons.ts 는 비어 있음), 홈 상단 궁합 검사 배너(home.*, 노란 띠 위로 검은 고딕 글자가 흘러가는 임시 배너), 맛 선택 카드의 예시 음식 문구와 2열 배치·비율 슬라이더의 예시 문구(src/utils/taste-examples.ts, Figma 의 Flavor Info 는 3열에 이름만 있음)
 
 ## 코드 규칙
 
@@ -67,7 +68,7 @@
 
 ## DB 규칙
 
-- Claude Code 는 Supabase 에 직접 SQL 을 실행하지 않는다. SQL 파일만 작성하고, 끝나면 "SQL Editor 에서 실행할 파일과 순서"를 보고한다
+- Supabase 조회(select)는 자유롭게 한다. 변경(테이블·함수·데이터)은 SQL 파일을 먼저 작성하고, 무엇을 왜 적용하는지 말해 승인받은 뒤에만 적용한다. `migrations/001_brand_structure.sql` 은 데이터를 지우므로 절대 실행하지 않는다. 직접 적용하지 못할 때는 "SQL Editor 에서 실행할 파일과 순서"를 보고한다
 - RPC 는 auth.uid() 로 사용자를 식별하고, 다른 사용자의 데이터를 반환할 때는 닉네임·유사도 같은 최소 정보만 반환한다. SECURITY DEFINER 함수는 set search_path = '' 를 쓴다
 - 새 테이블·뷰를 만들면 authenticated 에 필요한 GRANT 를 policies.sql 에 함께 쓴다 (권한이 없으면 RLS 정책 이전에 permission denied 가 난다).
 
@@ -78,7 +79,7 @@
 3. 작업 전에 main 이 최신인지 확인한다 (원격이 있으면 pull)
 4. 커밋은 `{타입}: {변경 내용}` 형식, 한 커밋에 한 가지 변경만. 타입은 feat / fix / docs / style / refactor / chore / test. 커밋 메시지에 Co-Authored-By 줄을 넣지 않는다
 5. 작업이 끝나면 `npm run build` 통과를 확인하고, 브랜치에 커밋한 뒤 결과를 보고한다. 내가 "머지해"라고 하면 `git checkout main && git merge --no-ff <브랜치>` 로 합치고 브랜치를 삭제한다
-6. git push 는 내가 요청할 때만 한다
+6. 작업 브랜치(feature/... 등)는 커밋하면 바로 push 한다(작업 환경이 임시라 push 하지 않은 커밋은 사라질 수 있다). main 에 합치는 것과 main push 는 내가 "머지해"라고 할 때만 한다
 
 ## 보고 형식
 
