@@ -1,5 +1,6 @@
 // 친구랑 궁합 검사 RPC 호출. 테이블은 클라이언트에 열려 있지 않아 모두 RPC 로만 읽고 쓴다.
 import { supabase } from '../lib/supabase';
+import type { MatchPairChoice } from '../utils/match-results';
 
 export interface MatchQuestion {
   questionId: number;
@@ -216,4 +217,11 @@ export async function getMatchPrintPhoto(passcode: string, requestId: number): P
 export async function markMatchPrinted(passcode: string, requestId: number): Promise<void> {
   const { error } = await supabase.rpc('mark_match_printed', { p_passcode: passcode, p_request_id: requestId });
   if (error) throw toError(error, '인쇄 완료로 표시하지 못했어요');
+}
+
+/** 두 사람(member_no)의 PART 1 문항별 답. 결과 화면과 영수증의 "통한 취향 / 갈린 취향"에 쓴다. 둘 다 검사를 마쳐야 한다. */
+export async function getMatchPairChoices(code: string, memberNoA: number, memberNoB: number): Promise<MatchPairChoice[]> {
+  const { data, error } = await supabase.rpc('get_match_pair_choices', { p_code: code, p_member_no_a: memberNoA, p_member_no_b: memberNoB });
+  if (error) throw toError(error, '문항 결과를 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  return (data ?? []).map((row) => ({ optionA: row.option_a, optionB: row.option_b, aChoice: row.a_choice, bChoice: row.b_choice }));
 }

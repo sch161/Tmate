@@ -3,10 +3,13 @@
 // 감열 프린터는 검정 점만 찍으므로 흰 바탕에 검정으로만 그린다. 사진 영역만 디더링하고 글자는 또렷하게 둔다.
 import { MXW01_WIDTH, rgbaToMono } from './mxw01-protocol';
 import { getMascotUrl, type MascotName } from './mascots';
-import { getMatchTier, type MatchResultCard } from './match-results';
+import { getMatchTier, type ChoiceSummary, type MatchResultCard } from './match-results';
 
 export const RECEIPT_FOOTER = '디지털미식연구반';
 export const RECEIPT_MAX_CARDS = 4;
+/** 통한 취향은 앞에서 이만큼, 갈린 취향은 이만큼만 찍는다 (영수증이 너무 길어지지 않게) */
+const RECEIPT_MAX_SAME = 6;
+const RECEIPT_MAX_DIFF = 2;
 /** 사진 비율 (가로:세로 = 4:3). 촬영 화면의 틀도 같은 비율을 쓴다 */
 export const RECEIPT_PHOTO_ASPECT = 4 / 3;
 
@@ -17,6 +20,8 @@ export interface ReceiptInput {
   score: number;
   /** 음식 결과 카드 (buildResultCards 결과). 앞에서부터 RECEIPT_MAX_CARDS 개만 쓴다 */
   cards: MatchResultCard[];
+  /** PART 1 문항에서 통한 취향·갈린 취향. 없으면 그 칸을 그리지 않는다 */
+  choices?: ChoiceSummary;
   /** 촬영한 사진. 없으면 사진 없이 그린다 */
   photo: HTMLCanvasElement | null;
   /** 사진 중간 톤 보정. 1 = 그대로, 1 보다 작으면 밝게, 크면 어둡게 (기본 1). 프린터·조명에 따라 진행자가 고른다 */
@@ -233,6 +238,18 @@ export async function renderMatchReceipt(input: ReceiptInput): Promise<ReceiptIm
   paragraph(`${input.score}%`, 700, 112, 22);
   paragraph(tier.title, 700, 28, 14);
   paragraph(tier.desc, 400, 22, 10);
+
+  // 통한 취향 / 갈린 취향 (PART 1 문항)
+  if (input.choices && input.choices.same.length > 0) {
+    rule();
+    paragraph(`둘이 통한 취향 ${input.choices.same.length}개`, 500, 20, 12);
+    paragraph(input.choices.same.slice(0, RECEIPT_MAX_SAME).join(' · '), 700, 24, 10);
+  }
+  if (input.choices && input.choices.diff.length > 0) {
+    rule();
+    paragraph('여기서 갈렸어요', 500, 20, 12);
+    for (const pair of input.choices.diff.slice(0, RECEIPT_MAX_DIFF)) paragraph(`${pair.a} vs ${pair.b}`, 700, 24, 10);
+  }
 
   // 음식 카드
   const cards = input.cards.slice(0, RECEIPT_MAX_CARDS);
