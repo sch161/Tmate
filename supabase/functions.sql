@@ -588,7 +588,8 @@ returns table (
   brand_id bigint,
   brand_name text,
   is_franchise boolean,
-  has_official_allergen boolean
+  has_official_allergen boolean,
+  category_name text
 )
 language plpgsql
 stable
@@ -621,9 +622,11 @@ begin
            b.id as brand_id,
            b.name as brand_name,
            b.is_franchise as is_franchise,
-           b.image_url as brand_image_url
+           b.image_url as brand_image_url,
+           fc.name as category_name
     from public.restaurants r
     join public.brands b on b.id = r.brand_id
+    left join public.food_categories fc on fc.id = b.category_id
     where (p_region is null or r.region = p_region)
       and (p_category_id is null or b.category_id = p_category_id)
       and (
@@ -669,7 +672,7 @@ begin
   )
   select x.restaurant_id, x.name, x.region, x.image_url, x.avg_rating, x.review_count,
          x.taste_tags, x.is_saved, x.match_percent,
-         x.brand_id, x.brand_name, x.is_franchise, x.has_official_allergen
+         x.brand_id, x.brand_name, x.is_franchise, x.has_official_allergen, x.category_name
   from (
     select bb.restaurant_id as restaurant_id,
            bb.name as name,
@@ -686,7 +689,8 @@ begin
            bb.brand_id as brand_id,
            bb.brand_name as brand_name,
            bb.is_franchise as is_franchise,
-           bi.has_official_allergen as has_official_allergen
+           bi.has_official_allergen as has_official_allergen,
+           bb.category_name as category_name
     from base bb
     join brand_info bi on bi.brand_id = bb.brand_id
     left join brand_match bm on bm.brand_id = bb.brand_id
@@ -716,7 +720,8 @@ returns table (
   match_percent int,
   reason text,
   brand_name text,
-  allergen_status public.allergen_status
+  allergen_status public.allergen_status,
+  category_name text
 )
 language plpgsql
 stable
@@ -740,7 +745,7 @@ begin
   select x.menu_id, x.menu_name, x.restaurant_id, x.restaurant_name, x.region, x.image_url,
          x.avg_rating, x.match_percent,
          public.calc_menu_reason(v_uid, x.menu_id) as reason,
-         x.brand_name, x.allergen_status
+         x.brand_name, x.allergen_status, x.category_name
   from (
     select m.id as menu_id,
            m.name as menu_name,
@@ -751,7 +756,8 @@ begin
            ms.avg_rating as avg_rating,
            d.match as match_percent,
            b.name as brand_name,
-           m.allergen_status as allergen_status
+           m.allergen_status as allergen_status,
+           fc.name as category_name
     from (
       select rr.brand_id as brand_id, min(rr.id) as restaurant_id
       from public.restaurants rr
@@ -760,6 +766,7 @@ begin
     ) rep
     join public.restaurants r on r.id = rep.restaurant_id
     join public.brands b on b.id = rep.brand_id
+    left join public.food_categories fc on fc.id = b.category_id
     join public.menus m on m.brand_id = b.id
     left join public.menu_stats ms on ms.menu_id = m.id
     cross join lateral public.calc_menu_match_detail(v_uid, m.id) d
@@ -799,7 +806,8 @@ returns table (
   is_franchise boolean,
   shared_notice text,
   allergen_source_url text,
-  allergen_data_date date
+  allergen_data_date date,
+  category_name text
 )
 language plpgsql
 stable
@@ -844,9 +852,11 @@ begin
          b.is_franchise,
          b.shared_notice,
          b.allergen_source_url,
-         b.allergen_data_date
+         b.allergen_data_date,
+         fc.name
   from public.restaurants r
   join public.brands b on b.id = r.brand_id
+  left join public.food_categories fc on fc.id = b.category_id
   left join public.brand_stats bs on bs.brand_id = b.id
   where r.id = p_restaurant_id;
 end;
@@ -1117,7 +1127,8 @@ returns table (
   taste_tags text[],
   created_at timestamptz,
   brand_id bigint,
-  brand_name text
+  brand_name text,
+  category_name text
 )
 language plpgsql
 stable
@@ -1150,10 +1161,12 @@ begin
          ), '{}'::text[]),
          rv.created_at,
          b.id,
-         b.name
+         b.name,
+         fc.name
   from public.reviews rv
   join public.menus m on m.id = rv.menu_id
   join public.brands b on b.id = m.brand_id
+  left join public.food_categories fc on fc.id = b.category_id
   left join lateral (
     select r.id as restaurant_id, r.name as restaurant_name, r.image_url as image_url
     from public.restaurants r
