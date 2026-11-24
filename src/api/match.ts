@@ -175,3 +175,45 @@ export async function getMatchPairFoods(code: string, memberNoA: number, memberN
     friendWantTry: (row.b_want_try as boolean | null) ?? null,
   }));
 }
+
+/** 손님: 결과 화면에서 찍은 사진(JPEG data URL)과 함께 영수증 인쇄를 요청한다. 그 방에서 검사를 마친 두 사람만 할 수 있다. */
+export async function requestMatchPrint(code: string, photo: string): Promise<void> {
+  const { error } = await supabase.rpc('request_match_print', { p_code: code, p_photo: photo });
+  if (error) throw toError(error, '사진을 올리지 못했어요. 잠시 후 다시 시도해주세요');
+}
+
+/** 인쇄 대기 1건 (진행자용). 사진은 getMatchPrintPhoto 로 따로 받는다 */
+export interface MatchPrintRequest {
+  requestId: number;
+  code: string;
+  pair: MatchRoomPair;
+  requestedAt: string;
+  printed: boolean;
+}
+
+/** 진행자: 인쇄 대기 목록. 아직 안 뽑은 것이 먼저 온다. 진행자 번호가 틀리면 오류 */
+export async function getMatchPrintQueue(passcode: string): Promise<MatchPrintRequest[]> {
+  const { data, error } = await supabase.rpc('get_match_print_queue', { p_passcode: passcode });
+  if (error) throw toError(error, '대기 목록을 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  return (data ?? []).map((row) => ({
+    requestId: row.request_id,
+    code: row.code,
+    pair: { memberNoA: row.member_no_a, memberNoB: row.member_no_b, nicknameA: row.nickname_a, nicknameB: row.nickname_b, score: row.score },
+    requestedAt: row.requested_at,
+    // 생성된 타입은 nullable 을 표현하지 못한다. 아직 안 뽑았으면 null 이 온다
+    printed: (row.printed_at as string | null) !== null,
+  }));
+}
+
+/** 진행자: 요청 1건의 사진(JPEG data URL). 없으면 null */
+export async function getMatchPrintPhoto(passcode: string, requestId: number): Promise<string | null> {
+  const { data, error } = await supabase.rpc('get_match_print_photo', { p_passcode: passcode, p_request_id: requestId });
+  if (error) throw toError(error, '사진을 불러오지 못했어요. 잠시 후 다시 시도해주세요');
+  return typeof data === 'string' && data !== '' ? data : null;
+}
+
+/** 진행자: 인쇄를 마친 요청으로 표시한다 */
+export async function markMatchPrinted(passcode: string, requestId: number): Promise<void> {
+  const { error } = await supabase.rpc('mark_match_printed', { p_passcode: passcode, p_request_id: requestId });
+  if (error) throw toError(error, '인쇄 완료로 표시하지 못했어요');
+}
