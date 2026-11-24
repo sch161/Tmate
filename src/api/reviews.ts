@@ -1,7 +1,7 @@
 import { supabase } from '../lib/supabase';
 import { getConflictingMenuIds } from './allergy-conflicts';
 import { getSession } from './auth';
-import type { AllergenStatus } from './restaurants';
+import { categoryOrNull, type AllergenStatus } from './restaurants';
 
 /** 평가 작성 화면용 메뉴 정보. 평가는 브랜드 메뉴 단위라 같은 브랜드의 모든 지점이 공유한다. */
 export interface ReviewMenu {
@@ -10,6 +10,8 @@ export interface ReviewMenu {
   description: string | null;
   imageUrl: string | null;
   brandName: string;
+  /** 음식 카테고리 이름. 없으면 null */
+  categoryName: string | null;
 }
 
 /** 내 기존 평가 */
@@ -41,7 +43,7 @@ export async function getMenuForReview(menuId: number): Promise<MenuForReview | 
 
     const { data: menu, error: menuError } = await supabase
       .from('menus')
-      .select('id, name, description, image_url, brands(name)')
+      .select('id, name, description, image_url, brands(name, food_categories(name))')
       .eq('id', menuId)
       .maybeSingle();
     if (menuError) throw menuError;
@@ -69,6 +71,7 @@ export async function getMenuForReview(menuId: number): Promise<MenuForReview | 
         description: menu.description?.trim() || null,
         imageUrl: menu.image_url?.trim() || null,
         brandName: menu.brands?.name ?? '',
+        categoryName: categoryOrNull(menu.brands?.food_categories?.name),
       },
       myReview,
     };
@@ -104,6 +107,8 @@ export interface MyReviewItem {
   menuName: string;
   brandId: number;
   brandName: string;
+  /** 음식 카테고리 이름. 없으면 null */
+  categoryName: string | null;
   imageUrl: string | null;
   /** 1~5 */
   rating: number;
@@ -140,6 +145,7 @@ export async function getMyReviews(): Promise<MyReviewItem[]> {
       menuName: row.menu_name,
       brandId: row.brand_id,
       brandName: row.brand_name,
+      categoryName: categoryOrNull(row.category_name),
       imageUrl: row.image_url?.trim() || null,
       rating: row.rating,
       tasteTags: Array.isArray(row.taste_tags) ? row.taste_tags.filter((tag): tag is string => typeof tag === 'string' && tag !== '') : [],

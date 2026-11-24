@@ -410,3 +410,11 @@ body {
   border-radius: 50%;
   background: var(--color-text-on-primary);
 }
+
+/* 음식 카테고리 기본 이미지: 글자가 들어 있는 둥근 모서리 정사각형 PNG 라 잘리지 않게 contain 으로 보여주고,
+   이미지 자체의 둥근 모서리를 살리도록 박스의 배경·모서리는 없앤다. 페이지 CSS 의 같은 이름 규칙보다 이기도록 요소 선택자를 붙인다. */
+img.image--category {
+  background: transparent;
+  border-radius: 0;
+  object-fit: contain;
+}

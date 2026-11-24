@@ -162,7 +162,7 @@ function renderDetail(detail: RestaurantDetail): void {
   panel = el('div', { class: 'restaurant__panel', role: 'tabpanel' });
 
   detailArea.replaceChildren(
-    createImage(detail.imageUrl, 'restaurant__hero'),
+    createImage(detail.imageUrl, 'restaurant__hero', detail.categoryName),
     el('section', { class: 'restaurant__info' }, el('div', { class: 'restaurant__lines' }, ...lines), intro),
     tabs,
     panel,
@@ -199,7 +199,7 @@ function createMenuCard(menu: RestaurantMenu): HTMLElement {
   if (menu.myRating !== null) foot.append(el('span', { class: 'menu-card__my-rating' }, `내 별점 ${menu.myRating}점`));
   info.append(foot);
 
-  return el('article', { class: 'menu-card' }, createImage(menu.imageUrl, 'menu-card__image'), info, createSaveButton(menu.menuId));
+  return el('article', { class: 'menu-card' }, createImage(menu.imageUrl, 'menu-card__image', currentDetail?.categoryName), info, createSaveButton(menu.menuId));
 }
 
 function renderMenus(menus: RestaurantMenu[]): void {
@@ -306,7 +306,7 @@ function createAllergyCard(menu: AllergyMenu): HTMLElement {
     info.append(el('span', { class: 'chip chip--neutral' }, '정보 없음'), el('p', { class: 'menu-card__desc text-wrap-ko' }, '알레르기 정보가 없어요. 가게에 확인하세요'));
   }
   info.append(createStatusLabel(menu.allergenStatus));
-  return el('article', { class: 'menu-card menu-card--allergy' }, createImage(menu.imageUrl, 'menu-card__image'), info, createSaveButton(menu.menuId));
+  return el('article', { class: 'menu-card menu-card--allergy' }, createImage(menu.imageUrl, 'menu-card__image', currentDetail?.categoryName), info, createSaveButton(menu.menuId));
 }
 
 function createGroup(title: string, hint: string | null, menus: AllergyMenu[]): HTMLElement {

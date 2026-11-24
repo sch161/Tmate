@@ -24,6 +24,8 @@ export interface RestaurantSummary {
   brandName: string;
   isFranchise: boolean;
   hasOfficialAllergen: boolean;
+  /** 음식 카테고리 이름(한식·중식·일식·양식). 기본 이미지 선택에 쓴다. 없으면 null */
+  categoryName: string | null;
 }
 
 /** 오늘의 추천 메뉴 한 건. */
@@ -39,6 +41,8 @@ export interface RecommendedMenu {
   /** 브랜드·알레르기 상태 (아직 화면에는 쓰지 않는다) */
   brandName: string;
   allergenStatus: AllergenStatus;
+  /** 음식 카테고리 이름. 없으면 null */
+  categoryName: string | null;
 }
 
 export interface GetRestaurantsParams {
@@ -48,6 +52,11 @@ export interface GetRestaurantsParams {
 }
 
 // 생성 타입은 null 을 표현하지 않으므로 실제 응답에 맞춰 느슨하게 읽는다
+/** 서버가 준 카테고리 이름. 배포 순서상 아직 컬럼이 없거나 값이 비면 null (화면은 기본 색 박스를 쓴다) */
+export function categoryOrNull(value: string | null | undefined): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value.trim() : null;
+}
+
 function numOrNull(value: number | null | undefined): number | null {
   return typeof value === 'number' && Number.isFinite(value) ? value : null;
 }
@@ -67,6 +76,7 @@ function toRestaurant(row: RestaurantRow): RestaurantSummary {
     brandName: row.brand_name,
     isFranchise: Boolean(row.is_franchise),
     hasOfficialAllergen: Boolean(row.has_official_allergen),
+    categoryName: categoryOrNull(row.category_name),
   };
 }
 
@@ -82,6 +92,7 @@ function toMenu(row: RecommendedMenuRow): RecommendedMenu {
     matchPercent: numOrNull(row.match_percent),
     brandName: row.brand_name,
     allergenStatus: row.allergen_status,
+    categoryName: categoryOrNull(row.category_name),
   };
 }
 
@@ -151,6 +162,8 @@ export interface RestaurantDetail {
   sharedNotice: string | null;
   allergenSourceUrl: string | null;
   allergenDataDate: string | null;
+  /** 음식 카테고리 이름. 없으면 null */
+  categoryName: string | null;
 }
 
 /** 브랜드 메뉴 한 건 (메뉴별 평가 탭) */
@@ -221,6 +234,7 @@ function toDetail(row: DetailRow): RestaurantDetail {
     sharedNotice: str(row.shared_notice),
     allergenSourceUrl: str(row.allergen_source_url),
     allergenDataDate: str(row.allergen_data_date),
+    categoryName: categoryOrNull(row.category_name),
   };
 }
 

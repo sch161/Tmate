@@ -12,6 +12,7 @@ import { PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { renderBottomNav } from '../utils/bottom-nav';
 import { el, qs, showToast } from '../utils/dom';
+import { createCategoryFallback } from '../utils/image';
 import { withReturnTo } from '../utils/navigation';
 import { pickRegion } from '../utils/region-picker';
 import { renderEmpty, renderError, renderLoading } from '../utils/state-views';
@@ -65,8 +66,8 @@ function safeImageUrl(url: string | null): string | null {
 }
 
 /** 이미지가 없거나 불러오기에 실패하면 토큰 색 플레이스홀더로 바꾼다. */
-function createImage(url: string | null, className: string): HTMLElement {
-  const placeholder = (): HTMLElement => el('div', { class: className });
+function createImage(url: string | null, className: string, categoryName: string | null = null): HTMLElement {
+  const placeholder = (): HTMLElement => createCategoryFallback(className, categoryName) ?? el('div', { class: className });
   const safe = safeImageUrl(url);
   if (!safe) return placeholder();
   const img = el('img', { class: className, src: safe, alt: '', loading: 'lazy' });
@@ -110,7 +111,7 @@ function createMenuCard(menu: RecommendedMenu): HTMLElement {
   return el(
     'a',
     { class: 'menu-card', href: restaurantHref(menu.restaurantId), 'aria-label': `${menu.menuName} - ${menu.restaurantName}` },
-    createImage(menu.imageUrl, 'menu-card__image'),
+    createImage(menu.imageUrl, 'menu-card__image', menu.categoryName),
     body,
     meters,
   );
@@ -239,7 +240,7 @@ function createRestaurantCard(restaurant: RestaurantSummary): HTMLElement {
   const link = el(
     'a',
     { class: 'store-card__link', href: restaurantHref(restaurant.restaurantId) },
-    createImage(restaurant.imageUrl, 'store-card__image'),
+    createImage(restaurant.imageUrl, 'store-card__image', restaurant.categoryName),
     info,
   );
 
