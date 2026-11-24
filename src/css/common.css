@@ -329,19 +329,20 @@ body {
   width: 100%;
   max-width: var(--app-max-width);
   height: var(--bottom-nav-height);
-  padding-inline: calc((var(--app-max-width) - 315px) / 2);
+  padding-inline: calc((var(--app-max-width) - 315px) / 2 - (var(--bottom-nav-tap) - 40px) / 2);
   border: 1px solid var(--color-surface-border);
   background: var(--color-surface);
   transform: translateX(-50%);
 }
 
 .bottom-nav__item {
+  /* 아이콘은 작게 그리되 누르는 영역은 넉넉하게 둔다 */
   display: block;
-  width: var(--bottom-nav-icon);
-  height: var(--bottom-nav-icon);
+  width: var(--bottom-nav-tap);
+  height: 100%;
   background-color: var(--color-text-muted);
-  -webkit-mask: var(--icon) center / contain no-repeat;
-  mask: var(--icon) center / contain no-repeat;
+  -webkit-mask: var(--icon) center / var(--bottom-nav-icon) no-repeat;
+  mask: var(--icon) center / var(--bottom-nav-icon) no-repeat;
 }
 
 .bottom-nav__item.is-active {
