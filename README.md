@@ -127,6 +127,10 @@ delete from auth.users where email like 'seed%@tmate-app.com';
 
 비밀값이 없으면 가게 추가 화면에서 "가게를 추가하지 못했어요"가 나옵니다. 알레르기는 메뉴 이름으로 추정한 값이라 언제나 "추정" 또는 "정보 없음"으로 저장됩니다.
 
+### 데모 평가 늘리기 (선택)
+
+`supabase/seed_demo_more.sql` 은 데모 사용자 14명(`demo01`~`demo14`, 로그인 불가, 닉네임 "데모 ○○러")을 더 만들고, 데모 사용자 20명이 전체 메뉴의 약 30% 씩을 평가하게 합니다(2026-11 기준 평가 약 2,600건, 모든 메뉴에 평가가 생깁니다). 추가만 하며 기존 사용자·평가는 건드리지 않습니다. **이 평가는 실제 사용자 평가가 아니며** 가게·메뉴 평균 평점과 취향 메이트에 섞여 보입니다. 정리: `delete from auth.users where email like 'demo%@tmate-app.com';`
+
 ### 친구랑 궁합 검사 (행사 체험용)
 
 방 번호로 묶인 친구와 둘 중 하나 문항 10개·음식 경험 5개에 답하고 궁합(%)을 보는 기능의 DB 부분입니다. `supabase/migrations/003_match_test.sql` → `supabase/functions.sql` → `supabase/seed_match.sql` 순서로 실행합니다. 구조는 `docs/erd.md` 에 있습니다.
