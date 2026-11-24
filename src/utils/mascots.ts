@@ -17,6 +17,11 @@ const MASCOTS = { shout, heart, search, 'thumbs-up': thumbsUp, eating, standing,
 export type MascotName = keyof typeof MASCOTS;
 export type MascotSize = 'sm' | 'md' | 'lg';
 
+/** 마스코트 이미지 주소 (캔버스에 그릴 때 쓴다. 화면에는 createMascot 을 쓴다) */
+export function getMascotUrl(name: MascotName): string {
+  return MASCOTS[name];
+}
+
 /** 장식용 마스코트 이미지. 뜻은 옆의 글자가 전하므로 alt 는 비운다. 크기는 common.css 의 .mascot--{size} */
 export function createMascot(name: MascotName, size: MascotSize = 'md'): HTMLImageElement {
   return el('img', { class: `mascot mascot--${size}`, src: MASCOTS[name], alt: '', 'aria-hidden': 'true' });

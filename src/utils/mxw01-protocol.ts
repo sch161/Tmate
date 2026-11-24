@@ -167,7 +167,7 @@ export interface MonoOptions {
   /** 사진에는 floyd-steinberg, 글자·선에는 threshold 가 맞다. 기본 floyd-steinberg */
   dither?: DitherMethod;
   /** dither 를 이 줄 범위(from 이상 to 미만)에만 적용하고 나머지는 threshold 로 자른다 (사진 영역만 디더링해 글자를 또렷하게 둔다) */
-  ditherRows?: { from: number; to: number };
+  ditherRows?: { from: number; to: number } | { from: number; to: number }[];
   /** 이 값보다 어두우면 검정 (0~255). 기본 128 */
   threshold?: number;
 }
@@ -189,13 +189,15 @@ export function grayToMono(gray: Float32Array, width: number, height: number, op
   if (gray.length !== width * height) throw new Error('이미지 크기와 데이터 길이가 맞지 않습니다');
   const threshold = options.threshold ?? 128;
   const method = options.dither ?? 'floyd-steinberg';
-  const from = method === 'threshold' ? 0 : Math.max(0, options.ditherRows?.from ?? 0);
-  const to = method === 'threshold' ? 0 : Math.min(height, options.ditherRows?.to ?? height);
+  // 디더링할 줄 범위들 (여러 곳일 수 있다: 영수증의 캐릭터 그림과 사진). 지정이 없으면 전체
+  const ranges = method === 'threshold' ? [] : (options.ditherRows === undefined ? [{ from: 0, to: height }] : Array.isArray(options.ditherRows) ? options.ditherRows : [options.ditherRows]).map((r) => ({ from: Math.max(0, r.from), to: Math.min(height, r.to) }));
   const work = Float32Array.from(gray);
   const mono = new Uint8Array(width * height);
 
   for (let y = 0; y < height; y++) {
-    const dithered = y >= from && y < to;
+    const range = ranges.find((r) => y >= r.from && y < r.to);
+    const dithered = range !== undefined;
+    const to = range?.to ?? 0;
     for (let x = 0; x < width; x++) {
       const i = y * width + x;
       const black = work[i] < threshold;
