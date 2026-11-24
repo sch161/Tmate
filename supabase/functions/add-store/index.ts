@@ -3,6 +3,7 @@
 //   1) begin_store_add  : 입력 확인(이름·지역·하루 한도·중복) + 요청 1회 기록. 통과해야 AI 를 부른다
 //   2) Claude Messages API : 메뉴 이름으로 알레르기(식약처 19종)·맛 태그 추정. 구조화 출력(JSON 스키마)으로 받는다
 //   3) add_user_store   : 가게·메뉴 저장. 알레르기는 언제나 estimated(추정) 또는 unknown(정보 없음)으로 들어간다
+// 요청에 restaurantId 가 있으면 "내가 추가한 가게에 메뉴 더 넣기"다: begin_store_menu_add → AI 추정 → add_user_store_menus
 // * 모든 DB 호출은 요청한 사용자의 토큰으로 한다(service_role 키를 쓰지 않는다). 권한·한도는 RPC 가 지킨다.
 // * API 키는 Supabase 프로젝트의 Edge Function 비밀값 ANTHROPIC_API_KEY 에만 둔다. 저장소·브라우저에는 두지 않는다.
 // * 외부 라이브러리를 쓰지 않는다(fetch 만 사용). Claude 호출 형식은 scripts/research/research.mjs 와 같다.
@@ -27,6 +28,8 @@ interface MenuInput {
   description: string;
 }
 interface StoreInput {
+  /** 있으면 이미 있는 내 가게에 메뉴만 더 넣는다 (name·region·categoryId 는 쓰지 않는다) */
+  restaurantId: number | null;
   name: string;
   region: string;
   address: string;
@@ -68,19 +71,23 @@ const clean = (value: unknown, max: number): string => (typeof value === 'string
 function parseInput(body: unknown): StoreInput {
   if (typeof body !== 'object' || body === null) throw new UserError('요청 형식이 올바르지 않아요.');
   const raw = body as Record<string, unknown>;
+  const restaurantId = raw.restaurantId === undefined || raw.restaurantId === null ? null : Number(raw.restaurantId);
+  if (restaurantId !== null && !Number.isInteger(restaurantId)) throw new UserError('가게를 다시 선택해주세요.');
   const name = clean(raw.name, 40);
   const region = clean(raw.region, 40);
   const categoryId = Number(raw.categoryId);
-  if (name.length < 2) throw new UserError('가게 이름은 2~40자로 입력해주세요.');
-  if (!region) throw new UserError('지역을 선택해주세요.');
-  if (!Number.isInteger(categoryId)) throw new UserError('음식 종류를 선택해주세요.');
+  if (restaurantId === null) {
+    if (name.length < 2) throw new UserError('가게 이름은 2~40자로 입력해주세요.');
+    if (!region) throw new UserError('지역을 선택해주세요.');
+    if (!Number.isInteger(categoryId)) throw new UserError('음식 종류를 선택해주세요.');
+  }
   if (!Array.isArray(raw.menus)) throw new UserError('메뉴를 1개 이상 입력해주세요.');
   const menus = raw.menus
     .map((m) => (typeof m === 'object' && m !== null ? (m as Record<string, unknown>) : {}))
     .map((m) => ({ name: clean(m.name, 40), description: clean(m.description, 100) }))
     .filter((m) => m.name !== '');
   if (menus.length < 1 || menus.length > MAX_MENUS) throw new UserError(`메뉴는 1~${MAX_MENUS}개까지 입력할 수 있어요.`);
-  return { name, region, address: clean(raw.address, 100), categoryId, menus };
+  return { restaurantId, name, region, address: clean(raw.address, 100), categoryId, menus };
 }
 
 /** 요청한 사용자의 토큰으로 PostgREST 를 부른다. RPC 가 raise 한 한국어 문구는 그대로 사용자에게 돌려준다 */
@@ -208,17 +215,32 @@ Deno.serve(async (request) => {
     const input = parseInput(await request.json().catch(() => null));
 
     // 1) 입력 확인 + 요청 기록 (통과하지 못하면 AI 를 부르지 않는다)
-    await db('rpc/begin_store_add', auth, { method: 'POST', body: JSON.stringify({ p_name: input.name, p_region: input.region }) });
+    if (input.restaurantId === null) {
+      await db('rpc/begin_store_add', auth, { method: 'POST', body: JSON.stringify({ p_name: input.name, p_region: input.region }) });
+    } else {
+      await db('rpc/begin_store_menu_add', auth, { method: 'POST', body: JSON.stringify({ p_restaurant_id: input.restaurantId }) });
+    }
 
     const [allergens, tastes, categories] = await Promise.all([db('allergens?select=id,name&order=id', auth), db('taste_tags?select=id,name&order=id', auth), db('food_categories?select=id,name&order=id', auth)]);
     if (!isLookupList(allergens) || !isLookupList(tastes) || !isLookupList(categories)) throw new Error('기준 데이터를 읽지 못함');
-    const category = categories.find((c) => c.id === input.categoryId);
-    if (!category) throw new UserError('음식 종류를 선택해주세요.');
+    // 메뉴만 더 넣을 때는 가게 이름과 음식 종류를 DB 에서 읽어 AI 에게 알려준다
+    let categoryName: string;
+    if (input.restaurantId === null) {
+      const category = categories.find((c) => c.id === input.categoryId);
+      if (!category) throw new UserError('음식 종류를 선택해주세요.');
+      categoryName = category.name;
+    } else {
+      const detail = await db('rpc/get_restaurant_detail', auth, { method: 'POST', body: JSON.stringify({ p_restaurant_id: input.restaurantId }) });
+      const row = Array.isArray(detail) && typeof detail[0] === 'object' && detail[0] !== null ? (detail[0] as Record<string, unknown>) : null;
+      if (!row || typeof row.name !== 'string') throw new UserError('가게를 찾지 못했어요.');
+      input.name = row.name;
+      categoryName = typeof row.category_name === 'string' ? row.category_name : '';
+    }
 
     // 2) AI 추정
     const result = await estimate(
       input,
-      category.name,
+      categoryName,
       allergens.map((a) => a.name),
       tastes.map((t) => t.name),
       apiKey,
@@ -247,6 +269,10 @@ Deno.serve(async (request) => {
           : [],
       };
     });
+    if (input.restaurantId !== null) {
+      await db('rpc/add_user_store_menus', auth, { method: 'POST', body: JSON.stringify({ p_restaurant_id: input.restaurantId, p_menus: menus }) });
+      return json({ restaurant_id: input.restaurantId, unknown_menus: menus.filter((m) => !m.inferred).map((m) => m.name) });
+    }
     const restaurantId = await db('rpc/add_user_store', auth, {
       method: 'POST',
       body: JSON.stringify({ p_name: input.name, p_region: input.region, p_address: input.address, p_category_id: input.categoryId, p_menus: menus }),
