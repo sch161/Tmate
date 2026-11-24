@@ -212,6 +212,42 @@ export type Database = {
         }
         Relationships: []
       }
+      match_photo_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          room_id: number
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          room_id: number
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          room_id?: number
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_photo_tokens_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "match_photo_tokens_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "match_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       match_print_requests: {
         Row: {
           created_at: string
@@ -932,6 +968,10 @@ export type Database = {
         Args: { p_menu: number; p_user: string }
         Returns: number
       }
+      calc_match_photo_token_room: {
+        Args: { p_token: string }
+        Returns: number
+      }
       calc_match_print_staff: {
         Args: { p_passcode: string }
         Returns: undefined
@@ -983,6 +1023,7 @@ export type Database = {
         Args: { p_a: string; p_b: string }
         Returns: number
       }
+      create_match_photo_token: { Args: { p_code: string }; Returns: string }
       create_match_room: { Args: never; Returns: string }
       delete_review: { Args: { p_menu_id: number }; Returns: undefined }
       get_allergy_menus: {
@@ -1039,6 +1080,14 @@ export type Database = {
           b_rating: number
           b_want_try: boolean
           food_name: string
+        }[]
+      }
+      get_match_photo_token_info: {
+        Args: { p_token: string }
+        Returns: {
+          nickname_a: string
+          nickname_b: string
+          score: number
         }[]
       }
       get_match_print_photo: {
@@ -1279,6 +1328,10 @@ export type Database = {
       }
       update_my_tastes: {
         Args: { p_ratios: number[]; p_taste_ids: number[] }
+        Returns: undefined
+      }
+      upload_match_photo_by_token: {
+        Args: { p_photo: string; p_show_on_rank?: boolean; p_token: string }
         Returns: undefined
       }
       upsert_review: {

@@ -390,3 +390,17 @@ create table if not exists match_print_settings (
 
 alter table match_print_requests enable row level security;
 alter table match_print_settings enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 13. 다른 폰으로 사진 보내기 (PC 에서 검사한 손님: 화면의 QR 을 폰으로 찍어 사진을 올린다)
+--   QR 주소에 들어가는 일회용에 가까운 표(token). 30분 동안만 쓸 수 있고, 로그인하지 않은 폰도 이 표로 그 방의 사진 1건만 올릴 수 있다.
+--   클라이언트에 직접 열지 않는다. functions.sql 의 RPC 로만 읽고 쓴다.
+-- ---------------------------------------------------------------------
+create table if not exists match_photo_tokens (
+  token       uuid primary key default gen_random_uuid(),
+  room_id     bigint not null references match_rooms (id) on delete cascade,
+  created_by  uuid not null references profiles (id) on delete cascade,
+  created_at  timestamptz not null default now()
+);
+
+alter table match_photo_tokens enable row level security;

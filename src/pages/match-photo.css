@@ -1,0 +1,57 @@
+/* 다른 폰으로 사진 보내기 전용 스타일 (디자인 대기: Figma 에 화면이 없어 토큰 기반 임시 UI). 값은 variables.css 토큰만 쓴다. */
+.match-photo-page {
+  padding-top: var(--space-6);
+  padding-bottom: calc(var(--space-6) + env(safe-area-inset-bottom));
+  padding-inline: var(--space-4);
+}
+
+.match-photo-page__title {
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.match-photo-page__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.match-photo-page__pair {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.match-photo-page__names {
+  font-size: var(--font-size-18);
+  font-weight: var(--font-weight-semibold);
+  text-align: center;
+}
+
+.match-photo-page__score {
+  color: var(--color-primary);
+  font-size: var(--font-size-24);
+  font-weight: var(--font-weight-bold);
+}
+
+.match-photo-page__consent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-14);
+}
+
+.match-photo-page__input {
+  display: none;
+}
+
+.match-photo-page__status {
+  font-size: var(--font-size-14);
+  text-align: center;
+}
