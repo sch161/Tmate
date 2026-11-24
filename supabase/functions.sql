@@ -2413,6 +2413,32 @@ grant execute on function public.begin_store_menu_add(bigint)          to authen
 grant execute on function public.add_user_store_menus(bigint, jsonb)   to authenticated;
 
 -- =====================================================================
+-- 가게 사진 (내가 추가한 가게)
+--   사진 파일은 Storage 의 공개 버킷 store-photos 에 '내 id/가게id-시각.jpg' 로 올린다(권한은 policies.sql).
+--   set_my_store_photo 는 내가 추가한 가게인지, 주소가 그 버킷의 내 폴더인지 확인한 뒤 restaurants.image_url 에 적는다.
+-- =====================================================================
+create or replace function public.set_my_store_photo(p_restaurant_id bigint, p_url text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  perform public.calc_my_store_brand(p_restaurant_id);
+  if p_url is null or p_url !~ (
+    '^https://[a-z0-9]+\.supabase\.co/storage/v1/object/public/store-photos/'
+    || auth.uid()::text || '/' || p_restaurant_id::text || '-[0-9]+\.(jpg|png)$'
+  ) then
+    raise exception '사진 주소가 올바르지 않아요.';
+  end if;
+  update public.restaurants set image_url = p_url where id = p_restaurant_id;
+end;
+$$;
+
+revoke all on function public.set_my_store_photo(bigint, text) from public, anon;
+grant execute on function public.set_my_store_photo(bigint, text) to authenticated;
+
+-- =====================================================================
 -- 궁합 영수증 사진 올리기 (손님 폰 → 진행자 인쇄 화면)
 --   손님: request_match_print(방 번호, 사진) — 그 방에서 검사를 마친 두 사람만 올릴 수 있다. 방마다 1건(다시 올리면 바뀐다)
 --   진행자: get_match_print_queue · get_match_print_photo · mark_match_printed — 진행자 번호(match_print_settings.passcode)가 맞아야 한다
