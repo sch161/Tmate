@@ -72,3 +72,27 @@ export function buildResultCards(rows: MatchFoodCompare[], names?: MatchCardName
 
   return cards;
 }
+
+/** PART 1 한 문항에 대한 두 사람의 답 (1 = optionA, 2 = optionB) */
+export interface MatchPairChoice {
+  optionA: string;
+  optionB: string;
+  aChoice: number;
+  bChoice: number;
+}
+
+/** 통한 취향(둘이 같이 고른 보기)과 갈린 취향(서로 다르게 고른 보기 쌍) */
+export interface ChoiceSummary {
+  same: string[];
+  diff: { a: string; b: string }[];
+}
+
+export function buildChoiceSummary(choices: MatchPairChoice[]): ChoiceSummary {
+  const pick = (choice: MatchPairChoice, value: number): string => (value === 1 ? choice.optionA : choice.optionB);
+  const summary: ChoiceSummary = { same: [], diff: [] };
+  for (const choice of choices) {
+    if (choice.aChoice === choice.bChoice) summary.same.push(pick(choice, choice.aChoice));
+    else summary.diff.push({ a: pick(choice, choice.aChoice), b: pick(choice, choice.bChoice) });
+  }
+  return summary;
+}
