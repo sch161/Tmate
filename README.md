@@ -12,6 +12,7 @@
 - **가게 상세**: 지점의 메뉴·평점·맛 태그는 소속 브랜드 기준입니다.
   - 메뉴별 평가 탭: 메뉴별 취향 일치도, 맛 태그, 내 별점, 메뉴 저장, 평가하기, 메뉴 출처.
   - 알레르기 정보 탭: 내 알레르기와 겹치는 메뉴(위험/주의), 정보 없는 메뉴, 메뉴별 정보 상태 라벨, 공식 표 기준일·공식 출처 링크, 조리기구 공유 공지, 참고용 안내.
+- **가게 추가**: 목록에 없는 가게와 메뉴(최대 8개)를 직접 넣습니다. 메뉴의 알레르기와 맛은 서버에서 AI(Claude)가 메뉴 이름으로 추정하고 "추정"으로 표시합니다. 하루 3곳까지 추가할 수 있습니다.
 - **메뉴 평가**: 별점 1~5 + 맛 태그 여러 개. 작성·수정·삭제할 수 있습니다.
 - **저장**: 저장한 가게와 메뉴를 검색하고, 저장 해제할 수 있습니다. 메뉴 카드에 알레르기 겹침 경고와 정보 상태를 보여줍니다.
 - **마이페이지**: 프로필 요약, 입맛 유형, 활동 수치(저장한 가게·평가한 메뉴·취향 메이트), 로그아웃.
@@ -32,6 +33,7 @@
 | 온보딩 위치 / 맛 선택 / 비율 / 알레르기 | `onboarding-location.html` / `onboarding-flavor.html` / `onboarding-ratio.html` / `onboarding-allergy.html` |
 | 홈 | `home.html` |
 | 가게 상세 (`?id=지점id`) | `restaurant.html` |
+| 가게 추가 (`?region=지역`) | `store-add.html` |
 | 메뉴 평가 (`?menuId=메뉴id`) | `review.html` |
 | 저장 | `save.html` |
 | 마이페이지 | `mypage.html` |
@@ -110,6 +112,15 @@ npm run dev
 ```sql
 delete from auth.users where email like 'seed%@tmate-app.com';
 ```
+
+### 가게 추가 (AI 알레르기 추정)
+
+목록에 없는 가게와 메뉴를 사용자가 직접 넣는 기능입니다. 기존 DB 에는 `supabase/migrations/007_store_add.sql` 하나를 실행합니다(컬럼·표·함수 추가만). 그다음 Edge Function 을 배포하고 비밀값을 넣습니다.
+
+1. `supabase/functions/add-store/index.ts` 를 Edge Function `add-store` 로 배포합니다 (JWT 확인 켬).
+2. Supabase 대시보드 → Edge Functions → Secrets 에 `ANTHROPIC_API_KEY`(Claude API 키)를 넣습니다. 키는 저장소나 `.env` 에 두지 않습니다.
+
+비밀값이 없으면 가게 추가 화면에서 "가게를 추가하지 못했어요"가 나옵니다. 알레르기는 메뉴 이름으로 추정한 값이라 언제나 "추정" 또는 "정보 없음"으로 저장됩니다.
 
 ### 친구랑 궁합 검사 (행사 체험용)
 
