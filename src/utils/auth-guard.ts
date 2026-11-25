@@ -1,14 +1,14 @@
 import { getMyProfile, getSession } from '../api/auth';
 import { PATHS } from '../lib/constants';
 
-/** 세션이 없으면 로그인 화면으로 보낸다. 세션이 있으면 true. */
+/** 세션이 없으면 닉네임으로 시작하는 화면으로 보낸다. 세션이 있으면 true. */
 export async function requireAuth(): Promise<boolean> {
   try {
     if (await getSession()) return true;
   } catch {
     // 세션 확인 실패는 비로그인으로 취급한다
   }
-  window.location.replace(PATHS.login);
+  window.location.replace(PATHS.signup);
   return false;
 }
 
