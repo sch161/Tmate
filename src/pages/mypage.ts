@@ -1,9 +1,9 @@
 // 마이페이지 (Figma User 1:716)
 // 디자인 대기: 입맛 정보가 없을 때의 대체 카드는 Figma 에 없는 임시 UI
-import { signOut } from '../api/auth';
+import { getMyProfile, signOut } from '../api/auth';
 import { getMySummary, updateMyRegion, type MySummary } from '../api/me';
 import avatarImage from '../assets/images/mypage-avatar.png';
-import { PATHS } from '../lib/constants';
+import { isGuestUsername, PATHS } from '../lib/constants';
 import { requireAuth } from '../utils/auth-guard';
 import { renderBottomNav } from '../utils/bottom-nav';
 import { el, qs, showToast } from '../utils/dom';
@@ -176,11 +176,15 @@ async function load(): Promise<void> {
 
 async function onLogout(): Promise<void> {
   if (!logoutButton || logoutButton.disabled) return;
-  if (!window.confirm('로그아웃할까요?')) return;
+  // 닉네임만으로 시작한 계정은 아이디·비밀번호를 모르므로 로그아웃하면 다시 들어올 수 없다
+  const guest = await getMyProfile()
+    .then((profile) => (profile ? isGuestUsername(profile.username) : false))
+    .catch(() => false);
+  if (!window.confirm(guest ? '로그아웃하면 지금 기록(평가·저장·입맛)으로 다시 들어올 수 없어요. 그래도 로그아웃할까요?' : '로그아웃할까요?')) return;
   logoutButton.disabled = true;
   try {
     await signOut();
-    window.location.replace(PATHS.login);
+    window.location.replace(PATHS.signup);
   } catch (e) {
     showToast(e instanceof Error ? e.message : FALLBACK_ERROR);
     logoutButton.disabled = false;

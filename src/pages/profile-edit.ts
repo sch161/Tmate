@@ -1,6 +1,7 @@
 // 프로필 수정: 닉네임만 바꾼다(아이디는 읽기 전용, 프로필 사진은 없다).
 // 디자인 대기: 화면 나오면 교체 (Figma 에 프로필 수정 화면이 없다)
 import { getMyProfile, type MyProfile } from '../api/auth';
+import { isGuestUsername } from '../lib/constants';
 import { NICKNAME_MAX_LENGTH, updateMyNickname, validateNickname } from '../api/me';
 import { requireAuth } from '../utils/auth-guard';
 import { el, qs, showToast } from '../utils/dom';
@@ -71,7 +72,8 @@ function renderForm(profile: MyProfile): void {
     el(
       'div',
       { class: 'profile-edit__form' },
-      el('div', { class: 'profile-edit__field' }, el('label', { class: 'profile-edit__label', for: 'username' }, '아이디'), username, el('p', { class: 'profile-edit__hint text-wrap-ko' }, '아이디는 바꿀 수 없어요')),
+      // 닉네임만으로 시작한 계정의 아이디는 무작위 글자라 보여주지 않는다
+      ...(isGuestUsername(profile.username) ? [] : [el('div', { class: 'profile-edit__field' }, el('label', { class: 'profile-edit__label', for: 'username' }, '아이디'), username, el('p', { class: 'profile-edit__hint text-wrap-ko' }, '아이디는 바꿀 수 없어요'))]),
       el('div', { class: 'profile-edit__field' }, el('label', { class: 'profile-edit__label', for: 'nickname' }, '닉네임'), nickname, el('p', { class: 'profile-edit__hint text-wrap-ko' }, `앞뒤 공백을 뺀 1~${NICKNAME_MAX_LENGTH}자로 입력해주세요`), error),
       save,
     ),
