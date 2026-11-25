@@ -1,6 +1,6 @@
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import { toEmail } from '../lib/constants';
+import { GUEST_USERNAME_PREFIX, toEmail } from '../lib/constants';
 import type { Tables } from '../types/database.types';
 
 export type MyProfile = Pick<Tables<'profiles'>, 'id' | 'username' | 'nickname' | 'region' | 'onboarding_done'>;
@@ -44,6 +44,20 @@ export async function signUp(username: string, password: string): Promise<Sessio
   } catch (e) {
     throw normalize(e);
   }
+}
+
+function randomText(length: number): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(length));
+  return Array.from(bytes, (b) => chars[b % chars.length]).join('');
+}
+
+/**
+ * 닉네임만으로 시작하기: 아이디·비밀번호를 무작위로 만들어 가입한다 (사용자는 보지 않는다).
+ * 로그인 상태는 이 기기의 브라우저에만 남으므로, 로그아웃하거나 브라우저 기록을 지우면 같은 계정으로 다시 들어올 수 없다.
+ */
+export async function startAsGuest(): Promise<Session> {
+  return signUp(`${GUEST_USERNAME_PREFIX}${randomText(14)}`, randomText(32));
 }
 
 export async function signIn(username: string, password: string): Promise<Session> {
