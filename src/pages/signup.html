@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#fff7ee" />
     <link rel="icon" type="image/png" href="/src/assets/images/search-mascot.png" />
-    <title>회원가입 - T:MATE</title>
+    <title>시작하기 - T:MATE</title>
     <link rel="stylesheet" href="/src/css/index.css" />
     <link rel="stylesheet" href="/src/pages/auth.css" />
   </head>
@@ -18,31 +18,22 @@
         <span class="auth__checker" aria-hidden="true"></span>
       </div>
 
+      <!-- 디자인 대기: 닉네임만 받는 시작 화면은 Figma 에 없는 임시 UI (Figma 는 아이디·비밀번호 가입) -->
       <form class="auth__form" id="auth-form" novalidate>
         <div class="auth__field">
-          <input class="input" id="username" name="username" type="text" placeholder="아이디를 입력해주세요" autocomplete="username" autocapitalize="none" maxlength="20" />
-          <p class="error-message" id="username-error" role="alert" hidden></p>
-        </div>
-        <!-- 디자인 대기: 닉네임 입력칸은 Figma 에 없는 임시 UI (랭킹·영수증에 아이디 대신 닉네임이 나온다) -->
-        <div class="auth__field">
-          <input class="input" id="nickname" name="nickname" type="text" placeholder="닉네임을 입력해주세요 (랭킹에 보여요)" autocomplete="nickname" maxlength="12" />
+          <input class="input" id="nickname" name="nickname" type="text" placeholder="닉네임을 입력해주세요" autocomplete="nickname" maxlength="12" />
           <p class="error-message" id="nickname-error" role="alert" hidden></p>
         </div>
-        <div class="auth__field">
-          <input class="input" id="password" name="password" type="password" placeholder="비밀번호를 입력해주세요" autocomplete="new-password" />
-          <p class="error-message" id="password-error" role="alert" hidden></p>
-        </div>
         <p class="error-message auth__form-error" id="form-error" role="alert" hidden></p>
-        <button class="btn-primary auth__submit" id="submit" type="submit">회원가입</button>
+        <button class="btn-primary auth__submit" id="submit" type="submit">시작하기</button>
       </form>
 
-      <!-- 디자인 대기: 비밀번호 안내 문구는 Figma 에 없는 임시 UI -->
       <div class="auth__notice">
-        <p class="text-wrap-ko">비밀번호는 다른 곳에서 쓰는 것과 다르게 정해 주세요. 비밀번호 찾기는 지원하지 않아요.</p>
+        <p class="text-wrap-ko">가입 없이 닉네임만으로 바로 시작해요. 기록은 이 기기의 이 브라우저에만 남아요.</p>
       </div>
 
       <p class="auth__switch">
-        <span>이미 계정이 있으신가요?</span>
+        <span>아이디가 있으신가요?</span>
         <a class="auth__switch-link--strong" href="/src/pages/login.html">로그인</a>
       </p>
     </main>
